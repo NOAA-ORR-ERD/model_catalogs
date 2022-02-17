@@ -1,0 +1,77 @@
+name: LMHOFS
+description: Lake Michigan and Huron model in FVCOM.
+metadata: 
+  grid_dim_(xyz): [90806,171377,20]
+  grid_res_min_(km): 0.05
+  grid_res_max_(km): 2.5
+  grid_type: 'unstructured'
+  alpha_shape: [20,10]  # dd, alpha
+
+sources:
+  forecast:
+    description: Lake Michigan and Huron model in FVCOM from 30 days ago with 120 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      ]
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LMHOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 120 hours after present time'
+      filetype: ['fields', 'regulargrid']
+  
+  nowcast:
+    description: Lake Michigan and Huron model in FVCOM from 30 days ago with 120 hour forecast (identical to forecast).
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LMHOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 120 hours after present time'
+      filetype: ['fields', 'regulargrid']
+
+  hindcast:
+    driver: opendap
+    description: Lake Michigan and Huron model in FVCOM from 2019 until 4 days ago.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-lmhofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 2019-09-17'
+      overall_end_datetime: 'Available through 4 days before present time'
+      filetype: ['fields']

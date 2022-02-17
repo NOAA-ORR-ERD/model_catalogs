@@ -1,0 +1,78 @@
+name: SFBOFS
+description: San Francisco Bay model in FVCOM.
+metadata: 
+  grid_dim_(xyz): [54120,20]
+  grid_res_min_(km): 0.1
+  grid_res_max_(km): 4
+  grid_type: 'unstructured'
+  alpha_shape: [8,50]  # dd, alpha
+
+sources:
+  forecast:
+    description: San Francisco Bay model in FVCOM from 30 days ago with 48 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      ]
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
+
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 48 hours after present time'
+      filetype: ['fields', 'regulargrid']
+  
+  nowcast:
+    description: San Francisco Bay model in FVCOM from 30 days ago with 48 hour forecast (identical to forecast).
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 48 hours after present time'
+      filetype: ['fields', 'regulargrid']
+
+  hindcast:
+    driver: opendap
+    description: San Francisco Bay model in FVCOM from 2015 until 4 days ago.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-sfbofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 2015-08-19'
+      overall_end_datetime: 'Available through 4 days before present time'
+      filetype: ['fields']

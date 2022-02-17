@@ -1,0 +1,73 @@
+name: CIOFS
+description: Cook Inlet model in ROMS.
+metadata: 
+  grid_dim_(xyz): [724,1044,30]
+  grid_res_min_(km): 0.01
+  grid_res_max_(km): 3.5
+  grid_type: 'curvilinear'
+
+sources:
+  forecast:
+    driver: opendap
+    description: 3D Cook Inlet model in ROMS with 48 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['ocean_time']
+      engine: netcdf4
+      urlpath: https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/CIOFS/fmrc/Aggregated_7_day_CIOFS_Fields_Forecast_best.ncd
+    metadata:
+      overall_start_datetime: '7 days before present time'
+      overall_end_datetime: '48 hours after present time'
+
+  nowcast:
+    driver: opendap
+    description: 3D Cook Inlet model in ROMS from 30 days ago with 48 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CIOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 48 hours after present time'
+      filetype: ['fields', 'regulargrid']
+
+  hindcast:
+    driver: opendap
+    description: 3D Cook Inlet model in ROMS from 2015 until 4 days ago. Nowcast files are available from these dates for aggregation.
+    args:
+      chunks:
+        ocean_time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      decode_times: False  # the older output has calendar 'gregorian_proleptic' instead of standard name 'proleptic_gregorian'
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-ciofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 2015-08-01. Stations files are inconsistently available back into 2014.'
+      overall_end_datetime: 'Available through 4 days before present time'
+      filetype: ['fields']
+      
+  hindcast-forecast-aggregation:
+    driver: opendap
+    description: 3D Cook Inlet model in ROMS from 2019 until 4 days ago. This is an aggregation of forecast files.
+    args:
+      chunks:
+        time: 1
+      drop_variables: ['ocean_time']
+      engine: netcdf4
+      urlpath: https://www.ncei.noaa.gov/thredds/dodsC/model-ciofs-agg/Aggregated_CIOFS_Fields_Forecast_best.ncd
+    metadata:
+      overall_start_datetime: 'Available starting 2019-09-16.'
+      overall_end_datetime: 'Available through 4 days before present time'

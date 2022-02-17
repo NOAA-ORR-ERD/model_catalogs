@@ -1,0 +1,21 @@
+name: GFS-1_2deg
+description: Global Forecast System, 1/2 degree horizontal resolution.
+metadata:
+  grid_dim_(xyz): [720,361,?]
+  grid_res_min_(deg): 1/2
+  grid_res_max_(deg): 1/2
+  grid_type: 'rectangular'
+
+sources:
+  forecast:
+    driver: opendap
+    description: Global Forecast System forecast, 1/2 degree horizontal resolution, from two months ago to 16 days from now.
+    args:
+      chunks:
+        time: 1
+      # drop_variables: ['ocean_time']
+      engine: netcdf4
+      urlpath: 'https://thredds.ucar.edu/thredds/dodsC/grib/NCEP/GFS/Global_0p5deg/Best'
+    metadata:
+      overall_start_datetime: 'Two months ago.'
+      overall_end_datetime: '16 days from today.'

@@ -1,0 +1,77 @@
+name: NGOFS2
+description: Northern Gulf of Mexico model in FVCOM.
+metadata: 
+  grid_dim_(xyz): [90267,40]
+  grid_res_min_(km): 0.05
+  grid_res_max_(km): 10
+  grid_type: 'unstructured'
+  alpha_shape: [20,1]  # dd, alpha
+
+sources:
+  forecast:
+    description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n003.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      ]
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") and 2D ("2ds") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields"), 2D ("2ds"), and gridded ("regulargrid") files available through 54 hours after present time'
+      filetype: ['fields', 'regulargrid', '2ds']
+  
+  nowcast:
+    description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast (identical to forecast).
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    driver: opendap
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: '3D ("fields") and 2D ("2ds") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
+      overall_end_datetime: '3D ("fields"), 2D ("2ds"), and gridded ("regulargrid") files available through 54 hours after present time'
+      filetype: ['fields', 'regulargrid', '2ds']
+
+  hindcast:
+    driver: opendap
+    description: Northern Gulf of Mexico model in FVCOM from 2021 until 4 days ago.
+    args:
+      chunks:
+        ocean_time: 1
+      drop_variables: ['siglay','siglev','Itime2']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-ngofs2-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 2021-03-22'
+      overall_end_datetime: 'Available through 4 days before present time'
+      filetype: ['fields', '2ds']

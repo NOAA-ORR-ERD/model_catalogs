@@ -1,0 +1,65 @@
+name: RTOFS-Alaska
+description: Real-Time Ocean Forecast System model in HYCOM for Alaska.
+metadata:
+  grid_dim_(xyz): [500,700,40]
+  grid_res_min_(deg): 1/12
+  grid_res_max_(deg): 1/12
+  grid_type: 'rectangular'
+
+sources:
+  forecast:
+    driver: opendap
+    description: 6-hourly 3D Real-Time Ocean Forecast System model in HYCOM for Alaska from yesterday through 5 day forecast.
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
+    args:
+      chunks:
+        time: 1
+      # drop_variables: ['ocean_time']
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: [
+      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak",
+      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak",
+      ]
+    metadata:
+      overall_start_datetime: 'Yesterday.'
+      overall_end_datetime: '5 days after present day.'
+
+  # nowcast:
+  #   driver: opendap
+  #   description: 6-hourly 3D Real-Time Ocean Forecast System model in HYCOM for Alaska from 2 days ago through 5 day forecast.
+  #   parameters:
+  #     tod:
+  #       description: Pandas like Timestamp for today
+  #       type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+  #       default: today
+  #     yesterday:
+  #       description: Pandas like Timestamp for yesterday
+  #       type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+  #       # default: today
+  #   args:
+  #     chunks:
+  #       time: 1
+  #     # drop_variables: ['ocean_time']
+  #     compat: override
+  #     combine: by_coords
+  #     parallel: True
+  #     data_vars: minimal
+  #     coords: minimal
+  #     engine: netcdf4
+  #     urlpath: [
+  #     "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak",
+  #     "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak",
+  #     "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak",
+  #     ]
+  #   metadata:
+  #     overall_start_datetime: '2 days before present day.'
+  #     overall_end_datetime: '5 days after present day'
