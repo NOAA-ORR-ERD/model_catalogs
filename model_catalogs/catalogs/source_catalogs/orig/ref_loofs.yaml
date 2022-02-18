@@ -1,6 +1,6 @@
 name: LOOFS
 description: Lake Ontario model in FVCOM.
-metadata: 
+metadata:
   grid_dim_(xyz): [34395,64453,20]
   grid_res_min_(km): 0.2
   grid_res_max_(km): 2.5
@@ -59,7 +59,7 @@ sources:
       overall_start_datetime: '3D ("fields") available starting 2016-03-01.'
       overall_end_datetime: 'Available through 4 days before present time'
       filetype: ['fields']
-      
+
   hindcast-forecast-aggregation:
     driver: opendap
     description: 3D Lake Ontario model in FVCOM from 2017 until 2019. This is an aggregation of forecast files.

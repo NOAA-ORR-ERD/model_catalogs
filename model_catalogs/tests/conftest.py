@@ -1,19 +1,26 @@
+"""
+This allows for control over which tests are run.
+"""
+
 # conftest.py
 
 import pytest
 
 
 def pytest_addoption(parser):
+    """Option for runslow"""
     parser.addoption(
         "--runslow", action="store_true", default=False, help="run slow tests"
     )
 
 
 def pytest_configure(config):
+    """Configure for runslow"""
     config.addinivalue_line("markers", "slow: mark test as slow to run")
 
 
 def pytest_collection_modifyitems(config, items):
+    """modification for runslow"""
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests
         return

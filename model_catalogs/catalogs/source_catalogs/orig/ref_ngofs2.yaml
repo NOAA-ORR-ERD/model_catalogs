@@ -1,6 +1,6 @@
 name: NGOFS2
 description: Northern Gulf of Mexico model in FVCOM.
-metadata: 
+metadata:
   grid_dim_(xyz): [90267,40]
   grid_res_min_(km): 0.05
   grid_res_max_(km): 10
@@ -35,7 +35,7 @@ sources:
       overall_start_datetime: '3D ("fields") and 2D ("2ds") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
       overall_end_datetime: '3D ("fields"), 2D ("2ds"), and gridded ("regulargrid") files available through 54 hours after present time'
       filetype: ['fields', 'regulargrid', '2ds']
-  
+
   nowcast:
     description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast (identical to forecast).
     args:

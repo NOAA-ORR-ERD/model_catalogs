@@ -1,6 +1,6 @@
 name: HYCOM
 description: 3D Global Ocean Forecasting System (GOFS) 3.1
-metadata: 
+metadata:
   grid_dim_(xyz): [4500,4251,40]
   grid_res_min_(deg): 1/12
   grid_res_max_(deg): 1/12

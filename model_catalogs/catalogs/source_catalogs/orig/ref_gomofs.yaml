@@ -1,6 +1,6 @@
 name: GOMOFS
 description: Gulf of Maine model in ROMS.
-metadata: 
+metadata:
   grid_dim_(xyz): [777,1173,30]
   grid_res_min_(km): 0.7
   grid_res_max_(km): 0.7
@@ -58,7 +58,7 @@ sources:
       overall_start_datetime: '3D ("fields") and 2D ("2ds") available starting 2018-05-10. Also available inconsistently to the beginning of 2018.'
       overall_end_datetime: 'Available through 4 days before present time'
       filetype: ['fields', '2ds']
-      
+
   hindcast-forecast-aggregation:
     driver: opendap
     description: 3D Gulf of Maine model in ROMS from 2018 until 4 days ago. This is an aggregation of forecast files.

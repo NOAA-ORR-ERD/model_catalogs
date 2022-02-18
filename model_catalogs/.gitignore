@@ -1,0 +1,5 @@
+catalogs/source_catalogs/source_catalog.yaml
+catalogs/updated_catalogs/
+catalogs/user_catalogs/
+model_catalogs/_version.py
+tests/catalogs/

@@ -2,6 +2,7 @@ name: model_catalogs
 channels:
   - conda-forge
 dependencies:
+  - python=3.8  # this is required for the dev tools/precommit stuff
   - pytest
   - alphashape
   - cf_xarray>=0.6
