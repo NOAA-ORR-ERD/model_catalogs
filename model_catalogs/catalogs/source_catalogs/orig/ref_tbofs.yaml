@@ -1,6 +1,6 @@
 name: TBOFS
 description: Tampa Bay model in ROMS.
-metadata: 
+metadata:
   grid_dim_(xyz): [176,290,11]
   grid_res_min_(km): 0.1
   grid_res_max_(km): 1.2
@@ -57,7 +57,7 @@ sources:
       overall_start_datetime: 'Available starting 2015-08-01. Stations files are inconsistently available back into 2014.'
       overall_end_datetime: 'Available through 4 days before present time'
       filetype: ['fields']
-      
+
   hindcast-forecast-aggregation:
     driver: opendap
     description: 3D Tampa Bay model in ROMS from 2009 until 4 days ago. This is an aggregation of forecast files.

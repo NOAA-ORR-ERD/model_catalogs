@@ -1,28 +1,26 @@
-name: model_catalogs
+name: test_env_model_catalogs
 channels:
   - conda-forge
 dependencies:
-  - python=3.8  # this is required for the dev tools/precommit stuff
-  - pytest
+  - python=3.8
+  ############## These will have to be adjusted to your specific project
   - alphashape
-  - cf_xarray>=0.6
   - dask
   - flake8
   - h5netcdf
   # - intake
   # - intake-xarray
-  - ipython
-  - jupyter
-  - jupyterlab
-  - matplotlib
   - numpy
   - pandas
   - pip
-  # - pyproj
   - shapely
   - siphon
   - xarray
-  - pip:  # install from github to get recent PRs I contributed
+  ##############
+  - pytest
+  - pip:
     - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
     - git+https://github.com/intake/intake.git
-    # - intake-nested-yaml-catalog
+    - codecov
+    - pytest-cov
+    - coverage[toml]

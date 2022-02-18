@@ -38,3 +38,17 @@ Run all tests, including slow tests, with:
 ``` bash
 $ pytest --runslow
 ```
+Note that the slow tests are not run during CI.
+
+## Set up to check linting locally
+
+Install additional packages:
+``` bash
+$ conda install --file requirements-dev.txt
+```
+
+To then check code before committing and pushing it to github, locally run
+``` bash
+$ pre-commit run --all-files
+```
+These checks can change your files so it is best to check the changes before committing.

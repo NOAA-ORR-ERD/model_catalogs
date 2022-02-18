@@ -1,6 +1,6 @@
 name: NYOFS
 description: New York Harbor model in POM.
-metadata: 
+metadata:
   grid_dim_(xyz): [73,134,7]
   grid_res_min_(km): 0.15
   grid_res_max_(km): 1
@@ -59,7 +59,7 @@ sources:
       overall_start_datetime: 'Available starting 2015-08-19. Stations files are inconsistently available back into 2014.'
       overall_end_datetime: 'Available through 4 days before present time'
       filetype: ['fields']
-      
+
   hindcast-forecast-aggregation:
     driver: opendap
     description: 3D New York Harbor model in POM from 2017 until 2019. This is an aggregation of forecast files.
