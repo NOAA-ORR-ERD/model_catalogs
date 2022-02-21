@@ -5,6 +5,7 @@ dependencies:
   - python=3.8
   ############## These will have to be adjusted to your specific project
   - alphashape
+  - cf_xarray
   - dask
   - flake8
   - h5netcdf
