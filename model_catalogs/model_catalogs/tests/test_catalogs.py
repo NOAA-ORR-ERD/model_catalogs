@@ -15,13 +15,13 @@ def test_make_source_catalog():
 
     # make source catalog
     cats = mc.Management(
-        catalog_path="tests/catalogs",
+        catalog_path="model_catalogs/tests/catalogs",
         source_catalog_name="source_catalog_test.yaml",
         make_source_catalog=True,
     )
 
     # source_catalog.yaml in main dir?
-    assert os.path.exists("tests/catalogs/source_catalogs/source_catalog_test.yaml")
+    assert os.path.exists("model_catalogs/tests/catalogs/source_catalogs/source_catalog_test.yaml")
 
     # has dir name (date) encoded in metadata at top of catalog?
     assert cats.source_cat.metadata["source_catalog_dir"] == cats.source_catalog_dir
@@ -38,7 +38,7 @@ def test_make_updated_catalog():
 
     # make source catalog
     cats = mc.Management(
-        catalog_path="tests/catalogs",
+        catalog_path="model_catalogs/tests/catalogs",
         source_catalog_name="source_catalog_test.yaml",
         make_source_catalog=True,
     )
@@ -75,7 +75,7 @@ def setup_user_catalog_for_test():
 
     # make source catalog
     cats = mc.Management(
-        catalog_path="tests/catalogs",
+        catalog_path="model_catalogs/tests/catalogs",
         source_catalog_name="source_catalog_test.yaml",
         make_source_catalog=True,
     )
@@ -185,7 +185,7 @@ def test_treat_last_day_as_forecast():
 
     # make source catalog
     cats = mc.Management(
-        catalog_path="tests/catalogs",
+        catalog_path="model_catalogs/tests/catalogs",
         source_catalog_name="source_catalog_test.yaml",
         make_source_catalog=True,
     )
