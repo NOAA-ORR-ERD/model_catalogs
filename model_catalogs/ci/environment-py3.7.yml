@@ -5,6 +5,7 @@ dependencies:
   - python=3.7
   ############## These will have to be adjusted to your specific project
   - alphashape
+  - cf_xarray
   - dask
   - flake8
   - h5netcdf
@@ -14,7 +15,6 @@ dependencies:
   - pandas
   - pip
   - shapely
-  - siphon
   - xarray
   ##############
   - pytest
@@ -24,3 +24,4 @@ dependencies:
     - codecov
     - pytest-cov
     - coverage[toml]
+    - siphon  # can get from conda-forge but isn't recognized

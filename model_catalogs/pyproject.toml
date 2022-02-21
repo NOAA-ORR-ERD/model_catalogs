@@ -2,7 +2,8 @@
 requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
+# [tool.setuptools_scm]
+# write_to = "model_catalogs/model_catalogs/_version.py"
 
 [tool.interrogate]
 ignore-init-method = true
@@ -28,5 +29,5 @@ minversion = "6.0"
 addopts = "-v"
 # only test the root level, otherwise it picks up the tests of the project template
 testpaths = [
-    "tests",
+    "model_catalogs/tests",
 ]
