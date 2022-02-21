@@ -7,6 +7,7 @@ import os
 
 from glob import glob
 
+import cf_xarray  # noqa
 import intake
 import intake.source.derived
 import numpy as np
@@ -305,7 +306,7 @@ class Management:
 
     def __init__(
         self,
-        catalog_path="../catalogs",
+        catalog_path="catalogs",
         source_catalog_name="source_catalog.yaml",
         make_source_catalog=False,
         source_ref_date=None,
@@ -425,7 +426,7 @@ class Management:
             # for source_id1 in source_ids1:
 
             # read in model output
-            ds = self.source_cat[model, timing].to_dask()
+            ds = self.source_cat[model][timing].to_dask()
 
             # find metadata
             # select lon/lat for use. There may be more than one and we also want the name.
@@ -471,13 +472,13 @@ class Management:
             # add Dataset metadata to specific source metadata
             # change metadata attributes to strings so catalog doesn't barf on them
             for attr in ds.attrs:
-                self.source_cat[model, timing].metadata[attr] = str(ds.attrs[attr])
+                self.source_cat[model][timing].metadata[attr] = str(ds.attrs[attr])
 
             # add 0th level metadata to 0th level model entry
             self.source_cat[model].metadata.update(metadata0)
 
             # add next level metadata to next level model entry
-            self.source_cat[model, timing].metadata.update(metadata1)
+            self.source_cat[model][timing].metadata.update(metadata1)
 
             cats = [self.source_cat[model][timing] for timing in timings]
             make_catalog(
@@ -638,27 +639,27 @@ class Management:
 
         # urlpath is None or a list of filler files if the filepaths need to be determined
         if (
-            ref_cat[model, timing].urlpath is None
-            or isinstance(ref_cat[model, timing].urlpath, list)
-        ) and "catloc" in ref_cat[model, timing].metadata:
-            if "pattern" in ref_cat[model, timing].metadata:
-                pattern = ref_cat[model, timing].metadata["pattern"]
+            ref_cat[model][timing].urlpath is None
+            or isinstance(ref_cat[model][timing].urlpath, list)
+        ) and "catloc" in ref_cat[model][timing].metadata:
+            if "pattern" in ref_cat[model][timing].metadata:
+                pattern = ref_cat[model][timing].metadata["pattern"]
             else:
                 pattern = None
 
             # make sure necessary variables are present
-            assertion = f'You need to provide a `start_date` and `end_date` for finding the relevant model output locations.\nFor {model} and {timing}, the `overall_start_date` is: {ref_cat[model, timing].metadata["overall_start_datetime"]} `overall_end_date` is: {ref_cat[model, timing].metadata["overall_end_datetime"]}.'  # noqa
+            assertion = f'You need to provide a `start_date` and `end_date` for finding the relevant model output locations.\nFor {model} and {timing}, the `overall_start_date` is: {ref_cat[model][timing].metadata["overall_start_datetime"]} `overall_end_date` is: {ref_cat[model][timing].metadata["overall_end_datetime"]}.'  # noqa
             assert start_date is not None and end_date is not None, assertion
 
-            if "filetype" in ref_cat[model, timing].metadata:
-                model_filetypes = ref_cat[model, timing].metadata["filetype"]
+            if "filetype" in ref_cat[model][timing].metadata:
+                model_filetypes = ref_cat[model][timing].metadata["filetype"]
                 assertion = f"Filetype for {model} and {timing} must be one of: {model_filetypes}."  # noqa
                 assert filetype in model_filetypes, assertion
             assertion = f'If timing is "hindcast", `treat_last_day_as_forecast` must be False because the forecast files are not available. `timing`=={timing}.'  # noqa
             if timing == "hindcast":
                 assert not treat_last_day_as_forecast, assertion
 
-            catloc = ref_cat[model, timing].metadata["catloc"]
+            catloc = ref_cat[model][timing].metadata["catloc"]
 
             # loop over dates
             filelocs = []
@@ -677,17 +678,17 @@ class Management:
                     )
                 )
 
-            source = ref_cat[model, timing](urlpath=filelocs)  # [:2])
+            source = ref_cat[model][timing](urlpath=filelocs)  # [:2])
 
         # urlpath is already available if the link is consistent in time
         else:
-            source = ref_cat[model, timing]
+            source = ref_cat[model][timing]
 
         # update source's info with model name since user would probably prefer this over timing?
         # also other metadata to bring into user catalog
         source.name = f"{model}-{timing}"
         source.description = f"{model}-{timing}"
-        if "filetype" in ref_cat[model, timing].metadata:
+        if "filetype" in ref_cat[model][timing].metadata:
             source.name += f"-{filetype}"
             source.description += f"-{filetype}"
         if treat_last_day_as_forecast:
