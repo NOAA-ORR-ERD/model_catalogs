@@ -20,9 +20,9 @@ dependencies:
   - pip
   # - pyproj
   - shapely
-  - siphon
   - xarray
   - pip:  # install from github to get recent PRs I contributed
     - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
     - git+https://github.com/intake/intake.git
+    - siphon  # can get from conda-forge but isn't recognized
     # - intake-nested-yaml-catalog
