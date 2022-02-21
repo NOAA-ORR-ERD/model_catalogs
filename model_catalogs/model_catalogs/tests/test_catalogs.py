@@ -21,7 +21,9 @@ def test_make_source_catalog():
     )
 
     # source_catalog.yaml in main dir?
-    assert os.path.exists("model_catalogs/tests/catalogs/source_catalogs/source_catalog_test.yaml")
+    assert os.path.exists(
+        "model_catalogs/tests/catalogs/source_catalogs/source_catalog_test.yaml"
+    )
 
     # has dir name (date) encoded in metadata at top of catalog?
     assert cats.source_cat.metadata["source_catalog_dir"] == cats.source_catalog_dir
