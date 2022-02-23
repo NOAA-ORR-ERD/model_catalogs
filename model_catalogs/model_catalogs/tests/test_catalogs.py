@@ -287,7 +287,7 @@ def test_hindcast():
     """Test all known models for running in hindcast mode."""
 
     cats = mc.Management(make_source_catalog=True)
-    day = pd.Timestamp.today() - pd.Timedelta("60 days")
+    day = pd.Timestamp.today() - pd.Timedelta("365 days")
     nextday = day + pd.Timedelta("1 day")
 
     cats_to_make = [

@@ -698,8 +698,8 @@ class Management:
         metadata = {
             "model": model,
             "timing": timing,
-            "start_date": start_date,
-            "end_date": end_date,
+            "start_date": start_date.isoformat() if start_date is not None else None,
+            "end_date": end_date.isoformat() if end_date is not None else None,
             "filetype": filetype,
             "treat_last_day_as_forecast": treat_last_day_as_forecast,
         }
