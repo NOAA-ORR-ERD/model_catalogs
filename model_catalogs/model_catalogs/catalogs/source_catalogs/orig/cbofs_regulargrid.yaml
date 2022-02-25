@@ -1,0 +1,72 @@
+name: CBOFS_REGULARGRID
+description: Chesapeake Bay model in ROMS, interpolated to regular grid.
+metadata:
+  grid_dim_(xyz): [509,693,15]
+  grid_res_min_(km): 0.5
+  grid_res_max_(km): 0.5
+  grid_type: 'rectangular'
+
+sources:
+  forecast:
+    driver: opendap
+    description: 3D Chesapeake Bay model in ROMS, interpolated to regular grid, from 1 day ago until present day. Only nowcast files are used in aggregation. Same as nowcast.
+    args:
+      chunks:
+        ocean_time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 1 day before present day.'
+      overall_end_datetime: 'Available through 48 hours after present time'
+      filetype: ['regulargrid']
+      output_period_(hr): 1
+      axis:
+        T: ocean_time
+        X: nx
+        Y: ny
+        Z: Depth
+      standard_names:
+        eastward_sea_water_velocity: u_eastward
+        northward_sea_water_velocity: v_northward
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: ocean_time
+
+  nowcast:
+    driver: opendap
+    description: 3D Chesapeake Bay model in ROMS, interpolated to regular grid, from 1 day ago until present day. Only nowcast files are used in aggregation. Same as forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath: null
+    metadata:
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      overall_start_datetime: 'Available starting 1 day before present day.'
+      overall_end_datetime: 'Available through 48 hours after present time'
+      filetype: ['regulargrid']
+      output_period_(hr): 1
+      axis:
+        T: ocean_time
+        X: nx
+        Y: ny
+        Z: Depth
+      standard_names:
+        eastward_sea_water_velocity: u_eastward
+        northward_sea_water_velocity: v_northward
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: ocean_time

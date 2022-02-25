@@ -12,13 +12,28 @@ sources:
     description: 3D Cook Inlet model in ROMS with 48 hour forecast.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: ['ocean_time']
       engine: netcdf4
       urlpath: https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/CIOFS/fmrc/Aggregated_7_day_CIOFS_Fields_Forecast_best.ncd
     metadata:
       overall_start_datetime: '7 days before present time'
       overall_end_datetime: '48 hours after present time'
+      output_period_(hr): 1
+      axis:
+        T: time
+        X: [xi_rho, xi_u, xi_v, xi_psi]
+        Y: [eta_rho, eta_u, eta_v, eta_psi]
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: Uwind
+        northward_sea_water_velocity: v
+        northward_wind: Vwind
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: time
+        upward_sea_water_velocity: w
 
   nowcast:
     driver: opendap
@@ -35,9 +50,24 @@ sources:
       urlpath: null
     metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CIOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: '3D ("fields") from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
-      overall_end_datetime: '3D ("fields") and gridded ("regulargrid") files available through 48 hours after present time'
-      filetype: ['fields', 'regulargrid']
+      overall_start_datetime: 'Available from a month before present day.'
+      overall_end_datetime: 'Available through 48 hours after present time'
+      filetype: ['fields']
+      output_period_(hr): 1
+      axis:
+        T: ocean_time
+        X: [xi_rho, xi_u, xi_v, xi_psi]
+        Y: [eta_rho, eta_u, eta_v, eta_psi]
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: Uwind
+        northward_sea_water_velocity: v
+        northward_wind: Vwind
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: ocean_time
+        upward_sea_water_velocity: w
 
   hindcast:
     driver: opendap
@@ -45,6 +75,7 @@ sources:
     args:
       chunks:
         ocean_time: 1
+      drop_variables: ['dstart']
       compat: override
       combine: by_coords
       parallel: True
@@ -58,6 +89,21 @@ sources:
       overall_start_datetime: 'Available starting 2015-08-01. Stations files are inconsistently available back into 2014.'
       overall_end_datetime: 'Available through 4 days before present time'
       filetype: ['fields']
+      output_period_(hr): 1
+      axis:
+        T: ocean_time
+        X: [xi_rho, xi_u, xi_v, xi_psi]
+        Y: [eta_rho, eta_u, eta_v, eta_psi]
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: Uwind
+        northward_sea_water_velocity: v
+        northward_wind: Vwind
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: ocean_time
+        upward_sea_water_velocity: w
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -71,3 +117,18 @@ sources:
     metadata:
       overall_start_datetime: 'Available starting 2019-09-16.'
       overall_end_datetime: 'Available through 4 days before present time'
+      output_period_(hr): 1
+      axis:
+        T: time
+        X: [xi_rho, xi_u, xi_v, xi_psi]
+        Y: [eta_rho, eta_u, eta_v, eta_psi]
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: Uwind
+        northward_sea_water_velocity: v
+        northward_wind: Vwind
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: time
+        upward_sea_water_velocity: w

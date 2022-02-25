@@ -232,12 +232,14 @@ def test_treat_last_day_as_forecast():
 def test_forecast():
     """Test all known models for running in forecast mode."""
 
-    cats = mc.Management(make_source_catalog=True)
+    cats = mc.Management(catalog_path="model_catalogs/tests/catalogs",
+                         make_source_catalog=True)
     today = pd.Timestamp.today()
 
     # not every forecast need start_date and end_date, but some do, and all can have extra inputs.
     cats_to_make = {
-        model: dict(
+        dict(
+            model=model,
             timing="forecast",
             start_date=today,
             end_date=today,
@@ -258,7 +260,7 @@ def test_forecast():
 def test_nowcast():
     """Test all known models for running in nowcast mode."""
 
-    cats = mc.Management(make_source_catalog=True)
+    cats = mc.Management(catalog_path="model_catalogs/tests/catalogs", make_source_catalog=True)
     today = pd.Timestamp.today()
 
     # not every forecast need start_date and end_date, but some do, and all can have extra inputs.
@@ -286,8 +288,8 @@ def test_nowcast():
 def test_hindcast():
     """Test all known models for running in hindcast mode."""
 
-    cats = mc.Management(make_source_catalog=True)
-    day = pd.Timestamp.today() - pd.Timedelta("365 days")
+    cats = mc.Management(catalog_path="model_catalogs/tests/catalogs", make_source_catalog=True)
+    day = pd.Timestamp.today() - pd.Timedelta("150 days")
     nextday = day + pd.Timedelta("1 day")
 
     cats_to_make = [
@@ -314,7 +316,7 @@ def test_hindcast():
 def test_hindcast_forecast_aggregation():
     """Test all known models for running in hindcast mode."""
 
-    cats = mc.Management(make_source_catalog=True)
+    cats = mc.Management(catalog_path="model_catalogs/tests/catalogs", make_source_catalog=True)
     day = pd.Timestamp.today() - pd.Timedelta("365 days")
     nextday = day + pd.Timedelta("1 day")
 
@@ -328,6 +330,32 @@ def test_hindcast_forecast_aggregation():
         )
         for model in list(cats.updated_cat)
         if "hindcast-forecast-aggregation" in list(cats.updated_cat[model])
+    ]
+
+    cats.setup_user_cat(cats_to_make)
+
+    # make sure can load them all in too
+    for source in list(cats.user_cat):
+        ds = cats.user_cat[source].to_dask()
+        ds.close()
+
+
+@pytest.mark.slow
+def test_derived():
+    """Test known hindcast model that will break without
+    derived dataset."""
+
+    cats = mc.Management(catalog_path="model_catalogs/tests/catalogs", make_source_catalog=True)
+    day = pd.Timestamp('2021-02-20')
+
+    cats_to_make = [
+        dict(
+            model='CBOFS',
+            timing="hindcast",
+            start_date=day,
+            end_date=day,
+            treat_last_day_as_forecast=False,
+        )
     ]
 
     cats.setup_user_cat(cats_to_make)

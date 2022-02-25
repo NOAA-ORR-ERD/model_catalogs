@@ -10,6 +10,7 @@ from glob import glob
 import cf_xarray  # noqa
 import intake
 import intake.source.derived
+import model_catalogs as mc
 import numpy as np
 import pandas as pd
 import shapely.geometry
@@ -17,7 +18,6 @@ import shapely.geometry
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from siphon.catalog import TDSCatalog
-
 
 # import xarray as xr
 
@@ -124,10 +124,12 @@ def make_catalog(
        Description of overall catalog.
     full_cat_metadata: dict
        Dictionary of metadata for overall catalog.
-    cat_driver: str or Intake object
+    cat_driver: str or Intake object or list
        Driver to apply to all catalog entries. For example:
        * intake.catalog.local.YAMLFileCatalog
        * 'opendap'
+       If list, must be same length as cats and contains drivers that
+       correspond to cats.
     cat_path: str, optional
        Path with catalog name to use for saving catalog. With or without yaml suffix. If not provided,
        will use `full_cat_name`.
@@ -150,16 +152,22 @@ def make_catalog(
     if ("yaml" not in cat_path) and ("yml" not in cat_path):
         cat_path = f"{cat_path}.yaml"
 
+    if not isinstance(cats, list):
+        cats = [cats]
+    if not isinstance(cat_driver, list):
+        cat_driver = [cat_driver] * len(cats)
+    assert len(cat_driver) == len(cats), 'Number of catalogs and catalog drivers must match'
+
     # create dictionary of catalog entries
     entries = {
         cat.name: LocalCatalogEntry(
             cat.name,
             description=cat.description,
-            driver=cat_driver,
+            driver=catd,
             args=cat._yaml()["sources"][cat.name]["args"],
             metadata=cat._yaml()["sources"][cat.name]["metadata"],
         )
-        for cat in cats
+        for cat, catd in zip(cats, cat_driver)
     }
 
     # create catalog
@@ -306,7 +314,7 @@ class Management:
 
     def __init__(
         self,
-        catalog_path="catalogs",
+        catalog_path=f"{mc.__path__[0]}/catalogs",
         source_catalog_name="source_catalog.yaml",
         make_source_catalog=False,
         source_ref_date=None,
@@ -379,7 +387,7 @@ class Management:
         cat_source_description = "Source catalog for models."
 
         # open catalogs
-        cat_locs = glob(f"{self.source_catalog_dir}/ref_*.yaml")
+        cat_locs = glob(f"{self.source_catalog_dir}/*.yaml")
         cats = [intake.open_catalog(cat_loc) for cat_loc in cat_locs]
 
         metadata = {"source_catalog_dir": self.source_catalog_dir}
@@ -631,6 +639,19 @@ class Management:
         Source associated with the catalog entry.
         """
 
+        model = model.upper()
+
+        # save source to already-made user catalog loc
+        self.user_catalog_dir = self.cat_user_base
+        self.user_catalog_name = (
+            f"{self.user_catalog_dir}/{self.time_ref.isoformat().replace(':','_')}.yaml"
+        )
+
+        if not isinstance(start_date, pd.Timestamp):
+            start_date = pd.Timestamp(start_date)
+        if not isinstance(end_date, pd.Timestamp):
+            end_date = pd.Timestamp(end_date)
+
         # use updated_cat unless hasn't been run in which case use source_cat
         if hasattr(self, "_updated_cat"):
             ref_cat = self.updated_cat
@@ -678,23 +699,49 @@ class Management:
                     )
                 )
 
-            source = ref_cat[model][timing](urlpath=filelocs)  # [:2])
+            source_orig = ref_cat[model][timing](urlpath=filelocs)  # [:2])
 
         # urlpath is already available if the link is consistent in time
         else:
-            source = ref_cat[model][timing]
+            source_orig = ref_cat[model][timing]
 
+        # open the skeleton transform cat entry and then alter
+        # a few things so can use it with source_orig
+        source_transform_loc = f"{self.cat_source_base}/transform.yaml"
+        source_transform = intake.open_catalog(source_transform_loc)['name']
+        from copy import deepcopy
+
+        # change new source information
         # update source's info with model name since user would probably prefer this over timing?
         # also other metadata to bring into user catalog
-        source.name = f"{model}-{timing}"
-        source.description = f"{model}-{timing}"
-        if "filetype" in ref_cat[model][timing].metadata:
-            source.name += f"-{filetype}"
-            source.description += f"-{filetype}"
+        source_transform.name = f"{model}-{timing}"
+        md = ref_cat[model][timing].metadata
+        if ("filetype" in md) and (len(md["filetype"]) > 1):
+            source_transform.name += f"-{filetype}"
+            # source_transform.description += f"-{filetype}"
         if treat_last_day_as_forecast:
-            source.name += "-with_forecast"
-            source.description += "-with_forecast"
+            source_transform.name += "-with_forecast"
+            # source_transform.description += "-with_forecast"
+        # rename source_orig to match source_transform
+        source_orig.name = source_transform.name + '_orig'
+        source_transform.description = f"Catalog entry for transform of dataset {source_orig.name}"
 
+        # copy over axis and standard_names to transform_kwargs and metadata
+        # also fill in target
+        axis = deepcopy(source_orig.metadata['axis'])
+        snames = deepcopy(source_orig.metadata['standard_names'])
+        source_transform.metadata['axis'] = axis
+        source_transform.metadata['standard_names'] = snames
+        # import pdb; pdb.set_trace()
+        source_transform.__dict__['_captured_init_kwargs']['transform_kwargs']['axis'] = axis
+        source_transform.__dict__['_captured_init_kwargs']['transform_kwargs']['standard_names'] = snames
+# ?        import pdb; pdb.set_trace()
+
+        # make source_orig the target since will be made available in same catalog
+        target = f"{source_orig.name}"
+        source_transform.__dict__['_captured_init_kwargs']['targets'] = [target]
+        # source2.transform_kwargs['axis'] = source.metadata['axis']
+        # source2.transform_kwargs['standard_names'] = source.metadata['standard_names']
         metadata = {
             "model": model,
             "timing": timing,
@@ -702,10 +749,34 @@ class Management:
             "end_date": end_date.isoformat() if end_date is not None else None,
             "filetype": filetype,
             "treat_last_day_as_forecast": treat_last_day_as_forecast,
+            "urlpath": deepcopy(source_orig.urlpath),
+            "cat_source_base": self.cat_source_base,
+            "cat_user_base": self.cat_user_base,
+            "source_catalog_dir": self.source_catalog_dir,
+            "source_catalog_name": self.source_catalog_name,
+            "source_cat": self.source_cat,
+            "user_catalog_dir": self.user_catalog_dir,
+            "user_catalog_name": self.user_catalog_name
         }
-        source.metadata.update(metadata)
+        source_transform.metadata.update(metadata)
+        source_transform.metadata.update(source_orig.metadata)
+        source_transform.metadata.update(ref_cat[model].metadata)
 
-        return source
+        # save sources together
+        self.user_cat = make_catalog(
+            [source_orig, source_transform],
+            f"User-catalog: {source_transform.name}",
+            f"User-made catalog. {source_transform.description}",
+            {'time_ref': self.time_ref.isoformat()},
+            [source_orig._entry._driver, source_transform._entry._driver],
+            cat_path=self.user_catalog_name,
+        )
+        # ARE ALL THE CATALOG PATHS IN THE METADATA?
+        # open new catalog of the two saved sources that match
+        # mycat = intake.open_catalog(self.user_catalog_name)
+        # import pdb; pdb.set_trace()
+
+        return self.user_cat
 
     def setup_user_cat(self, option_dicts):
         """Setup user catalog.
