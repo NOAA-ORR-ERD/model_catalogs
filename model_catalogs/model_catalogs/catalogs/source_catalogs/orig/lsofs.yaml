@@ -5,6 +5,7 @@ metadata:
   grid_res_min_(km): 10
   grid_res_max_(km): 10
   grid_type: 'rectangular'
+  alpha_shape: [1,10]  # dd, alpha
 
 sources:
   forecast:

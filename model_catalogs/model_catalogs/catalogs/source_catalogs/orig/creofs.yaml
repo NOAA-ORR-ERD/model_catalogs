@@ -5,7 +5,7 @@ metadata:
   grid_res_min_(km): 0.01
   grid_res_max_(km): 40
   grid_type: 'unstructured'
-  alpha_shape: [2,5]  # dd, alpha
+  alpha_shape: [2,4]  # dd, alpha
 
 sources:
   forecast:

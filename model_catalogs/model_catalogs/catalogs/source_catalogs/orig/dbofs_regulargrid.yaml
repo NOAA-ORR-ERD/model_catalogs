@@ -5,6 +5,7 @@ metadata:
   grid_res_min_(km): 0.5
   grid_res_max_(km): 0.5
   grid_type: 'rectangular'
+  alpha_shape: [5,4]  # dd, alpha
 
 sources:
   forecast:
@@ -19,7 +20,15 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/DBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.dbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/DBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.dbofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      ]
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
     metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/DBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available starting 1 day before present day.'

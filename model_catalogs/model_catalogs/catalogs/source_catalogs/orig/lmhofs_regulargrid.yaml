@@ -5,7 +5,7 @@ metadata:
   grid_res_min_(km): 1
   grid_res_max_(km): 1
   grid_type: 'rectangular'
-  alpha_shape: [20,10]  # dd, alpha
+  alpha_shape: [20,9]  # dd, alpha
 
 sources:
   forecast:
@@ -21,8 +21,8 @@ sources:
       coords: minimal
       engine: netcdf4
       urlpath: [
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.regulargrid.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LMHOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.lmhofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
       ]
     parameters:
       tod:

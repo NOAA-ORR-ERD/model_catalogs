@@ -5,6 +5,7 @@ metadata:
   grid_res_min_(km): 0.1
   grid_res_max_(km): 1.2
   grid_type: 'curvilinear'
+  alpha_shape: [4,50]  # dd, alpha
 
 sources:
   forecast:

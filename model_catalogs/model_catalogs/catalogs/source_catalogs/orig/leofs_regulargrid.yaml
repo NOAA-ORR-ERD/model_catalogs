@@ -20,7 +20,15 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LEOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.leofs.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LEOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.leofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      ]
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
     driver: opendap
     metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
