@@ -51,7 +51,9 @@ def test_make_complete_catalog():
 
     assert os.path.exists(f"{cats.cat_source_base}/complete")
 
-    assert cats.source_cat['CBOFS'].metadata['geospatial_bounds']
+    assert cats.source_cat["CBOFS"].metadata["geospatial_bounds"]
+
+
 #
 #
 # # def test_user_cat_3ways():
@@ -102,7 +104,7 @@ def test_make_complete_catalog():
 # #         cats1.user_cat["DBOFS-forecast"]
 # #         == cats2.user_cat["DBOFS-forecast"]
 # #         == cats3.user_cat["DBOFS-forecast"]
-# #     )
+# #     )  # noqa
 #
 #
 def setup_user_catalog_for_test():
