@@ -21,8 +21,8 @@ sources:
       coords: minimal
       engine: netcdf4
       urlpath: [
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n003.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.regulargrid.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.regulargrid.n003.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
       ]
     parameters:
       tod:

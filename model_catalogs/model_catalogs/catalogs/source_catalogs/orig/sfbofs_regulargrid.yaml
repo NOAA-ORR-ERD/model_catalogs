@@ -55,11 +55,15 @@ sources:
         ocean_time: 1
       compat: override
       combine: by_coords
+      drop_variables: ['siglay','siglev','Itime2']
       parallel: True
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.regulargrid.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
+      ]
     parameters:
       tod:
         description: Pandas like Timestamp for today
