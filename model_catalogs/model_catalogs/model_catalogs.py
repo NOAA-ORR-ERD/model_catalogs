@@ -18,14 +18,7 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from siphon.catalog import TDSCatalog
 
-
-# import xarray as xr
-
-
-# class DatasetFixes(intake.source.derived.DerivedSource):
-#     def fix_calendar(self, ds):
-#         ds.time.calendar = "proleptic_gregorian"
-#         return xr.decode_cf(ds)
+import model_catalogs as mc
 
 
 def find_bbox(ds, dd=None, alpha=None):
@@ -48,6 +41,8 @@ def find_bbox(ds, dd=None, alpha=None):
     max_lat], low res and high res wkt representation of model boundary.
     """
 
+    hasmask = False
+
     try:
         lon = ds.cf["longitude"].values
         lat = ds.cf["latitude"].values
@@ -55,24 +50,36 @@ def find_bbox(ds, dd=None, alpha=None):
         latkey = ds.cf["latitude"].name
 
     except KeyError:
-        lonkey = list(ds.cf[["longitude"]].coords.keys())[0]
-        # need to make sure latkey matches lonkey grid
-        latkey = f"lat{lonkey[3:]}"
-        # latkey = list(ds.cf[["latitude"]].coords.keys())[0]
+        if "lon_rho" in ds:
+            lonkey = "lon_rho"
+            latkey = "lat_rho"
+        else:
+            lonkey = list(ds.cf[["longitude"]].coords.keys())[0]
+            # need to make sure latkey matches lonkey grid
+            latkey = f"lat{lonkey[3:]}"
         # In case there are multiple grids, just take first one;
         # they are close enough
         lon = ds[lonkey].values
         lat = ds[latkey].values
-    # import pdb; pdb.set_trace()
-    if lon.ndim == 2:  # this is structured
-        lonb = np.concatenate((lon[:, 0], lon[-1, :], lon[::-1, -1], lon[0, ::-1]))
-        latb = np.concatenate((lat[:, 0], lat[-1, :], lat[::-1, -1], lat[0, ::-1]))
-        # boundary = np.vstack((lonb, latb)).T
-        p = shapely.geometry.Polygon(zip(lonb, latb))
-        p0 = p.simplify(1)
-        p1 = p
 
-    elif (lon.ndim == 1) and ("nele" not in ds.dims):  # This is structured
+    # check for corresponding mask (rectilinear and curvilinear grids)
+    if any([var for var in ds.data_vars if "mask" in var]):
+        if ("mask_rho" in ds) and (lonkey == "lon_rho"):
+            maskkey = lonkey.replace("lon", "mask")
+        elif "mask" in ds:
+            maskkey = "mask"
+        else:
+            maskkey = None
+        if maskkey in ds:
+            lon = ds[lonkey].where(ds[maskkey] == 1).values
+            lon = lon[~np.isnan(lon)].flatten()
+            lat = ds[latkey].where(ds[maskkey] == 1).values
+            lat = lat[~np.isnan(lat)].flatten()
+            hasmask = True
+
+    # This is structured, rectilinear
+    # GFS
+    if (lon.ndim == 1) and ("nele" not in ds.dims) and not hasmask:
 
         nlon, nlat = ds["lon"].size, ds["lat"].size
         lonb = np.concatenate(([lon[0]] * nlat, lon[:], [lon[-1]] * nlat, lon[::-1]))
@@ -82,7 +89,7 @@ def find_bbox(ds, dd=None, alpha=None):
         p0 = p.simplify(1)
         p1 = p
 
-    elif (lon.ndim == 1) and ("nele" in ds.dims):  # unstructured
+    elif hasmask or ("nele" in ds.dims):  # unstructured
 
         assertion = (
             "dd and alpha need to be defined in the source_catalog for this model."
@@ -95,13 +102,12 @@ def find_bbox(ds, dd=None, alpha=None):
         # low res, same as convex hull
         p0 = alphashape.alphashape(list(zip(lon, lat)), 0.0)
         # downsample a bit to save time, still should clearly see shape of domain
-        # dd = 10
         pts = shapely.geometry.MultiPoint(list(zip(lon[::dd], lat[::dd])))
         p1 = alphashape.alphashape(pts, alpha)
-        # p1 = alphashape.alphashape(list(zip(lon,lat)), 10.)
 
     # useful things to look at: p.wkt  #shapely.geometry.mapping(p)
-    return lonkey, latkey, list(p0.bounds), p0.wkt, p1.wkt
+    return lonkey, latkey, list(p0.bounds), p1.wkt
+    # return lonkey, latkey, list(p0.bounds), p0.wkt, p1.wkt
 
 
 def make_catalog(
@@ -124,10 +130,12 @@ def make_catalog(
        Description of overall catalog.
     full_cat_metadata: dict
        Dictionary of metadata for overall catalog.
-    cat_driver: str or Intake object
+    cat_driver: str or Intake object or list
        Driver to apply to all catalog entries. For example:
        * intake.catalog.local.YAMLFileCatalog
        * 'opendap'
+       If list, must be same length as cats and contains drivers that
+       correspond to cats.
     cat_path: str, optional
        Path with catalog name to use for saving catalog. With or without yaml suffix. If not provided,
        will use `full_cat_name`.
@@ -150,16 +158,24 @@ def make_catalog(
     if ("yaml" not in cat_path) and ("yml" not in cat_path):
         cat_path = f"{cat_path}.yaml"
 
+    if not isinstance(cats, list):
+        cats = [cats]
+    if not isinstance(cat_driver, list):
+        cat_driver = [cat_driver] * len(cats)
+    assert len(cat_driver) == len(
+        cats
+    ), "Number of catalogs and catalog drivers must match"
+
     # create dictionary of catalog entries
     entries = {
         cat.name: LocalCatalogEntry(
             cat.name,
             description=cat.description,
-            driver=cat_driver,
+            driver=catd,
             args=cat._yaml()["sources"][cat.name]["args"],
             metadata=cat._yaml()["sources"][cat.name]["metadata"],
         )
-        for cat in cats
+        for cat, catd in zip(cats, cat_driver)
     }
 
     # create catalog
@@ -261,9 +277,6 @@ class Management:
     """Class to manage up to 3 different versions of model catalogs:
 
     * source: combined catalog for all available models from hard-wired info in source_catalogs
-    * updated: optional combined catalog for all or subset of available models. Benefit of using
-        this is that some specific metadata is read in from the forecast-version of the models
-        themselves, which may be useful for deciding which model to use.
     * user: this catalog contains only the one or few specific model setups for a user project.
 
 
@@ -275,9 +288,6 @@ class Management:
     cat_source_base: str
         Provide base location for source catalogs. Default location is in the working directory,
         in a directory called f'{self.catalog_path}/source_catalogs'.
-    cat_updated_base: str
-        Provide base location for updated catalogs. Default location is in the working directory,
-        in a directory called f'{self.catalog_path}/updated_catalogs'.
     cat_user_base: str
         Provide base location for user catalogs. Default location is in the working directory,
         in a directory called f'{self.catalog_path}/user_catalogs'.
@@ -295,18 +305,11 @@ class Management:
     source_cat: intake Catalog object
         Source catalog, containing references to all known models in the source_catalogs directory.
         This is all hard-wired information about the models.
-    updated_catalog_dir: str
-        Subdirectory in updated_catalogs specifying which updated catalogs have been used for models.
-        Location is in the working directory,
-        in a directory called f'{self.cat_updated_base}/{self.time_ref.isoformat()}'
-    updated_catalog_name: str
-        Full relative path of the updated catalog, as defined by
-        f'{self.cat_updated_dir}/{updated_catalog_name}'.
     """
 
     def __init__(
         self,
-        catalog_path="catalogs",
+        catalog_path=f"{mc.__path__[0]}/catalogs",
         source_catalog_name="source_catalog.yaml",
         make_source_catalog=False,
         source_ref_date=None,
@@ -342,19 +345,18 @@ class Management:
 
         self.catalog_path = catalog_path
         self.cat_source_base = f"{self.catalog_path}/source_catalogs"
-        self.cat_updated_base = f"{self.catalog_path}/updated_catalogs"
         self.cat_user_base = f"{self.catalog_path}/user_catalogs"
         self.time_ref = pd.Timestamp.now()
 
         # find most recent set of source_catalogs
-        if source_ref_date is None:
-            which_dir = f"{self.cat_source_base}/orig"
-            # if there are newer directories of source catalogs, use
-            # the most recent one
-            if len(glob(f"{self.cat_source_base}/????-??-??")) > 0:
-                which_dir = sorted(glob(f"{self.cat_source_base}/????-??-??"))[-1]
+        if os.path.exists(f"{self.cat_source_base}/complete"):
+            which_dir = f"{self.cat_source_base}/complete"
         else:
-            which_dir = f"{self.cat_source_base}/{source_ref_date}"
+            which_dir = f"{self.cat_source_base}/orig"
+            print(
+                '"complete" model source files are not yet available. Run `.update_source_files()` to create this directory.'  # noqa: E501
+            )
+
         self.source_catalog_dir = which_dir
 
         # Read in already-available model source catalog
@@ -364,9 +366,6 @@ class Management:
 
         else:  # otherwise, make it
             self.setup_source_catalog()
-
-        # initialize user catalogs
-        # self.user_cats = []
 
     def setup_source_catalog(self):
         """Setup source catalog for models.
@@ -379,7 +378,7 @@ class Management:
         cat_source_description = "Source catalog for models."
 
         # open catalogs
-        cat_locs = glob(f"{self.source_catalog_dir}/ref_*.yaml")
+        cat_locs = glob(f"{self.source_catalog_dir}/*.yaml")
         cats = [intake.open_catalog(cat_loc) for cat_loc in cat_locs]
 
         metadata = {"source_catalog_dir": self.source_catalog_dir}
@@ -392,38 +391,37 @@ class Management:
             intake.catalog.local.YAMLFileCatalog,
         )
 
-    def update_model_catalogs(self, model_names=None):
-        """Update model catalogs in 'source_catalogs'.
+    def update_source_files(self):
+        """Update model source files in 'source_catalogs/orig'.
 
-        This will update certain metadata as well as the forecast times available.
-
-        Parameters
-        ----------
-        model_names: list of strings, optional
-            Model names to use if user does not want to include all available model catalogs.
-            Name should be like "CBOFS".
+        This will add outer boundary files for the model domains and create
+        "complete" directory of model files that mirror those in "orig".
 
         Returns
         -------
-        Nothing, but resaves either all model source catalogs or just model_names source
-        catalogs into self.updated_catalog_dir with updated metadata.
+        Nothing, but resaves all model source catalogs into
+        f"{self.cat_source_base}/complete" with domain boundaries added.
+
+        Examples
+        --------
+
+        Add boundary calculations to source model files:
+        >>> cats.update_source_files()
         """
 
-        if model_names is not None:
-            models = model_names
-        else:
-            models = list(self.source_cat)
+        if os.path.exists(f"{self.cat_source_base}/complete"):
+            print('"complete" source model catalog files already exist.')
+            return
+
+        # update default source_catalog model file location to complete
+        # instead of orig
+        self.source_catalog_dir_old = self.source_catalog_dir
+        self.source_catalog_dir = f"{self.cat_source_base}/complete"
+
+        models = list(self.source_cat)
+        timing = "forecast"
 
         for model in models:
-
-            timings = list(
-                self.source_cat[model]
-            )  # next level of submodels available in reference catalog for source_id0
-
-            timing = timings[
-                0
-            ]  # 'forecast' WHAT ABOUT WHEN THERE IS MORE THAN ONE FORECAST? SEARCH KEY NAMES?
-            # for source_id1 in source_ids1:
 
             # read in model output
             ds = self.source_cat[model][timing].to_dask()
@@ -431,42 +429,16 @@ class Management:
             # find metadata
             # select lon/lat for use. There may be more than one and we also want the name.
             if "alpha_shape" in self.source_cat[model].metadata:
-                # import pdb; pdb.set_trace()
                 dd, alpha = self.source_cat[model].metadata["alpha_shape"]
             else:
                 dd, alpha = None, None
-            # print(dd, alpha)
-            lonkey, latkey, bbox, wkt_low, wkt_high = find_bbox(ds, dd=dd, alpha=alpha)
-
-            # there may be more than one variable identified as time
-            ds = ds.cf.guess_coord_axis()  # add metadata if guessable
-            try:
-                tkey = ds.cf["T"].name
-            except KeyError:
-                tkeys = list(ds.cf[["T"]].dims)
-                # choose the time key that is longer
-                ntimes = 0
-                for tkeytest in tkeys:
-                    if ds[tkeytest].size > ntimes:
-                        tkey = tkeytest
-                        ntimes = max(ntimes, ds[tkey].size)
+            lonkey, latkey, bbox, wkt = find_bbox(ds, dd=dd, alpha=alpha)
+            # lonkey, latkey, bbox, wkt_low, wkt_high = find_bbox(ds, dd=dd, alpha=alpha)
 
             # metadata for overall source_id0
             metadata0 = {
-                "calculated_grid_dim": {
-                    "lon": ds[lonkey].shape,
-                    "lat": ds[latkey].shape,
-                },
-                "geospatial_bounds_low": wkt_low,
-                "geospatial_bounds_high": wkt_high,
+                "geospatial_bounds": wkt,
                 "bounding_box": bbox,
-            }
-
-            # metadata for source_id0, source_id1
-            metadata1 = {
-                "calculated_start_datetime": str(ds[tkey][0].values),
-                "calculated_end_datetime": str(ds[tkey][-1].values),
-                "calculated_dt (s)": float(ds[tkey].diff(dim=tkey).dt.seconds[0]),
             }
 
             # add Dataset metadata to specific source metadata
@@ -477,130 +449,31 @@ class Management:
             # add 0th level metadata to 0th level model entry
             self.source_cat[model].metadata.update(metadata0)
 
-            # add next level metadata to next level model entry
-            self.source_cat[model][timing].metadata.update(metadata1)
-
-            cats = [self.source_cat[model][timing] for timing in timings]
+            timings = list(self.source_cat[model])
+            sources = [self.source_cat[model][timing] for timing in timings]
             make_catalog(
-                cats,
+                sources,
                 model,
                 self.source_cat[model].description,
                 self.source_cat[model].metadata,
                 "opendap",
-                f"{self.updated_catalog_dir}/ref_{model.lower()}.yaml",
+                f"{self.source_catalog_dir}/{model.lower()}.yaml",
             )
 
-    def setup_updated_catalog(self, model_names=None):
-        """Setup updated catalog for models.
+        self.setup_source_catalog()
 
-        Parameters
-        ----------
-        model_names: list of strings, optional
-            Model names to use if user does not want to include all available model catalogs.
-            Name should be like "CBOFS".
-
-        Returns
-        -------
-        Nothing, but makes the updated catalog file.
-        """
-
-        self.update_model_catalogs(model_names=model_names)
-
-        cat_description = "Updated catalog for models."
-
-        # open catalogs
-        if model_names is None:
-            cat_locs = glob(f"{self.updated_catalog_dir}/ref_*.yaml")
-        else:
-            cat_locs = [
-                f"{self.updated_catalog_dir}/ref_{model_name.lower()}.yaml"
-                for model_name in model_names
-            ]
-        cats = [intake.open_catalog(cat_loc) for cat_loc in cat_locs]
-
-        metadata = {
-            "source_catalog_dir": self.source_catalog_dir,
-            "source_catalog_name": self.source_catalog_name,
-            "updated_catalog_dir": self.updated_catalog_dir,
-        }
-
-        return make_catalog(
-            cats,
-            self.updated_catalog_name,
-            cat_description,
-            metadata,
-            intake.catalog.local.YAMLFileCatalog,
-        )
-
-    def run_updated_cat(
-        self,
-        updated_catalog_name="updated_catalog.yaml",
-        make_updated_catalog=True,
-        model_names=None,
-    ):
-        """Find and return updated catalog.
-
-        This runs even if `self.updated_cat` has previously been found, and overwrites it.
-
-        Parameters
-        ----------
-        updated_catalog_name: str, optional
-            user can input catalog name to use in place of "updated_catalog.yaml".
-        make_updated_catalog: str, optional
-            Default of True assumes that user does want to updated the forecast catalog
-            metadata.
-        model_names: list, optional
-            User can specify model names to use in making `updated_cat`. If no names are
-            input, the available source_catalog file names will be used.
-
-        Returns
-        -------
-        Nothing, but sets up `self._updated_cat`.
-        """
-
-        # version control these catalogs by datetime
-        self.updated_catalog_dir = (
-            f"{self.cat_updated_base}/{self.time_ref.isoformat()}"
-        )
-        os.makedirs(self.updated_catalog_dir, exist_ok=True)
-        self.updated_catalog_name = f"{self.updated_catalog_dir}/{updated_catalog_name}"
-
-        # Create or update catalog
-        if os.path.exists(self.updated_catalog_name) and not make_updated_catalog:
-            updated_cat = intake.open_catalog(self.updated_catalog_name)
-
-        else:  # otherwise, make it
-            updated_cat = self.setup_updated_catalog(model_names=model_names)
-
-        self._updated_cat = updated_cat
-
-        return self._updated_cat
-
-    @property
-    def updated_cat(self):
-        """Run run_updated_cat with default options.
-
-        If you want to choose input options, use `run_updated_cat()` directly.
-
-        Returns
-        -------
-        self.updated_cat
-        """
-
-        if not hasattr(self, "_updated_cat"):
-            self._updated_cat = self.run_updated_cat()
-        return self._updated_cat
-
-    def _make_user_catalog(
+    def _make_user_sources(
         self,
         model,
         timing,
         start_date=None,
         end_date=None,
-        filetype="fields",
+        # filetype="fields",
         treat_last_day_as_forecast=False,
     ):
-        """Make a user catalog entry.
+        """Make a set of user catalog sources.
+
+        This is meant to be called by `setup_cat()`, not directly by user.
 
         Parameters
         ----------
@@ -615,11 +488,6 @@ class Management:
             If model has an aggregated link for timing, start_date and end_date
             are not used. Otherwise they should be input. Only year-month-day
             will be used in date. end_date is inclusive.
-        filetype: str, optional
-            Which filetype to use. Every NOAA OFS model has "fields" available,
-            but some have "regulargrid" or "2ds" also. This availability
-            information is in the source catalog for the model under `filetypes`
-            metadata. Default is "fields".
         treat_last_day_as_forecast: bool, optional
             If True, then date is the last day of the time period being sought and the forecast files
             should be brought in along with the nowcast files, to get the model output the length of the
@@ -630,6 +498,19 @@ class Management:
         -------
         Source associated with the catalog entry.
         """
+
+        model = model.upper()
+
+        # save source to already-made user catalog loc
+        self.user_catalog_dir = self.cat_user_base
+        self.user_catalog_name = (
+            f"{self.user_catalog_dir}/{self.time_ref.isoformat().replace(':','_')}.yaml"
+        )
+
+        if not isinstance(start_date, pd.Timestamp):
+            start_date = pd.Timestamp(start_date)
+        if not isinstance(end_date, pd.Timestamp):
+            end_date = pd.Timestamp(end_date)
 
         # use updated_cat unless hasn't been run in which case use source_cat
         if hasattr(self, "_updated_cat"):
@@ -651,15 +532,19 @@ class Management:
             assertion = f'You need to provide a `start_date` and `end_date` for finding the relevant model output locations.\nFor {model} and {timing}, the `overall_start_date` is: {ref_cat[model][timing].metadata["overall_start_datetime"]} `overall_end_date` is: {ref_cat[model][timing].metadata["overall_end_datetime"]}.'  # noqa
             assert start_date is not None and end_date is not None, assertion
 
-            if "filetype" in ref_cat[model][timing].metadata:
-                model_filetypes = ref_cat[model][timing].metadata["filetype"]
-                assertion = f"Filetype for {model} and {timing} must be one of: {model_filetypes}."  # noqa
-                assert filetype in model_filetypes, assertion
             assertion = f'If timing is "hindcast", `treat_last_day_as_forecast` must be False because the forecast files are not available. `timing`=={timing}.'  # noqa
             if timing == "hindcast":
                 assert not treat_last_day_as_forecast, assertion
 
             catloc = ref_cat[model][timing].metadata["catloc"]
+
+            # determine filetype to send to `agg_for_date`
+            if "regulargrid" in model.lower():
+                filetype = "regulargrid"
+            elif "2ds" in model.lower():
+                filetype = "2ds"
+            else:
+                filetype = "fields"
 
             # loop over dates
             filelocs = []
@@ -678,73 +563,196 @@ class Management:
                     )
                 )
 
-            source = ref_cat[model][timing](urlpath=filelocs)  # [:2])
+            source_orig = ref_cat[model][timing](urlpath=filelocs)  # [:2])
 
         # urlpath is already available if the link is consistent in time
         else:
-            source = ref_cat[model][timing]
+            source_orig = ref_cat[model][timing]
 
+        # open the skeleton transform cat entry and then alter
+        # a few things so can use it with source_orig
+        source_transform_loc = f"{self.cat_source_base}/transform.yaml"
+        source_transform = intake.open_catalog(source_transform_loc)["name"]
+        from copy import deepcopy
+
+        # change new source information
         # update source's info with model name since user would probably prefer this over timing?
         # also other metadata to bring into user catalog
-        source.name = f"{model}-{timing}"
-        source.description = f"{model}-{timing}"
-        if "filetype" in ref_cat[model][timing].metadata:
-            source.name += f"-{filetype}"
-            source.description += f"-{filetype}"
+        source_transform.name = f"{model}-{timing}"
         if treat_last_day_as_forecast:
-            source.name += "-with_forecast"
-            source.description += "-with_forecast"
+            source_transform.name += "-with_forecast"
+            # source_transform.description += "-with_forecast"
+        # rename source_orig to match source_transform
+        source_orig.name = source_transform.name + "_orig"
+        source_transform.description = (
+            f"Catalog entry for transform of dataset {source_orig.name}"
+        )
 
+        # copy over axis and standard_names to transform_kwargs and metadata
+        # also fill in target
+        axis = deepcopy(source_orig.metadata["axis"])
+        snames = deepcopy(source_orig.metadata["standard_names"])
+        source_transform.metadata["axis"] = axis
+        source_transform.metadata["standard_names"] = snames
+        source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+            "axis"
+        ] = axis
+        source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+            "standard_names"
+        ] = snames
+
+        # make source_orig the target since will be made available in same catalog
+        target = f"{source_orig.name}"
+        source_transform.__dict__["_captured_init_kwargs"]["targets"] = [target]
         metadata = {
             "model": model,
             "timing": timing,
-            "start_date": start_date,
-            "end_date": end_date,
-            "filetype": filetype,
+            "start_date": start_date.isoformat() if start_date is not None else None,
+            "end_date": end_date.isoformat() if end_date is not None else None,
             "treat_last_day_as_forecast": treat_last_day_as_forecast,
+            "urlpath": deepcopy(source_orig.urlpath),
+            "cat_source_base": self.cat_source_base,
+            "cat_user_base": self.cat_user_base,
+            "source_catalog_dir": self.source_catalog_dir,
+            "source_catalog_name": self.source_catalog_name,
+            "source_cat": self.source_cat,
+            "user_catalog_dir": self.user_catalog_dir,
+            "user_catalog_name": self.user_catalog_name,
         }
-        source.metadata.update(metadata)
+        source_transform.metadata.update(metadata)
+        source_transform.metadata.update(source_orig.metadata)
+        source_transform.metadata.update(ref_cat[model].metadata)
 
-        return source
+        return [source_orig, source_transform]
 
-    def setup_user_cat(self, option_dicts):
-        """Setup user catalog.
+    def setup_cat(
+        self,
+        kwargs=None,
+        model=None,
+        timing=None,
+        start_date=None,
+        end_date=None,
+        treat_last_day_as_forecast=False,
+    ):
+        """Setup user catalog, multiple input approaches possible.
+
+        This can be rerun to add more sources to `user_cat`.
 
         Parameters
         ----------
-        option_dicts: list of dicts
-            Which options to use for each user catalog source. Must include: model, timing.
-            Can include: start_date, end_date, filetype, treat_last_day_as_forecast.
+        kwargs: dict or list, optional
+            This keyword provides two of the approaches for using this function.
+            * kwargs can be a dict containing the keyword arguments for setting
+              up a single source in `user_cat` with `_make_user_sources()`:
+              model, timing, start_date, end_date, treat_last_day_as_forecast.
+            * kwargs can be a list containing any number of dicts as described
+              in the previous bullet point to set up multiple sources in
+              `user_cat`.
+            User can either input `kwargs` or the other keyword arguments, but
+            not both.
+        model: str, optional
+            Name of model, e.g., CBOFS. User can either input `kwargs` or the
+            other keyword arguments, but not both.
+        timing: str, optional
+            Which timing to use. Normally "forecast", "nowcast", or "hindcast", if
+            available for model, but could have different names and/or options.
+            Find model options available with `list(self.source_cat[model])` or
+            `list(self.updated_cat[model])`.
+        start_date, end_date: datetime-interpretable str or pd.Timestamp, optional
+            If model has an aggregated link for timing, start_date and end_date
+            are not used. Otherwise they should be input. Only year-month-day
+            will be used in date. end_date is inclusive.
+        treat_last_day_as_forecast: bool, optional
+            If True, then date is the last day of the time period being sought
+            and the forecast files should be brought in along with the nowcast
+            files, to get the model output the length of the forecast out in
+            time. The forecast files brought in will have the latest timing
+            cycle of the day that is available. If False, all nowcast files (for
+            all timing cycles) are brought in.
 
         Returns
         -------
-        Nothing, but sets up `self.user_cat`.
+        Nothing, but sets up or adds to `self.user_cat`. For every model
+        combination set up, there will be 2 sources: one ending with "_orig" and
+        one without. The one without will be read in but refers to the other.
+        Running this function also saves a user_catalog yaml file, or updates
+        one if it alreadys exists. The location of the catalog file can be found
+        as `cats.user_catalog_name`.
+
+        Examples
+        --------
+
+        Set up single source into user catalog:
+
+        >>> import model_catalogs as mc
+        >>> cats = mc.Management()
+        >>> cats.setup_cat(model='CBOFS', timing='forecast')
+
+        Set up single source into user catalog, from a dict:
+        >>> cats.setup_cat(dict(model='CBOFS', timing='forecast'))
+
+        Set up multiple sources into user catalog, from a list:
+        >>> cats.setup_cat([dict(model='DBOFS', timing='forecast'),
+                            dict(model='TBOFS', timing='forecast')])
         """
+
+        keywords = [model, timing, start_date, end_date]
+        if any([keyword is not None for keyword in keywords]):
+            assertion = "If inputting a set of keywords to setup user source, both `model` and `timing` are required."  # noqa: E501
+            assert (model is not None) and (timing is not None), assertion
+            assertion = "If inputting a set of keywords to setup user source, kwargs is not used and should be none."  # noqa: E501
+            assert kwargs is None, assertion
+        if kwargs is not None:
+            assertion = "If inputting kwargs, other keyword arguments should be None."
+            assert any([keyword is None for keyword in keywords]), assertion
 
         self.user_catalog_dir = self.cat_user_base
         self.user_catalog_name = (
             f"{self.user_catalog_dir}/{self.time_ref.isoformat()}.yaml"
         )
 
-        sources = []
-        for option_dict in option_dicts:
-            source = self._make_user_catalog(**option_dict)
-            sources.append(source)
+        if isinstance(kwargs, dict):
+            new_sources = self._make_user_sources(**kwargs)
+            # sources.append(source)
+        elif isinstance(kwargs, list):
+            new_sources = []
+            for option_dict in kwargs:
+                source = self._make_user_sources(**option_dict)
+                new_sources.extend(source)
+        else:
+            new_sources = self._make_user_sources(
+                model=model,
+                timing=timing,
+                start_date=start_date,
+                end_date=start_date,
+                treat_last_day_as_forecast=treat_last_day_as_forecast,
+            )
+
+        # if there is already a user_cat, pull out the existing sources and
+        # recreate with the new sources
+        if hasattr(self, "user_cat"):
+            old_source_names = list(self.user_cat)
+            sources = [
+                self.user_cat[old_source_name] for old_source_name in old_source_names
+            ]
+            sources.extend(new_sources)
+        else:
+            sources = new_sources
 
         metadata = {
             "source_catalog_dir": self.source_catalog_dir,
             "source_catalog_name": self.source_catalog_name,
+            "time_ref": self.time_ref.isoformat(),
         }
 
-        if hasattr(self, "_updated_cat"):
-            metadata["updated_catalog_dir"] = self.updated_catalog_dir
-
-        # make combined user_cat
-        self.user_cat = make_catalog(
+        new_user_cat = make_catalog(
             sources,
-            "User catalog",
+            "User-catalog.",
             "User-made catalog.",
             metadata,
-            "opendap",
+            [source._entry._driver for source in sources],
             cat_path=self.user_catalog_name,
         )
+        self.user_cat = new_user_cat
+
+        return self.user_cat

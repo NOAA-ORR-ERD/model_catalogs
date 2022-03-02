@@ -1,7 +1,7 @@
 name: NGOFS2
 description: Northern Gulf of Mexico model in FVCOM.
 metadata:
-  grid_dim_(xyz): [90267,40]
+  grid_dim_(node,nele,siglay): [303714,569405,40]
   grid_res_min_(km): 0.05
   grid_res_max_(km): 10
   grid_type: 'unstructured'
@@ -12,7 +12,7 @@ sources:
     description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: ['siglay','siglev','Itime2']
       compat: override
       combine: by_coords
@@ -32,15 +32,27 @@ sources:
     driver: opendap
     metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: '3D ("fields") and 2D ("2ds") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
-      overall_end_datetime: '3D ("fields"), 2D ("2ds"), and gridded ("regulargrid") files available through 54 hours after present time'
-      filetype: ['fields', 'regulargrid', '2ds']
+      overall_start_datetime: 'Available from a month before present day.'
+      overall_end_datetime: 'Available through 54 hours after present time'
+      filetype: ['fields']
+      output_period_(hr): 3
+      axis:
+        T: time
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salinity
+        time: time
 
   nowcast:
     description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast (identical to forecast).
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: ['siglay','siglev','Itime2']
       compat: override
       combine: by_coords
@@ -52,16 +64,28 @@ sources:
     driver: opendap
     metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: '3D ("fields") and 2D ("2ds") available from a month before present day. Gridded ("regulargrid") starting 1 day before present day.'
-      overall_end_datetime: '3D ("fields"), 2D ("2ds"), and gridded ("regulargrid") files available through 54 hours after present time'
-      filetype: ['fields', 'regulargrid', '2ds']
+      overall_start_datetime: 'Available from a month before present day.'
+      overall_end_datetime: 'Available through 54 hours after present time'
+      filetype: ['fields']
+      output_period_(hr): 3
+      axis:
+        T: time
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salinity
+        time: time
 
   hindcast:
     driver: opendap
     description: Northern Gulf of Mexico model in FVCOM from 2021 until 4 days ago.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: ['siglay','siglev','Itime2']
       compat: override
       combine: by_coords
@@ -72,6 +96,18 @@ sources:
       urlpath: null
     metadata:
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-ngofs2-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
-      overall_start_datetime: 'Available starting 2021-03-22'
-      overall_end_datetime: 'Available through 4 days before present time'
+      overall_start_datetime: 'Available starting 2021-03-22.'
+      overall_end_datetime: 'Available through 4 days before present time.'
       filetype: ['fields', '2ds']
+      output_period_(hr): 3
+      axis:
+        T: time
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salinity
+        time: time

@@ -40,6 +40,12 @@ $ pytest --runslow
 ```
 Note that the slow tests are not run during CI.
 
+Also note that when running tests locally, the conda environment is apparently not used for the tests unless you prefix the command as follows, where `model_catalogs` is the default name of the conda environment:
+
+``` base
+conda run -n model_catalogs pytest --runslow
+```
+
 ## Set up to check linting locally
 
 Install additional packages:
