@@ -9,7 +9,8 @@ from glob import glob
 
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .model_catalogs import Management, agg_for_date, make_catalog  # noqa
+from .model_catalogs import (setup_source_catalog, agg_for_date, make_catalog,
+                             complete_source_catalog, update_catalog, add_url_path)  # noqa
 
 
 try:
@@ -17,6 +18,16 @@ try:
 except DistributionNotFound:
     # package is not installed
     __version__ = "unknown"
+
+
+# set up known locations for catalogs. Can be overwritten HOW
+CATALOG_PATH = f"{__path__[0]}/catalogs"
+SOURCE_CATALOG_NAME = "source_catalog.yaml"
+CAT_SOURCE_BASE = f"{CATALOG_PATH}/source_catalogs"
+CAT_USER_BASE = f"{CATALOG_PATH}/user_catalogs"
+
+SOURCE_CATALOG_DIR_ORIG = f"{CAT_SOURCE_BASE}/orig"
+SOURCE_CATALOG_DIR = f"{CAT_SOURCE_BASE}/complete"
 
 # make directories
 # os.makedirs('.catalogs', exist_ok=True)
