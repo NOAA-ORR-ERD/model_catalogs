@@ -5,6 +5,7 @@ metadata:
   grid_res_min_(deg): 1/2
   grid_res_max_(deg): 1/2
   grid_type: 'rectangular'
+  filetype: 'fields'
 
 sources:
   forecast:

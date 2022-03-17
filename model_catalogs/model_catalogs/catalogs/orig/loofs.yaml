@@ -6,6 +6,7 @@ metadata:
   grid_res_max_(km): 5
   grid_type: 'rectangular'
   alpha_shape: [5,5]  # dd, alpha
+  filetype: 'fields'
 
 sources:
   forecast:
@@ -31,6 +32,7 @@ sources:
         eastward_wind: air_u
         northward_sea_water_velocity: v
         northward_wind: air_v
+        sea_floor_depth: depth
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
@@ -49,10 +51,10 @@ sources:
       engine: netcdf4
       urlpath: null
     metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LOOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LOOFS/MODELS/catalog.xml'
+      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LOOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
       overall_end_datetime: 'Available through 120 hours after present time.'
-      filetype: ['fields']
       notes: 'treat_last_day_as_forecast==True will not work here'
       output_period_(hr): 1
       axis:
@@ -65,6 +67,7 @@ sources:
         eastward_wind: air_u
         northward_sea_water_velocity: v
         northward_wind: air_v
+        sea_floor_depth: depth
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
@@ -84,10 +87,10 @@ sources:
       engine: netcdf4
       urlpath: null
     metadata:
-      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-loofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-loofs-files/catalog.xml'
+      # catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-loofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available starting 2016-03-01.'
       overall_end_datetime: 'Available through 4 days before present time.'
-      filetype: ['fields']
       output_period_(hr): 1
       axis:
         T: time
@@ -99,6 +102,7 @@ sources:
         eastward_wind: air_u
         northward_sea_water_velocity: v
         northward_wind: air_v
+        sea_floor_depth: depth
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
@@ -125,6 +129,7 @@ sources:
         eastward_wind: air_u
         northward_sea_water_velocity: v
         northward_wind: air_v
+        sea_floor_depth: depth
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time

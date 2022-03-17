@@ -6,6 +6,7 @@ metadata:
   grid_res_max_(km): 0.7
   grid_type: 'curvilinear'
   alpha_shape: [100,5]  # dd, alpha
+  filetype: '2ds'
 
 sources:
   forecast:
@@ -30,10 +31,10 @@ sources:
         type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
         default: today
     metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/catalog.xml'
+      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
       overall_end_datetime: 'Available through 72 hours after present time'
-      filetype: ['2ds']
       output_period_(hr): 1
       axis:
         T: ocean_time
@@ -44,6 +45,7 @@ sources:
         eastward_wind: Uwind
         northward_sea_water_velocity: v_sur
         northward_wind: Vwind
+        sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
@@ -70,10 +72,10 @@ sources:
         type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
         default: today
     metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/catalog.xml'
+      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/GOMOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
       overall_end_datetime: 'Available through 72 hours after present time'
-      filetype: ['2ds']
       output_period_(hr): 1
       axis:
         T: ocean_time
@@ -84,6 +86,7 @@ sources:
         eastward_wind: Uwind
         northward_sea_water_velocity: v_sur
         northward_wind: Vwind
+        sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
@@ -105,10 +108,10 @@ sources:
       engine: netcdf4
       urlpath: null
     metadata:
-      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-gomofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
+      catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-gomofs-files/catalog.xml'
+      # catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-gomofs-files/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available starting 2018-05-10. Also available inconsistently to the beginning of 2018.'
       overall_end_datetime: 'Available through 4 days before present time'
-      filetype: ['2ds']
       output_period_(hr): 1
       axis:
         T: ocean_time
@@ -119,6 +122,7 @@ sources:
         eastward_wind: Uwind
         northward_sea_water_velocity: v_sur
         northward_wind: Vwind
+        sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
