@@ -9,12 +9,20 @@ from glob import glob
 
 from pkg_resources import DistributionNotFound, get_distribution
 
-from .model_catalogs import (setup_source_catalog, make_catalog,
-                             complete_source_catalog,
-                             add_url_path, find_availability)  # noqa
-
-from .utils import (find_bbox, agg_for_date, find_catrefs, find_filelocs,
-                    get_dates_from_ofs)
+from .model_catalogs import (  # noqa
+    add_url_path,
+    complete_source_catalog,
+    find_availability,
+    make_catalog,
+    setup_source_catalog,
+)
+from .utils import (  # noqa
+    agg_for_date,
+    find_bbox,
+    find_catrefs,
+    find_filelocs,
+    get_dates_from_ofs,
+)
 
 
 try:
@@ -33,7 +41,7 @@ CATALOG_PATH_DIR = f"{CATALOG_PATH}/complete"
 CATALOG_PATH_UPDATED = f"{CATALOG_PATH}/updated"
 
 # make directories
-os.makedirs('.catalogs', exist_ok=True)
+os.makedirs(".catalogs", exist_ok=True)
 os.makedirs(f"{__path__[0]}/catalogs/updated", exist_ok=True)
 
 # set up testing

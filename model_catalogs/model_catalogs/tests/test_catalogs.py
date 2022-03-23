@@ -56,11 +56,12 @@ def test_derived():
     derived dataset."""
 
     day = pd.Timestamp("2021-02-20")
-    cat = mc.find_availability(model='CBOFS')
+    cat = mc.find_availability(model="CBOFS")
     source = mc.add_url_path(cat, start_date=day, end_date=day)
     # make sure can load model output for source
     ds = source.to_dask()
     ds.close()
+
 
 # even this one won't run consistently
 # @pytest.mark.slow
@@ -92,9 +93,10 @@ def test_nowcast():
 
     today = pd.Timestamp.today()
 
-    model = 'LMHOFS'
-    source = mc.add_url_path(source_cat[model], timing='nowcast',
-                             start_date=today, end_date=today)
+    model = "LMHOFS"
+    source = mc.add_url_path(
+        source_cat[model], timing="nowcast", start_date=today, end_date=today
+    )
     ds = source.to_dask()
     ds.close()
 
@@ -108,9 +110,10 @@ def test_hindcast():
     day = pd.Timestamp.today() - pd.Timedelta("150 days")
     nextday = day + pd.Timedelta("1 day")
 
-    model = 'CIOFS'
-    source = mc.add_url_path(source_cat[model], timing="hindcast",
-                             start_date=day, end_date=nextday)
+    model = "CIOFS"
+    source = mc.add_url_path(
+        source_cat[model], timing="hindcast", start_date=day, end_date=nextday
+    )
     ds = source.to_dask()
     ds.close()
 
@@ -124,10 +127,13 @@ def test_hindcast_forecast_aggregation():
     day = pd.Timestamp.today() - pd.Timedelta("365 days")
     nextday = day + pd.Timedelta("1 day")
 
-    model = 'TBOFS'
-    source = mc.add_url_path(source_cat[model],
-                             timing="hindcast-forecast-aggregation",
-                             start_date=day, end_date=nextday)
+    model = "TBOFS"
+    source = mc.add_url_path(
+        source_cat[model],
+        timing="hindcast-forecast-aggregation",
+        start_date=day,
+        end_date=nextday,
+    )
     ds = source.to_dask()
     ds.close()
 

@@ -2,12 +2,14 @@
 Utilities to help with catalogs.
 """
 
-import cf_xarray  # noqa
 import fnmatch
+import re
+
+import cf_xarray  # noqa
 import numpy as np
 import pandas as pd
-import re
 import shapely.geometry
+
 from siphon.catalog import TDSCatalog
 
 
@@ -193,23 +195,46 @@ def find_catrefs(catloc):
     catrefs_to_check = [catref for catref in catrefs_to_check if catref.isnumeric()]
 
     # 1st level catalog
-    catrefs_to_check1 = [cat.catalog_refs[catref].follow().catalog_refs for catref in catrefs_to_check]
+    catrefs_to_check1 = [
+        cat.catalog_refs[catref].follow().catalog_refs for catref in catrefs_to_check
+    ]
 
     # Combine the catalog references together
-    catrefs = [(catref0, catref1) for catref0, catrefs1 in zip(catrefs_to_check, catrefs_to_check1) for catref1 in catrefs1]
+    catrefs = [
+        (catref0, catref1)
+        for catref0, catrefs1 in zip(catrefs_to_check, catrefs_to_check1)
+        for catref1 in catrefs1
+    ]
 
     # Check first one to see if there are more catalog references or not
-    cat_ref_test = cat.catalog_refs[catrefs[0][0]].follow().catalog_refs[catrefs[0][1]].follow().catalog_refs
+    cat_ref_test = (
+        cat.catalog_refs[catrefs[0][0]]
+        .follow()
+        .catalog_refs[catrefs[0][1]]
+        .follow()
+        .catalog_refs
+    )
     # If there are more catalog references, run another level of catalog and combine, ## 2
     if len(cat_ref_test) > 1:
-        catrefs2 = [cat.catalog_refs[catref[0]].follow().catalog_refs[catref[1]].follow().catalog_refs for catref in catrefs]
-        catrefs = [(catref[0], catref[1], catref22) for catref, catref2 in zip(catrefs, catrefs2) for catref22 in catref2]
+        catrefs2 = [
+            cat.catalog_refs[catref[0]]
+            .follow()
+            .catalog_refs[catref[1]]
+            .follow()
+            .catalog_refs
+            for catref in catrefs
+        ]
+        catrefs = [
+            (catref[0], catref[1], catref22)
+            for catref, catref2 in zip(catrefs, catrefs2)
+            for catref22 in catref2
+        ]
 
     # OUTPUT
     return catrefs
 
 
-def find_filelocs(catref, catloc, filetype='fields'):
+def find_filelocs(catref, catloc, filetype="fields"):
     """Find thredds file locations.
 
     TEST with filetype still
@@ -225,7 +250,7 @@ def find_filelocs(catref, catloc, filetype='fields'):
 
     Returns
     -------
-    Locations of files found from catloc to hierarchical location desribed by
+    Locations of files found from catloc to hierarchical location described by
     catref.
     """
 
@@ -247,9 +272,13 @@ def find_filelocs(catref, catloc, filetype='fields'):
         datasets = cat3.datasets
     # import pdb; pdb.set_trace()
     for dataset in datasets:
-        if 'stations' not in dataset and 'vibrioprob' not in dataset and filetype in dataset:
+        if (
+            "stations" not in dataset
+            and "vibrioprob" not in dataset
+            and filetype in dataset
+        ):
             # print(dataset)
-            url = last_cat.datasets[dataset].access_urls['OPENDAP']
+            url = last_cat.datasets[dataset].access_urls["OPENDAP"]
             # print(url)
             filelocs.append(url)
     return filelocs
@@ -263,13 +292,13 @@ def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
 
     pattern = f"*{filetype}*.{norf}*.????????.t??z.*"
     # pattern = date.strftime(f"*{filetype}*.n*.%Y%m%d.t??z.*")
-    if firstorlast == 'first':
+    if firstorlast == "first":
         ind = 0
-    elif firstorlast == 'last':
+    elif firstorlast == "last":
         ind = -1
     fileloc = sorted(fnmatch.filter(filelocs, pattern))[ind]
-    filename = fileloc.split('/')[-1]
-    date = pd.Timestamp(filename.split('.')[4])
+    filename = fileloc.split("/")[-1]
+    date = pd.Timestamp(filename.split(".")[4])
     regex = re.compile(".t[0-9]{2}z.")
     cycle = [substr[2:4] for substr in regex.findall("".join(filename))][0]
     regex = re.compile(f".{norf}" + "[0-9]{3}.")
@@ -278,6 +307,6 @@ def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     except IndexError:  # NYOFS uses this
         filetime = 0
     # in UTC
-    datetime = date + pd.Timedelta(f'{cycle} hours') + pd.Timedelta(f'{filetime} hours')
+    datetime = date + pd.Timedelta(f"{cycle} hours") + pd.Timedelta(f"{filetime} hours")
 
     return datetime
