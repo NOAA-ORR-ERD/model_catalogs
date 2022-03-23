@@ -106,9 +106,16 @@ def make_catalog(
 def setup_source_catalog(override=False):
     """Setup source catalog for models.
 
+    Parameters
+    ----------
+    override: bool
+        Will use model catalog files available in "complete" directory if it is
+        available, or if `override==True` will always use "orig" directory to
+        set up source catalog.
+
     Returns
     -------
-    Source catalog `source_cat`.
+    Intake catalog `source_cat`.
     """
 
     cat_source_description = "Source catalog for models."
@@ -144,11 +151,12 @@ def complete_source_catalog():
     """Update model source files in 'source_catalogs/orig'.
 
     This will add outer boundary files for the model domains and create
-    "complete" directory of model files that mirror those in "orig".
+    "complete" directory of model files that mirror those in "orig". If this is
+    run and "complete" directory already exists, it will be overwritten.
 
     Returns
     -------
-    Nothing, but resaves all model source catalogs into
+    Intake catalog, and also resaves all model source catalogs into
     f"{self.cat_source_base}/complete" with domain boundaries added.
 
     Examples
@@ -211,21 +219,41 @@ def complete_source_catalog():
     return setup_source_catalog()
 
 
-def find_availability(model, override_source=False, override_updated=False):
+def find_availability(model, override=False, override_updated=False):
     """Find availability for model for 'forecast' and 'hindcast'.
 
     Parameters
     ----------
     model: str
         Name of model, e.g., CBOFS
+    override: bool
+        Will use model catalog files available in "complete" directory if it is
+        available, or if `override==True` will always use "orig" directory to
+        set up source catalog.
+    override_updated: bool
+        Will use model "updated" catalog file if available in "updated"
+        directory if it is not stale, or if `override==True` will remake updated
+        catalog file regardless.
+
+    Returns
+    -------
+    Intake catalog with some added metadata about the availability.
+
+    Examples
+    --------
+    >> cat = mc.find_availability(model='DBOFS')
     """
 
     model = model.upper()
 
     ran_forecast, ran_hindcast = False, False
 
-    ref_cat = setup_source_catalog(override=override_source)
-    cat = ref_cat[model]
+    complete_path = f'{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml'
+    if os.path.exists(complete_path):
+        cat = intake.open_catalog(complete_path)
+    else:
+        ref_cat = setup_source_catalog(override=override)
+        cat = ref_cat[model]
 
     # deal with RTOFS completely separately
     if "RTOFS" in model:
@@ -278,7 +306,7 @@ def find_availability(model, override_source=False, override_updated=False):
         if "time_last_checked" in cat[timing].metadata:
             time_last_checked = cat[timing].metadata["time_last_checked"]
         else:
-            time_last_checked = pd.Timestamp.now() - pd.Timedelta("30 days")
+            time_last_checked = pd.Timestamp.now()
         dt = pd.Timestamp.now() - pd.Timestamp(time_last_checked)
 
         if timing == "forecast" and (dt > stale or override_updated):
@@ -375,7 +403,7 @@ def find_availability(model, override_source=False, override_updated=False):
             "model": model,
             "timing": timing,
             "filetype": filetype,
-            "time_last_checked": str(time_last_checked),
+            "time_last_checked": str(pd.Timestamp.now()),
             "stale": stale,
             "start_datetime": str(start_datetime),
             "end_datetime": str(end_datetime),
@@ -406,35 +434,56 @@ def find_availability(model, override_source=False, override_updated=False):
         return new_user_cat
 
 
-def add_url_path(cat, timing=None, start_date=None, end_date=None, override=True):
+def add_url_path(cat, timing=None, start_date=None, end_date=None):
     """Make a set of user catalog sources.
 
     This is meant to be called by `setup_cat()`, not directly by user.
 
     Parameters
     ----------
-    model: str
-        Name of model, e.g., CBOFS
+    cat: Intake catalog
+        An intake catalog for a specific model entry.
     timing: str, optional
-        Which timing to use. Normally "forecast", "nowcast", or "hindcast", if
-        available for model, but could have different names and/or options.
-        Find model options available with `list(self.source_cat[model])` or
-        `list(self.updated_cat[model])`.
+        Which timing to use. If `find_availability` has been run, the code will
+        determine whether `start_date`, `end_date` are in "forecast" or
+        "hindcast". Otherwise timing must be provided for a single timing.
+        Normally the options are "forecast", "nowcast", or "hindcast", and
+        sometimes "hindcast-forecast-aggregation".
     start_date, end_date: datetime-interpretable str or pd.Timestamp, optional
+        These two define the range of model output to include.
         If model has an aggregated link for timing, start_date and end_date
         are not used. Otherwise they should be input. Only year-month-day
         will be used in date. end_date is inclusive.
-    treat_last_day_as_forecast: bool, optional
-        CHANGE BEHAVIOR
-        If True, then date is the last day of the time period being sought and the forecast files
-        should be brought in along with the nowcast files, to get the model output the length of the
-        forecast out in time. The forecast files brought in will have the latest timing cycle of the
-        day that is available. If False, all nowcast files (for all timing cycles) are brought in.
 
     Returns
     -------
     Source associated with the catalog entry.
+
+    Examples
+    --------
+
+    Find model 'LMHOFS' urlpaths directly from source catalog without first
+    search for availability with `find_availability()`:
+    >>> source_cat = mc.setup_source_catalog()
+    >>> today = pd.Timestamp.today()
+    >>> cat = source_cat["LMHOFS"]
+    >>> source = mc.add_url_path(cat, timing="forecast",
+                                 start_date=today, end_date=today)
+
+    Find availability for model (for forecast and hindcast timings), then find
+    urlpaths:
+    >>> cat = mc.find_availability(model='LMHOFS')
+    >>> today = pd.Timestamp.today()
+    >>> source = mc.add_url_path(cat, start_date=today, end_date=today)
+
     """
+
+    # either `find_availability` needs to have been run and therefore certain
+    # metadata present in cat (start_datetime, end_datetime), or don't need to
+    #  have run `find_availability` but need to input which "timing" to use.
+    dates = set(cat['forecast'].metadata).intersection(set(["start_datetime", "end_datetime"]))  # noqa
+    assertion = 'Either `find_availability` needs to have been run and therefore certain metadata present in cat (start_datetime, end_datetime), or do not need to have run `find_availability` but need to input which "timing" to use.'  # noqa
+    assert len(dates) > 1 or timing is not None, assertion
 
     # model = model.upper()
     model = cat.name.upper()
@@ -526,6 +575,7 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None, override=True
 
     # urlpath is already available if the link is consistent in time
     else:
+        print('`start_date` and `end_date` were not used since static link available.')  # noqa: E501
         source_orig = source
 
     return source_orig

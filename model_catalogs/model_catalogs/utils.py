@@ -237,8 +237,6 @@ def find_catrefs(catloc):
 def find_filelocs(catref, catloc, filetype="fields"):
     """Find thredds file locations.
 
-    TEST with filetype still
-
     Parameters
     ----------
     catref: tuple
@@ -246,7 +244,10 @@ def find_filelocs(catref, catloc, filetype="fields"):
         locations.
     catloc: str
         Base thredds catalog location.
-    filetype FILL IN
+    filetype: str
+        Which filetype to use. Every NOAA OFS model has "fields" available, but
+        some have "regulargrid"or "2ds" also (listed in separate catalogs in the
+        model name).
 
     Returns
     -------
@@ -254,7 +255,6 @@ def find_filelocs(catref, catloc, filetype="fields"):
     catref.
     """
 
-    # ADD FILETYPE IN
     filelocs = []
     cat = TDSCatalog(catloc)
     if len(catref) == 2:
@@ -270,16 +270,15 @@ def find_filelocs(catref, catloc, filetype="fields"):
         cat3 = cat2.catalog_refs[catref3].follow()
         last_cat = cat3
         datasets = cat3.datasets
-    # import pdb; pdb.set_trace()
+
     for dataset in datasets:
         if (
             "stations" not in dataset
             and "vibrioprob" not in dataset
             and filetype in dataset
         ):
-            # print(dataset)
+
             url = last_cat.datasets[dataset].access_urls["OPENDAP"]
-            # print(url)
             filelocs.append(url)
     return filelocs
 
@@ -287,7 +286,20 @@ def find_filelocs(catref, catloc, filetype="fields"):
 def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     """Return either start or end datetime from list of filenames.
 
-    MORE
+    Parameters
+    ----------
+    filelocs: list
+        Locations of files found from catloc to hierarchical location described by
+        catref.
+    filetype: str
+        Which filetype to use. Every NOAA OFS model has "fields" available, but
+        some have "regulargrid"or "2ds" also (listed in separate catalogs in the
+        model name).
+    norf: str
+        "n" or "f" for "nowcast" or "forecast", for OFS files.
+    firstorlast: str
+        Whether to get the "first" or "last" entry of the filelocs, which will
+        translate to the index to use.
     """
 
     pattern = f"*{filetype}*.{norf}*.????????.t??z.*"

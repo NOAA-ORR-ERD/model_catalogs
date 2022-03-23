@@ -39,6 +39,15 @@ def test_setup_source_catalog():
     assert sorted(list(source_cat["CBOFS"])) == ["forecast", "hindcast", "nowcast"]
 
 
+def test_find_availability():
+    """Make sure one test case works for this."""
+
+    cat = mc.find_availability(model='DBOFS')
+
+    assert 'start_datetime' in cat['forecast'].metadata
+    assert 'time_last_checked' in cat['forecast'].metadata
+
+
 @pytest.mark.slow
 def test_make_complete_catalog():
     """Make sure complete version of source model catalogs works."""
