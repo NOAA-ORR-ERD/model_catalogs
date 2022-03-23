@@ -248,7 +248,7 @@ def find_availability(model, override=False, override_updated=False):
 
     ran_forecast, ran_hindcast = False, False
 
-    complete_path = f'{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml'
+    complete_path = f"{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml"
     if os.path.exists(complete_path):
         cat = intake.open_catalog(complete_path)
     else:
@@ -481,7 +481,9 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     # either `find_availability` needs to have been run and therefore certain
     # metadata present in cat (start_datetime, end_datetime), or don't need to
     #  have run `find_availability` but need to input which "timing" to use.
-    dates = set(cat['forecast'].metadata).intersection(set(["start_datetime", "end_datetime"]))  # noqa
+    dates = set(cat["forecast"].metadata).intersection(
+        set(["start_datetime", "end_datetime"])
+    )  # noqa
     assertion = 'Either `find_availability` needs to have been run and therefore certain metadata present in cat (start_datetime, end_datetime), or do not need to have run `find_availability` but need to input which "timing" to use.'  # noqa
     assert len(dates) > 1 or timing is not None, assertion
 
@@ -575,7 +577,9 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
 
     # urlpath is already available if the link is consistent in time
     else:
-        print('`start_date` and `end_date` were not used since static link available.')  # noqa: E501
+        print(
+            "`start_date` and `end_date` were not used since static link available."
+        )  # noqa: E501
         source_orig = source
 
     return source_orig
