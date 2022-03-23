@@ -11,10 +11,10 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .model_catalogs import (setup_source_catalog, make_catalog,
                              complete_source_catalog,
-                             add_url_path)  # noqa
+                             add_url_path, find_availability)  # noqa
 
 from .utils import (find_bbox, agg_for_date, find_catrefs, find_filelocs,
-                    get_dates_from_ofs, find_availability)
+                    get_dates_from_ofs)
 
 
 try:
@@ -40,10 +40,10 @@ os.makedirs(f"{__path__[0]}/catalogs/updated", exist_ok=True)
 os.makedirs(f"{__path__[0]}/tests/catalogs", exist_ok=True)
 # # copy source catalogs to tests
 # os.makedirs(f"{__path__[0]}/tests/catalogs/source_catalogs/", exist_ok=True)
-# os.makedirs(f"{__path__[0]}/tests/catalogs/source_catalogs/orig", exist_ok=True)
+os.makedirs(f"{__path__[0]}/tests/catalogs/orig", exist_ok=True)
 [
-    shutil.copy(fname, f"{__path__[0]}/tests/catalogs/source_catalogs/orig/")
-    for fname in glob(f"{__path__[0]}/catalogs/source_catalogs/orig/*")
+    shutil.copy(fname, f"{__path__[0]}/tests/catalogs/orig/")
+    for fname in glob(f"{__path__[0]}/catalogs/orig/*")
 ]
 # also copy transform template
 shutil.copy(
