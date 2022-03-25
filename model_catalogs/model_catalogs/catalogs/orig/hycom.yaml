@@ -1,0 +1,35 @@
+name: HYCOM
+description: 3D Global Ocean Forecasting System (GOFS) 3.1
+metadata:
+  grid_dim_(xyz): [4500,4251,40]
+  grid_res_min_(deg): 1/12
+  grid_res_max_(deg): 1/12
+  grid_type: 'rectangular'
+  filetype: 'fields'
+
+sources:
+  forecast:
+    driver: opendap
+    description: 3D Global Ocean Forecasting System (GOFS) 3.1 forecast from a week ago through 5 days from now.
+    args:
+      chunks:
+        time: 1
+      drop_variables: ['tau']
+      engine: netcdf4
+      urlpath: http://tds.hycom.org/thredds/dodsC/GLBy0.08/latest
+    metadata:
+      overall_start_datetime: '7 days before present time'
+      overall_end_datetime: '5 days after present time'
+      output_period_(hr): 3
+      axis:
+        T: time
+        X: lon
+        Y: lat
+        Z: depth
+      standard_names:
+        eastward_sea_water_velocity: water_u
+        northward_sea_water_velocity: water_v
+        sea_surface_height_above_mean_sea_level: surf_el
+        sea_water_temperature: water_temp
+        sea_water_practical_salinity: salinity
+        time: time
