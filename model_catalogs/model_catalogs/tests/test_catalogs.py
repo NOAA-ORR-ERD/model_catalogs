@@ -43,7 +43,7 @@ def test_setup_source_catalog():
 def test_find_availability():
     """Make sure one test case works for this."""
 
-    cat = mc.find_availability(model="DBOFS")
+    cat = mc.find_availability(model="DBOFS", override_updated=True)
 
     assert "start_datetime" in cat["forecast"].metadata
     assert "time_last_checked" in cat["forecast"].metadata
