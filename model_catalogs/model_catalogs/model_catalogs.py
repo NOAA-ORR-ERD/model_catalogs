@@ -435,9 +435,7 @@ def find_availability(model, override=False, override_updated=False):
 
 
 def add_url_path(cat, timing=None, start_date=None, end_date=None):
-    """Make a set of user catalog sources.
-
-    This is meant to be called by `setup_cat()`, not directly by user.
+    """Add urlpath locations to existing catalog/source.
 
     Parameters
     ----------
@@ -582,4 +580,95 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
         )  # noqa: E501
         source_orig = source
 
-    return source_orig
+    # save "orig" source to a tempfile
+    # import tempfile
+    # temp_dir = tempfile.TemporaryDirectory()
+    # print(temp_dir.name)
+    # fp = tempfile.NamedTemporaryFile()
+    # temp_cat = make_catalog(
+    #                 source_orig,
+    #                 "User-catalog",
+    #                 "User-made catalog",
+    #                 {},#metadata,
+    #                 source_orig._entry._driver,
+    #                 cat_path=mc.CATALOG_PATH_TMP,
+    #             )
+
+    # import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
+    # Now do the transform of the Dataset (or "derived dataset").
+    # open the skeleton transform cat entry and then alter
+    # a few things so can use it with source_orig
+    source_transform_loc = f"{mc.CATALOG_PATH}/transform.yaml"
+    source_transform = intake.open_catalog(source_transform_loc)["name"]
+
+    # change new source information
+    # update source's info with model name since user would probably prefer this over timing?
+    # also other metadata to bring into user catalog
+    source_transform.name = f"{model}"
+    # if treat_last_day_as_forecast:
+    #     source_transform.name += "-with_forecast"
+    #     # source_transform.description += "-with_forecast"
+    # # rename source_orig to match source_transform
+    # source_orig.name = source_transform.name + "_orig"
+    source_transform.description = (
+        f"Catalog entry for transform of dataset {source_orig.name}"
+    )
+
+    # copy over axis and standard_names to transform_kwargs and metadata
+    # also fill in target
+    axis = deepcopy(source_orig.metadata["axis"])
+    snames = deepcopy(source_orig.metadata["standard_names"])
+    source_transform.metadata["axis"] = axis
+    source_transform.metadata["standard_names"] = snames
+    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+        "axis"
+    ] = axis
+    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+        "standard_names"
+    ] = snames
+
+    # make source_orig the target since will be made available in same catalog
+    # target = f"{source_orig.name}"
+    # target = f"{temp_dir.name}/user-catalog.yaml:"
+    source_orig.name = "temp"
+    target = f"{source_orig.name}"
+    # target = f"{mc.CATALOG_PATH_TMP}/user-catalog.yaml:{source_orig.name}"
+    # import pdb; pdb.set_trace()
+    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [target]
+    # SAVE FIND_AVAILABILITY INFO IF AVAILABLE
+    metadata = {
+        "model": model,
+        "timing": timing,
+        "start_date": start_date.isoformat() if start_date is not None else None,
+        "end_date": end_date.isoformat() if end_date is not None else None,
+        # "treat_last_day_as_forecast": treat_last_day_as_forecast,
+        "urlpath": deepcopy(source_orig.urlpath),
+        # "cat_source_base": self.cat_source_base,
+        # "cat_user_base": self.cat_user_base,
+        # "source_catalog_dir": self.source_catalog_dir,
+        # "source_catalog_name": self.source_catalog_name,
+        # "source_cat": self.source_cat,
+        # "user_catalog_dir": self.user_catalog_dir,
+        # "user_catalog_name": self.user_catalog_name,
+    }
+    source_transform.metadata.update(metadata)
+    source_transform.metadata.update(source_orig.metadata)
+    # source_transform.metadata.update(ref_cat[model].metadata)
+    # import pdb; pdb.set_trace()
+
+    sources = [source_orig, source_transform]
+    new_user_cat = make_catalog(
+        sources,
+        "User-catalog.",
+        "User-made catalog.",
+        metadata,
+        [source._entry._driver for source in sources],
+        cat_path=mc.CATALOG_PATH_TMP,
+    )
+
+    return new_user_cat
+
+    # return [source_orig, source_transform]
+
+    # return source_orig

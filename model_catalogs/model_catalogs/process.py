@@ -42,6 +42,19 @@ def add_attributes(ds, axis, standard_names):
     standard names (from CF conventions), update the Dataset metadata.
     """
 
+    # set standard_names for all variables
+    for stan_name, var_names in standard_names.items():
+        if not isinstance(var_names, list):
+            var_names = [var_names]
+        for var_name in var_names:
+            ds[var_name].attrs["standard_name"] = stan_name
+
+    # Run code to find vertical coordinates
+    try:
+        ds.cf.decode_vertical_coords()
+    except Exception:
+        pass
+
     # set axis attributes (time, lon, lat, z potentially)
     for ax_name, var_names in axis.items():
         if not isinstance(var_names, list):
@@ -56,10 +69,6 @@ def add_attributes(ds, axis, standard_names):
                 )
             else:
                 ds[var_name].attrs["axis"] = ax_name
-
-    # set standard_names for all variables
-    for stan_name, var_name in standard_names.items():
-        ds[var_name].attrs["standard_name"] = stan_name
 
     # this won't run for e.g. GFS which has multiple time variables
     # but also doesn't need to have the calendar updated

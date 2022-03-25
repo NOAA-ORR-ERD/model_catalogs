@@ -9,6 +9,7 @@ them instead.
 
 import os
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -65,35 +66,40 @@ def test_derived():
     derived dataset."""
 
     day = pd.Timestamp("2021-02-20")
-    cat = mc.find_availability(model="CBOFS")
-    source = mc.add_url_path(cat, start_date=day, end_date=day)
+    # cat = mc.find_availability(model="CBOFS")
+    source_cat = mc.setup_source_catalog()
+    cat = mc.add_url_path(
+        source_cat["CBOFS"], timing="hindcast", start_date=day, end_date=day
+    )
     # make sure can load model output for source
-    ds = source.to_dask()
+    ds = cat["CBOFS"].to_dask()
     ds.close()
 
-
-# even this one won't run consistently
-# @pytest.mark.slow
-# def test_forecast():
-#     """Test two known models for running in forecast mode."""
-#
-#     source_cat = mc.setup_source_catalog()
-#
-#     yes = pd.Timestamp.today() - pd.Timedelta('1 day')
-#     today = pd.Timestamp.today()
-#
-#     for model in ['NGOFS2']:#, 'LEOFS_REGULARGRID']:# list(source_cat):
-#         if "forecast" in list(source_cat[model]):
-#             cat = source_cat[model]
-#             if "REGULARGRID" in model:
-#                 source = mc.add_url_path(cat, timing='forecast', start_date=today, end_date=today)
-#             else:
-#                 source = mc.add_url_path(cat, timing='forecast', start_date=yes, end_date=yes)
-#             # time.sleep(60)  # this did not help
-#             ds = source.to_dask()
-#             ds.close()
+    assert isinstance(ds.ocean_time.values[0], np.datetime64)
 
 
+# # even this one won't run consistently
+# # @pytest.mark.slow
+# # def test_forecast():
+# #     """Test two known models for running in forecast mode."""
+# #
+# #     source_cat = mc.setup_source_catalog()
+# #
+# #     yes = pd.Timestamp.today() - pd.Timedelta('1 day')
+# #     today = pd.Timestamp.today()
+# #
+# #     for model in ['NGOFS2']:#, 'LEOFS_REGULARGRID']:# list(source_cat):
+# #         if "forecast" in list(source_cat[model]):
+# #             cat = source_cat[model]
+# #             if "REGULARGRID" in model:
+# #                 source = mc.add_url_path(cat, timing='forecast', start_date=today, end_date=today)
+# #             else:
+# #                 source = mc.add_url_path(cat, timing='forecast', start_date=yes, end_date=yes)
+# #             # time.sleep(60)  # this did not help
+# #             ds = source.to_dask()
+# #             ds.close()
+#
+#
 @pytest.mark.slow
 def test_nowcast():
     """Test two known models for running in nowcast mode."""
@@ -103,10 +109,10 @@ def test_nowcast():
     today = pd.Timestamp.today()
 
     model = "LMHOFS"
-    source = mc.add_url_path(
+    cat = mc.add_url_path(
         source_cat[model], timing="nowcast", start_date=today, end_date=today
     )
-    ds = source.to_dask()
+    ds = cat[model].to_dask()
     ds.close()
 
 
@@ -120,10 +126,10 @@ def test_hindcast():
     nextday = day + pd.Timedelta("1 day")
 
     model = "CIOFS"
-    source = mc.add_url_path(
+    cat = mc.add_url_path(
         source_cat[model], timing="hindcast", start_date=day, end_date=nextday
     )
-    ds = source.to_dask()
+    ds = cat[model].to_dask()
     ds.close()
 
 
@@ -137,13 +143,13 @@ def test_hindcast_forecast_aggregation():
     nextday = day + pd.Timedelta("1 day")
 
     model = "TBOFS"
-    source = mc.add_url_path(
+    cat = mc.add_url_path(
         source_cat[model],
         timing="hindcast-forecast-aggregation",
         start_date=day,
         end_date=nextday,
     )
-    ds = source.to_dask()
+    ds = cat[model].to_dask()
     ds.close()
 
 

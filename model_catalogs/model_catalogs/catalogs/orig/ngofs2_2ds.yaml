@@ -44,6 +44,7 @@ sources:
         eastward_wind: uwind_speed
         northward_sea_water_velocity: v_surface
         northward_wind: vwind_speed
+        ocean_sigma_coordinate: [siglay, siglev]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_surface
@@ -84,6 +85,7 @@ sources:
         eastward_wind: uwind_speed
         northward_sea_water_velocity: v_surface
         northward_wind: vwind_speed
+        ocean_sigma_coordinate: [siglay, siglev]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_surface
@@ -116,6 +118,7 @@ sources:
         eastward_wind: uwind_speed
         northward_sea_water_velocity: v_surface
         northward_wind: vwind_speed
+        ocean_sigma_coordinate: [siglay, siglev]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp_surface

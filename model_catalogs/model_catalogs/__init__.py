@@ -39,10 +39,12 @@ SOURCE_CATALOG_NAME = "source_catalog.yaml"
 CATALOG_PATH_DIR_ORIG = f"{CATALOG_PATH}/orig"
 CATALOG_PATH_DIR = f"{CATALOG_PATH}/complete"
 CATALOG_PATH_UPDATED = f"{CATALOG_PATH}/updated"
+CATALOG_PATH_TMP = f"{CATALOG_PATH}/tmp"
 
 # make directories
 os.makedirs(".catalogs", exist_ok=True)
 os.makedirs(f"{__path__[0]}/catalogs/updated", exist_ok=True)
+os.makedirs(f"{__path__[0]}/catalogs/tmp", exist_ok=True)
 
 # set up testing
 os.makedirs(f"{__path__[0]}/tests/catalogs", exist_ok=True)

@@ -39,6 +39,7 @@ sources:
       output_period_(hr): 1
       axis:
         T: time
+        Z: z_val
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: uwind_speed
@@ -72,6 +73,7 @@ sources:
       output_period_(hr): 1
       axis:
         T: time
+        Z: z_val
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: uwind_speed
@@ -105,6 +107,7 @@ sources:
       output_period_(hr): 1
       axis:
         T: time
+        Z: z_val
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: uwind_speed

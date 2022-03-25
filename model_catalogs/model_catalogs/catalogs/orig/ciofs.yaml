@@ -26,11 +26,13 @@ sources:
         T: time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [z_rho, z_w]
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: Uwind
         northward_sea_water_velocity: v
         northward_wind: Vwind
+        ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
@@ -61,11 +63,13 @@ sources:
         T: ocean_time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [z_rho, z_w]
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: Uwind
         northward_sea_water_velocity: v
         northward_wind: Vwind
+        ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
@@ -98,11 +102,13 @@ sources:
         T: ocean_time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [z_rho, z_w]
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: Uwind
         northward_sea_water_velocity: v
         northward_wind: Vwind
+        ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
@@ -127,11 +133,13 @@ sources:
         T: time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [z_rho, z_w]
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: Uwind
         northward_sea_water_velocity: v
         northward_wind: Vwind
+        ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp

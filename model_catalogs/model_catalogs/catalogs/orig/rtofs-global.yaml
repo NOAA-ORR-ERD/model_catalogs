@@ -39,6 +39,7 @@ sources:
         T: time
         X: lon
         Y: lat
+        Z: lev
       standard_names:
         eastward_sea_water_velocity: u
         northward_sea_water_velocity: v
