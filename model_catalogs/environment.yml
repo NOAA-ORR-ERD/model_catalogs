@@ -5,8 +5,9 @@ dependencies:
   - python=3.8  # this is required for the dev tools/precommit stuff
   - pytest
   - alphashape
-  - cf_xarray>=0.6
+  - cf_xarray
   - dask
+  - extract_model
   - flake8
   - h5netcdf
   # - intake
@@ -22,6 +23,8 @@ dependencies:
   - shapely
   - xarray
   - pip:  # install from github to get recent PRs I contributed
+    # - git+https://github.com/axiom-data-science/extract_model.git
+    # - git+https://github.com/xarray-contrib/cf-xarray.git
     - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
     - git+https://github.com/intake/intake.git
     - siphon  # can get from conda-forge but isn't recognized

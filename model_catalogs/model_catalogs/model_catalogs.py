@@ -654,8 +654,9 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     }
     source_transform.metadata.update(metadata)
     source_transform.metadata.update(source_orig.metadata)
-    # source_transform.metadata.update(ref_cat[model].metadata)
     # import pdb; pdb.set_trace()
+    # Add original overall model catalog metadata to this next version
+    metadata.update(cat.metadata)
 
     sources = [source_orig, source_transform]
     new_user_cat = make_catalog(

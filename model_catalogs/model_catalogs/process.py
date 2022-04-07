@@ -49,26 +49,36 @@ def add_attributes(ds, axis, standard_names):
         for var_name in var_names:
             ds[var_name].attrs["standard_name"] = stan_name
 
-    # Run code to find vertical coordinates
-    try:
-        ds.cf.decode_vertical_coords()
-    except Exception:
-        pass
+    # # Run code to find vertical coordinates
+    # try:
+    #     # create name mapping
+    #     snames = ['ocean_s_coordinate_g1', 'ocean_s_coordinate_g2', 'ocean_sigma_coordinate']
+    #     s_vars = [standard_names[sname] for sname in snames if sname in standard_names][0]
+    #     z_vars = axis['Z']
+    #     outnames = {s_var: z_var for s_var, z_var in zip(s_vars, z_vars)}
+    #     ds.cf.decode_vertical_coords(outnames=outnames)
+    # except Exception:
+    #     pass
 
     # set axis attributes (time, lon, lat, z potentially)
     for ax_name, var_names in axis.items():
         if not isinstance(var_names, list):
             var_names = [var_names]
         for var_name in var_names:
-            # var_name needs to be a coord to have attributes
-            if var_name not in ds.coords:
-                ds[var_name] = (
-                    var_name,
-                    np.arange(ds.sizes[var_name]),
-                    {"axis": ax_name},
-                )
-            else:
-                ds[var_name].attrs["axis"] = ax_name
+            # var_name needs to exist
+            # if ax_name == 'X':
+            #     import pdb; pdb.set_trace()
+
+            if var_name in ds.dims:
+                # var_name needs to be a coord to have attributes
+                if var_name not in ds.coords:
+                    ds[var_name] = (
+                        var_name,
+                        np.arange(ds.sizes[var_name]),
+                        {"axis": ax_name},
+                    )
+                else:
+                    ds[var_name].attrs["axis"] = ax_name
 
     # this won't run for e.g. GFS which has multiple time variables
     # but also doesn't need to have the calendar updated
@@ -80,4 +90,8 @@ def add_attributes(ds, axis, standard_names):
     except KeyError:
         pass
 
-    return xr.decode_cf(ds)
+    # decode times if times are floats
+    if ds.cf["T"].dtype == "float64":
+        ds = xr.decode_cf(ds, decode_times=True)
+
+    return ds  # xr.decode_cf(ds)
