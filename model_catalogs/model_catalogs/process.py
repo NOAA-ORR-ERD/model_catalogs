@@ -94,4 +94,4 @@ def add_attributes(ds, axis, standard_names):
     if ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
 
-    return ds  # xr.decode_cf(ds)
+    return ds

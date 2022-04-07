@@ -654,7 +654,6 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     }
     source_transform.metadata.update(metadata)
     source_transform.metadata.update(source_orig.metadata)
-    # import pdb; pdb.set_trace()
     # Add original overall model catalog metadata to this next version
     metadata.update(cat.metadata)
 
