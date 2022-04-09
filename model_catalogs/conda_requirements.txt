@@ -1,0 +1,20 @@
+python=3.8  # this is required for the dev tools/precommit stuff
+pytest
+# alphashape
+cf_xarray
+dask
+h5netcdf
+
+# need latest non-released versions of these -- see pip_requirements.py file
+# intake
+# intake-xarray
+
+# needed for demos / testing
+# ipython
+# jupyter
+# jupyterlab
+# matplotlib
+numpy
+pandas
+shapely
+xarray
