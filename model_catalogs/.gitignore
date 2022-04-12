@@ -3,3 +3,4 @@ model_catalogs/catalogs/updated/
 model_catalogs/catalogs/complete/
 model_catalogs/_version.py
 model_catalogs/tests/catalogs/
+*.nc
