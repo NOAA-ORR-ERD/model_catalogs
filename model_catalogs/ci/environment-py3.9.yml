@@ -2,7 +2,7 @@ name: test_env_model_catalogs
 channels:
   - conda-forge
 dependencies:
-  - python=3.7
+  - python=3.9
   ############## These will have to be adjusted to your specific project
   - alphashape
   - cf_xarray
