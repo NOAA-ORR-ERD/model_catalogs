@@ -132,7 +132,8 @@ def setup_source_catalog(override=False):
         cat_dir = mc.CATALOG_PATH_DIR
 
     # open catalogs
-    cat_locs = glob(f"{cat_dir}/*.yaml")
+    cat_locs = glob((cat_dir / "*.yaml").as_posix())
+    # cat_locs = glob(f"{cat_dir}/*.yaml")
     cats = [intake.open_catalog(cat_loc) for cat_loc in cat_locs]
 
     metadata = {"source_catalog_dir": cat_dir}
@@ -599,8 +600,8 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     # Now do the transform of the Dataset (or "derived dataset").
     # open the skeleton transform cat entry and then alter
     # a few things so can use it with source_orig
-    source_transform_loc = f"{mc.CATALOG_PATH}/transform.yaml"
-    source_transform = intake.open_catalog(source_transform_loc)["name"]
+    # source_transform_loc = f"{mc.CATALOG_PATH}/transform.yaml"
+    source_transform = intake.open_catalog(mc.SOURCE_TRANSFORM.as_posix())["name"]
 
     # change new source information
     # update source's info with model name since user would probably prefer this over timing?
