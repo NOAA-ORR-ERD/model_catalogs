@@ -304,7 +304,7 @@ def find_availability(model, override=False, override_updated=False):
         else:
             stale = pd.Timedelta("1 minute")
         if "time_last_checked" in cat[timing].metadata:
-            time_last_checked = cat[timing].metadata["time_last_checked"]
+            time_last_checked = pd.Timestamp(cat[timing].metadata["time_last_checked"])
         else:
             time_last_checked = pd.Timestamp.today() - pd.Timedelta(
                 "30 days"
