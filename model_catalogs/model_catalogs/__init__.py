@@ -4,7 +4,6 @@ Set up for using package.
 
 import shutil
 
-from glob import glob
 from pathlib import Path
 
 from pkg_resources import DistributionNotFound, get_distribution
@@ -52,7 +51,7 @@ CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
 PKG_CATALOG_PATH_DIR_ORIG = Path(__path__[0]) / "catalogs" / "orig"
 [
     shutil.copy(fname, CATALOG_PATH_DIR_ORIG)
-    for fname in glob((PKG_CATALOG_PATH_DIR_ORIG / "*").absolute().as_posix())
+    for fname in PKG_CATALOG_PATH_DIR_ORIG.glob("*.yaml")
 ]
 
 # Move "transform.yaml" to catalog dir

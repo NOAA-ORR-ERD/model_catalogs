@@ -44,7 +44,7 @@ def make_catalog(
        * 'opendap'
        If list, must be same length as cats and contains drivers that
        correspond to cats.
-    cat_path: str, optional
+    cat_path: Path object, optional
        Path with catalog name to use for saving catalog. With or without yaml suffix. If not provided,
        will use `full_cat_name`.
 
@@ -64,9 +64,10 @@ def make_catalog(
     if cat_path is None:
         cat_path = full_cat_name
     else:
-        cat_path = f"{cat_path}/{full_cat_name.lower()}"
-    if ("yaml" not in cat_path) and ("yml" not in cat_path):
-        cat_path = f"{cat_path}.yaml"
+        cat_path = cat_path / full_cat_name.lower()
+        # cat_path = f"{cat_path}/{full_cat_name.lower()}"
+    if ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
+        cat_path = cat_path.with_suffix(".yaml")
     # import pdb; pdb.set_trace()
     if not isinstance(cats, list):
         cats = [cats]
@@ -132,11 +133,9 @@ def setup_source_catalog(override=False):
         cat_dir = mc.CATALOG_PATH_DIR
 
     # open catalogs
-    cat_locs = glob((cat_dir / "*.yaml").as_posix())
-    # cat_locs = glob(f"{cat_dir}/*.yaml")
-    cats = [intake.open_catalog(cat_loc) for cat_loc in cat_locs]
+    cats = [intake.open_catalog(cat_loc) for cat_loc in cat_dir.glob("*.yaml")]
 
-    metadata = {"source_catalog_dir": cat_dir}
+    metadata = {"source_catalog_dir": str(cat_dir)}
 
     return make_catalog(
         cats,
@@ -214,7 +213,7 @@ def complete_source_catalog():
             source_cat[model].description,
             source_cat[model].metadata,
             "opendap",
-            f"{mc.CATALOG_PATH_DIR}",
+            mc.CATALOG_PATH_DIR,
         )
 
     return setup_source_catalog()
@@ -249,7 +248,8 @@ def find_availability(model, override=False, override_updated=False):
 
     ran_forecast, ran_hindcast = False, False
 
-    complete_path = f"{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml"
+    complete_path = (mc.CATALOG_PATH_UPDATED / model.lower()).with_suffix(".yaml")
+    # complete_path = f"{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml"
     if os.path.exists(complete_path):
         cat = intake.open_catalog(complete_path)
     else:
@@ -265,7 +265,7 @@ def find_availability(model, override=False, override_updated=False):
         cat["forecast"].metadata["end_datetime"] = end_datetime
         cat_metadata = cat.metadata
         metadata = {
-            "catalog_path": mc.CATALOG_PATH,
+            "catalog_path": str(mc.CATALOG_PATH),
             # "source_catalog_name": mc.SOURCE_CATALOG_NAME,
             # "filetype": cat.metadata["filetype"]
         }
@@ -303,12 +303,12 @@ def find_availability(model, override=False, override_updated=False):
         if "stale" in cat[timing].metadata:
             stale = pd.Timedelta(cat[timing].metadata["stale"])
         else:
-            stale = pd.Timedelta("1 second")
+            stale = pd.Timedelta("1 minute")
         if "time_last_checked" in cat[timing].metadata:
             time_last_checked = cat[timing].metadata["time_last_checked"]
         else:
-            time_last_checked = pd.Timestamp.now()
-        dt = pd.Timestamp.now() - pd.Timestamp(time_last_checked)
+            time_last_checked = pd.Timestamp.today() - pd.Timedelta("30 days")  # just a big number
+        dt = pd.Timestamp.now() - time_last_checked
 
         if timing == "forecast" and (dt > stale or override_updated):
 
@@ -418,7 +418,7 @@ def find_availability(model, override=False, override_updated=False):
 
         cat_metadata = cat.metadata
         metadata = {
-            "catalog_path": mc.CATALOG_PATH,
+            "catalog_path": str(mc.CATALOG_PATH),
             # "source_catalog_name": mc.SOURCE_CATALOG_NAME,
             "filetype": new_sources[0].metadata["filetype"],
         }
@@ -601,7 +601,7 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     # open the skeleton transform cat entry and then alter
     # a few things so can use it with source_orig
     # source_transform_loc = f"{mc.CATALOG_PATH}/transform.yaml"
-    source_transform = intake.open_catalog(mc.SOURCE_TRANSFORM.as_posix())["name"]
+    source_transform = intake.open_catalog(mc.SOURCE_TRANSFORM)["name"]
 
     # change new source information
     # update source's info with model name since user would probably prefer this over timing?
