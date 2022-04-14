@@ -8,6 +8,9 @@ them instead.
 """
 
 import os
+import tempfile
+
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -15,8 +18,6 @@ import pytest
 
 import model_catalogs as mc
 
-import tempfile
-from pathlib import Path
 
 # make temp dir
 temp_dir = tempfile.TemporaryDirectory()
