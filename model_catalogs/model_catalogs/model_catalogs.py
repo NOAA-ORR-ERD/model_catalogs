@@ -5,7 +5,6 @@ Everything dealing with the catalogs.
 import os
 
 from copy import deepcopy
-from glob import glob
 
 import cf_xarray  # noqa
 import intake
@@ -307,7 +306,9 @@ def find_availability(model, override=False, override_updated=False):
         if "time_last_checked" in cat[timing].metadata:
             time_last_checked = cat[timing].metadata["time_last_checked"]
         else:
-            time_last_checked = pd.Timestamp.today() - pd.Timedelta("30 days")  # just a big number
+            time_last_checked = pd.Timestamp.today() - pd.Timedelta(
+                "30 days"
+            )  # just a big number
         dt = pd.Timestamp.now() - time_last_checked
 
         if timing == "forecast" and (dt > stale or override_updated):
