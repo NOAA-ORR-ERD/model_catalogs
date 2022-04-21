@@ -11,4 +11,4 @@ git+https://github.com/intake/intake.git@d28391c54c875a47bf34f640e46c5f68109ba8b
 # git+https://github.com/intake/intake.git
 
 
-git+https://github.com/axiom-data-science/extract_model.git
+#git+https://github.com/axiom-data-science/extract_model.git
