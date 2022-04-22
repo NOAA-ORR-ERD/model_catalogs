@@ -1,0 +1,93 @@
+description: Tampa Bay model in ROMS, interpolated to regular grid.
+metadata:
+  alpha_shape:
+  - 4
+  - 35
+  bounding_box:
+  - -83.17
+  - 27.077499999999997
+  - -82.38499999999999
+  - 28.029999999999998
+  catalog_dir: ''
+  filetype: regulargrid
+  geospatial_bounds: POLYGON ((-82.52 27.0825, -82.50999999999999 27.0825, -82.5 27.084999999999997,
+    -82.49 27.084999999999997, -82.53 27.08, -82.52 27.0825))
+  grid_dim_(xyz):
+  - 329
+  - 393
+  - 11
+  grid_res_max_(km): 0.25
+  grid_res_min_(km): 0.25
+  grid_type: rectangular
+name: TBOFS_REGULARGRID
+sources:
+  forecast:
+    args:
+      chunks:
+        ocean_time: 1
+      combine: by_coords
+      compat: override
+      coords: minimal
+      data_vars: minimal
+      engine: netcdf4
+      parallel: true
+      urlpath:
+      - https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/TBOFS/MODELS/2022/04/08/nos.tbofs.regulargrid.n001.20220408.t00z.nc
+      - https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/TBOFS/MODELS/2022/04/08/nos.tbofs.regulargrid.n002.20220408.t00z.nc
+    description: 3D Tampa Bay model in ROMS, interpolated to regular grid, from 1
+      day ago with 48 hour forecast. Same as nowcast.
+    driver: opendap
+    metadata:
+      axis:
+        T: ocean_time
+        X: nx
+        Y: ny
+        Z: Depth
+      catalog_dir: C:/Users/amy.macfadyen/PyProjects/libgoods/model_catalogs/model_catalogs/catalogs/orig/
+      catloc: https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/TBOFS/MODELS/catalog.xml
+      output_period_(hr): 1
+      overall_end_datetime: Available through 48 hours after present time
+      overall_start_datetime: Available starting 1 day before present day.
+      standard_names:
+        eastward_sea_water_velocity: u_eastward
+        northward_sea_water_velocity: v_northward
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_practical_salinity: salt
+        sea_water_temperature: temp
+        time: ocean_time
+    parameters: {}
+  nowcast:
+    args:
+      chunks:
+        ocean_time: 1
+      combine: by_coords
+      compat: override
+      coords: minimal
+      data_vars: minimal
+      engine: netcdf4
+      parallel: true
+      urlpath: null
+    description: 3D Tampa Bay model in ROMS, interpolated to regular grid, from 1
+      day ago with 48 hour forecast. Same as forecast.
+    driver: opendap
+    metadata:
+      axis:
+        T: ocean_time
+        X: nx
+        Y: ny
+        Z: Depth
+      catalog_dir: C:/Users/amy.macfadyen/PyProjects/libgoods/model_catalogs/model_catalogs/catalogs/orig/
+      catloc: https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/TBOFS/MODELS/catalog.xml
+      output_period_(hr): 1
+      overall_end_datetime: Available through 48 hours after present time
+      overall_start_datetime: Available starting 1 day before present day.
+      standard_names:
+        eastward_sea_water_velocity: u_eastward
+        northward_sea_water_velocity: v_northward
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_practical_salinity: salt
+        sea_water_temperature: temp
+        time: ocean_time
+    parameters: {}

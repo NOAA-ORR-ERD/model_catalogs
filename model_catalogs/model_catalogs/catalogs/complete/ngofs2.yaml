@@ -1,0 +1,179 @@
+description: Northern Gulf of Mexico model in FVCOM.
+metadata:
+  alpha_shape:
+  - 20
+  - 1
+  bounding_box:
+  - 262.1380310058594
+  - 21.789426803588867
+  - 274.26678466796875
+  - 30.780752182006836
+  catalog_dir: ''
+  filetype: fields
+  geospatial_bounds: POLYGON ((273.8310241699219 29.740936279296875, 273.6911315917969
+    29.568429946899414, 272.5882568359375 29.234878540039062, 272.0340270996094 28.910865783691406,
+    271.88006591796875 28.753990173339844, 271.40667724609375 28.66600227355957, 270.8355712890625
+    28.42697525024414, 270.7014465332031 28.330280303955078, 270.40283203125 28.389476776123047,
+    270.0509338378906 28.45446014404297, 269.2301940917969 28.251657485961914, 268.9942321777344
+    28.0684757232666, 268.79071044921875 27.96959114074707, 267.8588562011719 28.0966854095459,
+    267.4420166015625 27.969345092773438, 267.0092468261719 27.84613800048828, 266.8078918457031
+    27.757314682006836, 266.2919006347656 28.0203800201416, 265.7392272949219 27.99517250061035,
+    265.0177307128906 27.919788360595703, 264.8197937011719 27.80949592590332, 264.1593322753906
+    27.757478713989258, 263.6195068359375 26.51042938232422, 263.38104248046875 25.93657875061035,
+    263.30645751953125 25.245033264160156, 263.2903137207031 25.087099075317383, 262.87689208984375
+    24.765674591064453, 262.6716613769531 23.954383850097656, 262.6907043457031 23.809900283813477,
+    262.5059814453125 22.60215950012207, 262.5700988769531 22.500499725341797, 262.43280029296875
+    21.829151153564453, 262.4195556640625 21.789426803588867, 262.37890625 21.842041015625,
+    262.20721435546875 22.23189926147461, 262.1869201660156 22.650014877319336, 262.19036865234375
+    22.742450714111328, 262.23687744140625 22.950359344482422, 262.29351806640625
+    23.66494369506836, 262.2964782714844 23.918344497680664, 262.2823791503906 24.2031192779541,
+    262.33831787109375 24.40622901916504, 262.45660400390625 24.86445426940918, 262.52386474609375
+    25.136823654174805, 262.6055908203125 25.953847885131836, 262.5410461425781 26.45374870300293,
+    262.4432067871094 26.841060638427734, 262.4324645996094 26.882343292236328, 262.2572021484375
+    27.281015396118164, 262.293212890625 27.385196685791016, 262.5287780761719 27.870107650756836,
+    262.8167724609375 28.15764045715332, 263.1814270019531 28.47209930419922, 263.3442687988281
+    28.720245361328125, 263.4128723144531 28.725189208984375, 263.55572509765625 28.749513626098633,
+    263.8285827636719 28.754676818847656, 264.72552490234375 29.728483200073242, 264.9281005859375
+    29.782005310058594, 265.2433166503906 29.774837493896484, 265.9046630859375 30.08566665649414,
+    265.9096374511719 30.087980270385742, 266.7570495605469 30.253135681152344, 266.7752685546875
+    30.254749298095703, 267.8729553222656 29.760278701782227, 268.0635070800781 29.81812858581543,
+    268.806396484375 30.50066566467285, 269.7319030761719 30.342140197753906, 269.8669128417969
+    30.370149612426758, 270.650146484375 30.366039276123047, 270.6809387207031 30.375789642333984,
+    271.01251220703125 30.427204132080078, 271.01397705078125 30.427583694458008,
+    271.0707092285156 30.43079948425293, 271.12982177734375 30.427696228027344, 271.1421813964844
+    30.427337646484375, 271.1552429199219 30.427114486694336, 271.98077392578125 30.777507781982422,
+    272.0734558105469 30.76365852355957, 272.84796142578125 30.549306869506836, 273.0113220214844
+    30.56453514099121, 273.66558837890625 30.47484016418457, 273.7618408203125 30.475826263427734,
+    273.77435302734375 30.47444725036621, 273.8128356933594 30.455394744873047, 273.8377685546875
+    30.429744720458984, 274.1545715332031 30.183265686035156, 274.2294616699219 30.135080337524414,
+    274.18182373046875 30.093280792236328, 273.8310241699219 29.740936279296875))
+  grid_dim_(node,nele,siglay):
+  - 303714
+  - 569405
+  - 40
+  grid_res_max_(km): 10
+  grid_res_min_(km): 0.05
+  grid_type: unstructured
+name: NGOFS2
+sources:
+  forecast:
+    args:
+      chunks:
+        time: 1
+      combine: by_coords
+      compat: override
+      coords: minimal
+      data_vars: minimal
+      drop_variables:
+      - siglay
+      - siglev
+      - Itime2
+      engine: netcdf4
+      parallel: true
+      urlpath:
+      - https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/2022/04/08/nos.ngofs2.fields.n000.20220408.t03z.nc
+      - https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/2022/04/08/nos.ngofs2.fields.n003.20220408.t03z.nc
+    description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour
+      forecast.
+    driver: opendap
+    metadata:
+      axis:
+        T: time
+      catalog_dir: C:/Users/amy.macfadyen/PyProjects/libgoods/model_catalogs/model_catalogs/catalogs/orig/
+      catloc: https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/catalog.xml
+      output_period_(hr): 3
+      overall_end_datetime: Available through 54 hours after present time
+      overall_start_datetime: Available from a month before present day.
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        ocean_sigma_coordinate:
+        - siglay
+        - siglev
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_practical_salinity: salinity
+        sea_water_temperature: temp
+        time: time
+    parameters: {}
+  hindcast:
+    args:
+      chunks:
+        time: 1
+      combine: by_coords
+      compat: override
+      coords: minimal
+      data_vars: minimal
+      drop_variables:
+      - siglay
+      - siglev
+      - Itime2
+      engine: netcdf4
+      parallel: true
+      urlpath: null
+    description: Northern Gulf of Mexico model in FVCOM from 2021 until 4 days ago.
+    driver: opendap
+    metadata:
+      axis:
+        T: time
+      catalog_dir: C:/Users/amy.macfadyen/PyProjects/libgoods/model_catalogs/model_catalogs/catalogs/orig/
+      catloc: https://www.ncei.noaa.gov/thredds/catalog/model-ngofs2-files/catalog.xml
+      output_period_(hr): 3
+      overall_end_datetime: Available through 4 days before present time.
+      overall_start_datetime: Available starting 2021-03-22.
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        ocean_sigma_coordinate:
+        - siglay
+        - siglev
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_practical_salinity: salinity
+        sea_water_temperature: temp
+        time: time
+    parameters: {}
+  nowcast:
+    args:
+      chunks:
+        time: 1
+      combine: by_coords
+      compat: override
+      coords: minimal
+      data_vars: minimal
+      drop_variables:
+      - siglay
+      - siglev
+      - Itime2
+      engine: netcdf4
+      parallel: true
+      urlpath: null
+    description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour
+      forecast (identical to forecast).
+    driver: opendap
+    metadata:
+      axis:
+        T: time
+      catalog_dir: C:/Users/amy.macfadyen/PyProjects/libgoods/model_catalogs/model_catalogs/catalogs/orig/
+      catloc: https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/catalog.xml
+      output_period_(hr): 3
+      overall_end_datetime: Available through 54 hours after present time
+      overall_start_datetime: Available from a month before present day.
+      standard_names:
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        ocean_sigma_coordinate:
+        - siglay
+        - siglev
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_practical_salinity: salinity
+        sea_water_temperature: temp
+        time: time
+    parameters: {}
