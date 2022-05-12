@@ -10,6 +10,11 @@ h5netcdf
 # intake
 # intake-xarray
 
+alphashape
+click-log
+networkx
+rtree
+
 numpy
 pandas
 shapely
