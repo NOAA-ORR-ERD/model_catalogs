@@ -1,20 +1,32 @@
-python=3.8  # this is required for the dev tools/precommit stuff
-pytest
+python>=3.8,<3.10 #
+# python=3.8.*  # this is required for the dev tools/precommit stuff
+# pytest
 # alphashape
 cf_xarray
 dask
 h5netcdf
 
-# need latest non-released versions of these -- see pip_requirements.py file
+# need latest non-released versions of these -- see pip_requirements.txt
 # intake
 # intake-xarray
+
+numpy
+pandas
+shapely
+siphon
+xarray
+
+# these because intake-xarray and/or extract-model needs them
+appdirs
+asciitree
+entrypoints
+fasteners
+numcodecs
+zarr
+
 
 # needed for demos / testing
 # ipython
 # jupyter
 # jupyterlab
 # matplotlib
-numpy
-pandas
-shapely
-xarray

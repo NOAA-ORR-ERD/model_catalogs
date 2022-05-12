@@ -1,6 +1,6 @@
 # a few things that conda-forge does not have
 
-siphon  # can get from conda-forge but isn't recognized
+# siphon  # can get from conda-forge but isn't recognized
 
 # We need the unreleased versions of these for now:
 
@@ -10,5 +10,6 @@ git+https://github.com/intake/intake-xarray.git@b78950df8d1ca1250909ee2aaa0bc28c
 git+https://github.com/intake/intake.git@d28391c54c875a47bf34f640e46c5f68109ba8b5
 # git+https://github.com/intake/intake.git
 
-
-#git+https://github.com/axiom-data-science/extract_model.git
+# may need this some day, but there are issues with dependencies on Windows
+# could probably install with --no-deps
+# git+https://github.com/axiom-data-science/extract_model.git
