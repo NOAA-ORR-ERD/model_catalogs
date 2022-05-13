@@ -1,4 +1,4 @@
-python>=3.8,<3.10 #
+python
 # python=3.8.*  # this is required for the dev tools/precommit stuff
 # pytest
 # alphashape
