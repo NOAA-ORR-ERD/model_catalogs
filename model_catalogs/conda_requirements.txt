@@ -1,8 +1,7 @@
-python>=3.8.*,<3.10
+python>=3.8,<3.10
 cf_xarray
 dask
 h5netcdf
-setuptools
 requests
 
 # need latest non-released versions of these -- see pip_requirements.txt
