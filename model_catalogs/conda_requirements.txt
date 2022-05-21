@@ -1,4 +1,4 @@
-python>=3.8,<3.10
+python>=3.8,<3.11
 cf_xarray
 dask
 h5netcdf
