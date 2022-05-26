@@ -1,0 +1,2 @@
+# test requirements for model_catalogs
+pytest
