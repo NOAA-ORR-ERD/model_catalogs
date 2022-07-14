@@ -1,0 +1,12 @@
+alphashape
+cf_xarray
+dask
+extract_model
+flake8
+h5netcdf
+numpy
+pandas
+pip
+pyproj
+shapely
+xarray
