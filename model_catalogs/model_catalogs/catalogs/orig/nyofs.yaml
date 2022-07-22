@@ -36,6 +36,9 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         time: time
         upward_sea_water_velocity: w
+      cf_coordinates:
+        - longitude
+        - latitude
 
   nowcast:
     driver: opendap
@@ -73,6 +76,9 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         time: time
         upward_sea_water_velocity: w
+      cf_coordinates:
+        - longitude
+        - latitude
 
   hindcast:
     driver: opendap
@@ -108,6 +114,9 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         time: time
         upward_sea_water_velocity: w
+      cf_coordinates:
+        - longitude
+        - latitude
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -136,3 +145,6 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         time: time
         upward_sea_water_velocity: w
+      cf_coordinates:
+        - longitude
+        - latitude
