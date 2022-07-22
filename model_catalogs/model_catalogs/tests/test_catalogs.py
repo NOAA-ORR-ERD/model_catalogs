@@ -8,6 +8,9 @@ them instead.
 """
 
 import os
+import tempfile
+
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -16,11 +19,19 @@ import pytest
 import model_catalogs as mc
 
 
+# make temp dir
+temp_dir = tempfile.TemporaryDirectory()
+
 # overwrite built in catalog locations
-mc.CATALOG_PATH = f"{mc.__path__[0]}/tests/catalogs"
-mc.CATALOG_PATH_DIR_ORIG = f"{mc.CATALOG_PATH}/orig"
-mc.CATALOG_PATH_DIR = f"{mc.CATALOG_PATH}/complete"
-mc.CATALOG_PATH_UPDATED = f"{mc.CATALOG_PATH}/updated"
+mc.CATALOG_PATH = Path(temp_dir.name)
+# no need to replace orig path, just use from where they are
+# mc.CATALOG_PATH_DIR_ORIG = mc.CATALOG_PATH / "orig"
+mc.CATALOG_PATH_DIR = mc.CATALOG_PATH / "complete"
+mc.CATALOG_PATH_UPDATED = mc.CATALOG_PATH / "updated"
+
+# set up catalog directories for this testing file
+mc.CATALOG_PATH_UPDATED.mkdir(parents=True, exist_ok=True)
+mc.CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
 
 
 def test_setup_source_catalog():
@@ -29,7 +40,8 @@ def test_setup_source_catalog():
     source_cat = mc.setup_source_catalog(override=True)
 
     # source_catalog.yaml in main dir?
-    path = f"{mc.__path__[0]}/tests/catalogs/source_catalog.yaml"
+    path = mc.CATALOG_PATH / "source_catalog.yaml"
+    # path = f"{mc.__path__[0]}/tests/catalogs/source_catalog.yaml"
     assert os.path.exists(path)
 
     # has specific date/source catalog files encoded in the catalog to trace which
@@ -224,3 +236,7 @@ def test_hindcast_forecast_aggregation():
 #             source = mc.add_url_path(cat, start_date=day, end_date=nextday)
 #             ds = source.to_dask()
 #             ds.close()
+
+
+# after these tests, remove temp dir:
+temp_dir.cleanup()

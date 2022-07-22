@@ -2,10 +2,9 @@
 Set up for using package.
 """
 
-import os
 import shutil
 
-from glob import glob
+from pathlib import Path
 
 from pkg_resources import DistributionNotFound, get_distribution
 
@@ -33,30 +32,28 @@ except DistributionNotFound:
 
 
 # set up known locations for catalogs. Can be overwritten HOW
-CATALOG_PATH = f"{__path__[0]}/catalogs"
+# By default, put catalog directory in home directory
+CATALOG_PATH = Path.home() / "catalogs"
 SOURCE_CATALOG_NAME = "source_catalog.yaml"
-
-CATALOG_PATH_DIR_ORIG = f"{CATALOG_PATH}/orig"
-CATALOG_PATH_DIR = f"{CATALOG_PATH}/complete"
-CATALOG_PATH_UPDATED = f"{CATALOG_PATH}/updated"
-CATALOG_PATH_TMP = f"{CATALOG_PATH}/tmp"
+CATALOG_PATH_DIR_ORIG = CATALOG_PATH / "orig"
+CATALOG_PATH_DIR = CATALOG_PATH / "complete"
+CATALOG_PATH_UPDATED = CATALOG_PATH / "updated"
+CATALOG_PATH_TMP = CATALOG_PATH / "tmp"
+SOURCE_TRANSFORM = CATALOG_PATH / "transform.yaml"
 
 # make directories
-os.makedirs(".catalogs", exist_ok=True)
-os.makedirs(f"{__path__[0]}/catalogs/updated", exist_ok=True)
-os.makedirs(f"{__path__[0]}/catalogs/tmp", exist_ok=True)
+# CATALOG_PATH.mkdir(parents=True, exist_ok=True)
+CATALOG_PATH_DIR_ORIG.mkdir(parents=True, exist_ok=True)
+CATALOG_PATH_UPDATED.mkdir(parents=True, exist_ok=True)
+CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
 
-# set up testing
-os.makedirs(f"{__path__[0]}/tests/catalogs", exist_ok=True)
-# # copy source catalogs to tests
-# os.makedirs(f"{__path__[0]}/tests/catalogs/source_catalogs/", exist_ok=True)
-os.makedirs(f"{__path__[0]}/tests/catalogs/orig", exist_ok=True)
+# Move "orig" catalog files to catalog dir
+PKG_CATALOG_PATH_DIR_ORIG = Path(__path__[0]) / "catalogs" / "orig"
 [
-    shutil.copy(fname, f"{__path__[0]}/tests/catalogs/orig/")
-    for fname in glob(f"{__path__[0]}/catalogs/orig/*")
+    shutil.copy(fname, CATALOG_PATH_DIR_ORIG)
+    for fname in PKG_CATALOG_PATH_DIR_ORIG.glob("*.yaml")
 ]
-# also copy transform template
-shutil.copy(
-    f"{__path__[0]}/catalogs/transform.yaml",
-    f"{__path__[0]}/tests/catalogs/",
-)
+
+# Move "transform.yaml" to catalog dir
+SOURCE_TRANSFORM_REPO = Path(__path__[0]) / "catalogs" / "transform.yaml"
+shutil.copy(SOURCE_TRANSFORM_REPO, SOURCE_TRANSFORM)

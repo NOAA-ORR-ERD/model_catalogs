@@ -1,35 +1,12 @@
-python>=3.8,<3.11
+alphashape
 cf_xarray
 dask
+extract_model
+flake8
 h5netcdf
-requests
-
-# need latest non-released versions of these -- see pip_requirements.txt
-# intake
-# intake-xarray
-
-alphashape
-click-log
-networkx
-rtree
-
 numpy
 pandas
+pip
+pyproj
 shapely
-siphon
 xarray
-
-# these because intake-xarray and/or extract-model needs them
-appdirs
-asciitree
-entrypoints
-fasteners
-numcodecs
-zarr
-
-
-# needed for demos / testing
-# ipython
-# jupyter
-# jupyterlab
-# matplotlib
