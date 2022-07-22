@@ -38,8 +38,10 @@ sources:
         sea_water_temperature: temp
         time: time
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   nowcast:
     driver: opendap
@@ -77,8 +79,10 @@ sources:
         sea_water_temperature: temp
         time: time
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast:
     driver: opendap
@@ -116,8 +120,10 @@ sources:
         sea_water_temperature: temp
         time: time
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -147,5 +153,7 @@ sources:
         sea_water_temperature: temp
         time: time
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon

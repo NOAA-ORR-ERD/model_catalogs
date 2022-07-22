@@ -39,8 +39,10 @@ sources:
         longitude: lon
         latitude: lat
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   nowcast:
     driver: opendap
@@ -80,8 +82,10 @@ sources:
         longitude: lon
         latitude: lat
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast:
     driver: opendap
@@ -121,8 +125,10 @@ sources:
         longitude: lon
         latitude: lat
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -154,5 +160,7 @@ sources:
         longitude: lon
         latitude: lat
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon

@@ -37,8 +37,10 @@ sources:
         time: time
         upward_sea_water_velocity: w
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   nowcast:
     driver: opendap
@@ -77,8 +79,10 @@ sources:
         time: time
         upward_sea_water_velocity: w
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast:
     driver: opendap
@@ -115,8 +119,10 @@ sources:
         time: time
         upward_sea_water_velocity: w
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -146,5 +152,7 @@ sources:
         time: time
         upward_sea_water_velocity: w
       coords:
-        - lon
+        - time
+        - sigma
         - lat
+        - lon
