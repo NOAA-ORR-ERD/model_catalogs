@@ -75,7 +75,7 @@ def parse_bbox(val: str) -> Tuple[float, float, float, float]:
     values = val.split(',')
     if len(values) != 4:
         raise ValueError('bbox should include four numbers: lon_min,lat_min,lon_max,lat_max')
-    return tuple(*[float(i) for i in values])
+    return tuple(float(i) for i in values)
 
 
 def fetch(fetch_config):
