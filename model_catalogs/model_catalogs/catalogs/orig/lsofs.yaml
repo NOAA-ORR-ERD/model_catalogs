@@ -38,9 +38,9 @@ sources:
         time: time
         longitude: lon
         latitude: lat
-      cf_coordinates:
-        - longitude
-        - latitude
+      coords:
+        - lon
+        - lat
 
   nowcast:
     driver: opendap
@@ -79,9 +79,9 @@ sources:
         time: time
         longitude: lon
         latitude: lat
-      cf_coordinates:
-        - longitude
-        - latitude
+      coords:
+        - lon
+        - lat
 
   hindcast:
     driver: opendap
@@ -120,9 +120,9 @@ sources:
         time: time
         longitude: lon
         latitude: lat
-      cf_coordinates:
-        - longitude
-        - latitude
+      coords:
+        - lon
+        - lat
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -153,6 +153,6 @@ sources:
         time: time
         longitude: lon
         latitude: lat
-      cf_coordinates:
-        - longitude
-        - latitude
+      coords:
+        - lon
+        - lat

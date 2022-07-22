@@ -65,8 +65,8 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     # except Exception:
     #     pass
 
-    if metadata is not None and 'cf_coordinates' in metadata:
-        ds = ds.cf.set_coords(['longitude', 'latitude'])
+    if metadata is not None and 'coords' in metadata:
+        ds = ds.assign_coords({ k: ds[k] for k in metadata['coords'] })
 
     # set axis attributes (time, lon, lat, z potentially)
     for ax_name, var_names in axis.items():
