@@ -117,17 +117,27 @@ def parse_config(main,
                  default_bbox,
                  output_dir,
                  default_timing='hindcast',
-                 standard_names=None) -> FetchConfig:
+                 standard_names=None,
+                 default_start=None,
+                 default_end=None) -> FetchConfig:
     if standard_names is None:
         standard_names = STANDARD_NAMES
     parser = ArgumentParser(description=main.__doc__)
     parser.add_argument('-t',
                         '--timing',
                         choices=['hindcast', 'nowcast', 'forecast'],
-                        default='hindcast',
+                        default=default_timing,
                         help='Model Timing Choice.')
-    parser.add_argument('-s', '--start', type=pd.Timestamp, help='Request start time')
-    parser.add_argument('-e', '--end', type=pd.Timestamp, help='Request end time')
+    parser.add_argument('-s',
+                        '--start',
+                        type=pd.Timestamp,
+                        default=default_start,
+                        help='Request start time')
+    parser.add_argument('-e',
+                        '--end',
+                        type=pd.Timestamp,
+                        default=default_end,
+                        help='Request end time')
     parser.add_argument('-f', '--force', action='store_true', help='Overwrite existing files')
     parser.add_argument('--bbox',
                         type=parse_bbox,

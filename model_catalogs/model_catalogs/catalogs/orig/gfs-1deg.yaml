@@ -21,6 +21,16 @@ sources:
       overall_end_datetime: '16 days from today.'
       output_period_(hr): 3
       axis:
+        # time is for instantaneous variables which are most
+        # time2 is the time dimension for averaged variables
+        # time3 is for precipitation accumulation variables
         T: ['time', 'time2', 'time1', 'time3']
       standard_names:
         time: time
+        air_temperature: Temperature_height_above_ground
+        wind_u: u-component_of_wind_height_above_ground
+        wind_v: v-component_of_wind_height_above_ground
+        wind_gust: Wind_speed_gust_surface
+        dew_point_temperature: Dewpoint_temperature_height_above_ground
+        longitude: lon
+        latitude: lat

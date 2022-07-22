@@ -98,8 +98,20 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     except KeyError:
         pass
 
-    # decode times if times are floats
-    if ds.cf["T"].dtype == "float64":
+    # decode times if times are floats.
+    # Some datasets like GFS have multiple time coordinates for different phenomena like
+    # precipitation accumulation vs winds vs surface albedo average.
+    if 'T' in axis and len(axis['T']) > 1:
+        for time_var in axis['T']:
+            if ds[time_var].dtype == 'float64':
+                ds = xr.decode_cf(ds, decode_times=True)
+                break
+    elif ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
+
+    # This is an internal attribute used by netCDF which xarray doesn't know or care about, but can
+    # be returned from THREDDS.
+    if '_NCProperties' in ds.attrs:
+        del ds.attrs['_NCProperties']
 
     return ds
