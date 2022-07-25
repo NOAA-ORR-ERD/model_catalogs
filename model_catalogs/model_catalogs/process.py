@@ -46,7 +46,6 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     Using supplied axis variable names and variable name mapping to associated
     standard names (from CF conventions), update the Dataset metadata.
     """
-
     # set standard_names for all variables
     for stan_name, var_names in standard_names.items():
         if not isinstance(var_names, list):
@@ -101,7 +100,7 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     # decode times if times are floats.
     # Some datasets like GFS have multiple time coordinates for different phenomena like
     # precipitation accumulation vs winds vs surface albedo average.
-    if "T" in axis and len(axis["T"]) > 1:
+    if "T" in axis and isinstance(axis["T"], list) and len(axis["T"]) > 1:
         for time_var in axis["T"]:
             if ds[time_var].dtype == "float64":
                 ds = xr.decode_cf(ds, decode_times=True)
