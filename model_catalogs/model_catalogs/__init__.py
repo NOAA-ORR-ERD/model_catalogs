@@ -14,6 +14,7 @@ from .model_catalogs import (  # noqa
     find_availability,
     make_catalog,
     setup_source_catalog,
+    transform_source,
 )
 from .utils import (  # noqa
     agg_for_date,

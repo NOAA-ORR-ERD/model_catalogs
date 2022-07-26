@@ -47,7 +47,8 @@ def add_attributes(ds, axis, standard_names):
         if not isinstance(var_names, list):
             var_names = [var_names]
         for var_name in var_names:
-            ds[var_name].attrs["standard_name"] = stan_name
+            if var_name in ds.data_vars:
+                ds[var_name].attrs["standard_name"] = stan_name
 
     # # Run code to find vertical coordinates
     # try:
@@ -93,5 +94,10 @@ def add_attributes(ds, axis, standard_names):
     # decode times if times are floats
     if ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
+
+    # This is an internal attribute used by netCDF which xarray doesn't know or care about, but can
+    # be returned from THREDDS.
+    if "_NCProperties" in ds.attrs:
+        del ds.attrs["_NCProperties"]
 
     return ds
