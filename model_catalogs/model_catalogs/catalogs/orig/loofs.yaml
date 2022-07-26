@@ -37,6 +37,11 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
+      coords:
+        - time
+        - sigma
+        - lat
+        - lon
 
   nowcast:
     driver: opendap
@@ -76,6 +81,11 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
+      coords:
+        - time
+        - sigma
+        - lat
+        - lon
 
   hindcast:
     driver: opendap
@@ -114,6 +124,11 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
+      coords:
+        - time
+        - sigma
+        - lat
+        - lon
 
   hindcast-forecast-aggregation:
     driver: opendap
@@ -142,3 +157,8 @@ sources:
         sea_surface_height_above_mean_sea_level: zeta
         sea_water_temperature: temp
         time: time
+      coords:
+        - time
+        - sigma
+        - lat
+        - lon
