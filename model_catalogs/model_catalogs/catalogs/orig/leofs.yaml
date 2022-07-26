@@ -32,42 +32,11 @@ sources:
         default: today
     driver: opendap
     metadata:
+      sample_locs: [
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LEOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.leofs.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LEOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.leofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
+      ]
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/catalog.xml'
-      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 120 hours after present time'
-      output_period_(hr): 1
-      axis:
-        T: time
-      standard_names:
-        eastward_sea_water_velocity: u
-        eastward_wind: uwind_speed
-        northward_sea_water_velocity: v
-        northward_wind: vwind_speed
-        ocean_sigma_coordinate: [siglay, siglev]
-        sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
-        sea_water_temperature: temp
-        sea_water_practical_salinity: salinity
-        time: time
-
-  nowcast:
-    description: Lake Erie model in FVCOM from 30 days ago with 120 hour forecast (identical to forecast).
-    args:
-      chunks:
-        ocean_time: 1
-      drop_variables: ['siglay','siglev','Itime2']
-      compat: override
-      combine: by_coords
-      parallel: True
-      data_vars: minimal
-      coords: minimal
-      engine: netcdf4
-      urlpath: null
-    driver: opendap
-    metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/catalog.xml'
-      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
       overall_end_datetime: 'Available through 120 hours after present time'
       output_period_(hr): 1
@@ -100,8 +69,10 @@ sources:
       engine: netcdf4
       urlpath: null
     metadata:
+      # Sample files with known dates
+      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc",
+      "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"]
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-leofs/catalog.xml'
-      # catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-leofs/{date.year}/{str(date.month).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available starting 2016-03-10'
       overall_end_datetime: 'Available through 4 days before present time'
       output_period_(hr): 1
