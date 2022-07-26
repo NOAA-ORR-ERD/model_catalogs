@@ -10,11 +10,11 @@ metadata:
 
 sources:
   forecast:
-    description: San Francisco Bay model in FVCOM, interpolated to regular grid, from 1 day ago with 48 hour forecast. Same as nowcast.
+    description: San Francisco Bay model in FVCOM, interpolated to regular grid, from 1 day ago with 48 hour forecast.
     args:
       chunks:
         ocean_time: 1
-      drop_variables: ['siglay','siglev','Itime2']
+      drop_variables: ['Itime2']
       compat: override
       combine: by_coords
       parallel: True
@@ -32,49 +32,11 @@ sources:
         default: today
     driver: opendap
     metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/catalog.xml'
-      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: 'Available starting 1 day before present day.'
-      overall_end_datetime: 'Available through 48 hours after present time'
-      output_period_(hr): 1
-      axis:
-        T: ocean_time
-        X: nx
-        Y: ny
-        Z: Depth
-      standard_names:
-        eastward_sea_water_velocity: u_eastward
-        northward_sea_water_velocity: v_northward
-        sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
-        sea_water_temperature: temp
-        sea_water_practical_salinity: salt
-        time: ocean_time
-  nowcast:
-    description: San Francisco Bay model in FVCOM, interpolated to regular grid, from 1 day ago with 48 hour forecast. Same as forecast.
-    args:
-      chunks:
-        ocean_time: 1
-      compat: override
-      combine: by_coords
-      drop_variables: ['siglay','siglev','Itime2']
-      parallel: True
-      data_vars: minimal
-      coords: minimal
-      engine: netcdf4
-      urlpath: [
+      sample_locs: [
       "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.regulargrid.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
       "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.sfbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc",
       ]
-    parameters:
-      tod:
-        description: Pandas like Timestamp for today
-        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
-        default: today
-    driver: opendap
-    metadata:
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/catalog.xml'
-      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available starting 1 day before present day.'
       overall_end_datetime: 'Available through 48 hours after present time'
       output_period_(hr): 1
