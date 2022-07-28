@@ -14,7 +14,7 @@ sources:
     args:
       chunks:
         ocean_time: 1
-      drop_variables: ['siglay','siglev','Itime2']
+      drop_variables: ['Itime2']
       compat: override
       combine: by_coords
       parallel: True

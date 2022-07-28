@@ -545,30 +545,51 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     if not isinstance(end_date, pd.Timestamp):
         end_date = pd.Timestamp(end_date)
 
-    # which source to use from catalog for desired date range
+    # # which source to use from catalog for desired date range
+    # if "RTOFS" in model:
+    #     if "GLOBAL" in model:
+    #         source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))            
+    #     else:
+    #         # RTOFS needs to have yesterday's date input, then it is able to
+    #         # create the necessary file names to get the model output
+    #         source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))
+
     if timing is None:
         if start_date >= pd.Timestamp(
             cat["forecast"].metadata["start_datetime"]
         ).normalize() and end_date <= pd.Timestamp(
             cat["forecast"].metadata["end_datetime"]
         ):
-            source = cat["forecast"]
+            timing = "forecast"
         elif (
             "hindcast" in list(cat)
             and start_date
             >= pd.Timestamp(cat["hindcast"].metadata["start_datetime"]).normalize()
             and end_date <= pd.Timestamp(cat["hindcast"].metadata["end_datetime"])
         ):
-            source = cat["hindcast"]
+            timing = "hindcast"
         else:
             print("date range does not easily fit into forecast or hindcast")
-    else:  # assume user knows their choice works
-        source = cat[timing]
+
+    source = cat[timing]
+
+    # RTOFS has special issues to form the paths for the model output available right now
+    if "RTOFS-EAST" in model or "RTOFS-ALASKA" in model or "RTOFS-WEST" in model:
+        # if "GLOBAL" in model:
+        #     source_orig = cat[timing]         
+        # else:
+        # RTOFS needs to have yesterday's date input, then it is able to
+        # create the necessary file names to get the model output
+        source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))
+    
+    elif "RTOFS-GLOBAL" in model or "RTOFS-GLOBAL_2D" in model:
+        source_orig = cat[timing]         
 
     # urlpath is None or a list of filler files if the filepaths need to be determined
-    if (
+    elif (
         source.urlpath is None or isinstance(source.urlpath, list)
     ) and "catloc" in source.metadata:
+
         if "pattern" in source.metadata:
             pattern = source.metadata["pattern"]
         else:

@@ -14,7 +14,6 @@ sources:
     args:
       chunks:
         time: 1
-      # drop_variables: ['siglay','siglev','Itime2']
       compat: override
       combine: by_coords
       parallel: True
@@ -42,7 +41,7 @@ sources:
       output_period_(hr): 1
       axis:
         T: time
-        Z: zval
+        Z: nv
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: uwind_speed
@@ -53,6 +52,11 @@ sources:
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
+      coords:
+        - time
+        - zval
+        - lat
+        - lon
 
   hindcast:
     driver: opendap
@@ -60,7 +64,6 @@ sources:
     args:
       chunks:
         ocean_time: 1
-      # drop_variables: ['siglay','siglev','Itime2']
       compat: override
       combine: by_coords
       parallel: True
@@ -78,7 +81,7 @@ sources:
       output_period_(hr): 1
       axis:
         T: time
-        Z: zval
+        Z: nv
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: uwind_speed
@@ -89,3 +92,8 @@ sources:
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
+      coords:
+        - time
+        - zval
+        - lat
+        - lon
