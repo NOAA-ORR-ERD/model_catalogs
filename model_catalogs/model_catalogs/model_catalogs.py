@@ -435,7 +435,7 @@ def find_availability(model, override=False, override_updated=False):
         )
         return new_user_cat
 
-    
+
 def transform_source(source_orig):
     """DOCSTRINGS"""
 
@@ -478,7 +478,7 @@ def transform_source(source_orig):
         sources,
         "User-catalog.",
         "User-made catalog.",
-        source_transform.metadata,  # this is where the most metadata is, but probably not important for cat
+        source_transform.metadata,  # this is where the most metadata is, but probably not important for cat  # noqa: E501
         [source._entry._driver for source in sources],
         cat_path=mc.CATALOG_PATH_TMP,
     )
@@ -545,15 +545,7 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     if not isinstance(end_date, pd.Timestamp):
         end_date = pd.Timestamp(end_date)
 
-    # # which source to use from catalog for desired date range
-    # if "RTOFS" in model:
-    #     if "GLOBAL" in model:
-    #         source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))            
-    #     else:
-    #         # RTOFS needs to have yesterday's date input, then it is able to
-    #         # create the necessary file names to get the model output
-    #         source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))
-
+    # which source to use from catalog for desired date range
     if timing is None:
         if start_date >= pd.Timestamp(
             cat["forecast"].metadata["start_datetime"]
@@ -575,15 +567,14 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
 
     # RTOFS has special issues to form the paths for the model output available right now
     if "RTOFS-EAST" in model or "RTOFS-ALASKA" in model or "RTOFS-WEST" in model:
-        # if "GLOBAL" in model:
-        #     source_orig = cat[timing]         
-        # else:
         # RTOFS needs to have yesterday's date input, then it is able to
         # create the necessary file names to get the model output
-        source_orig = cat[timing](yesterday=pd.Timestamp.today()-pd.Timedelta('1 day'))
-    
+        source_orig = cat[timing](
+            yesterday=pd.Timestamp.today() - pd.Timedelta("1 day")
+        )
+
     elif "RTOFS-GLOBAL" in model or "RTOFS-GLOBAL_2D" in model:
-        source_orig = cat[timing]         
+        source_orig = cat[timing]
 
     # urlpath is None or a list of filler files if the filepaths need to be determined
     elif (
@@ -624,7 +615,9 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
 
             ind = catrefs.index(cat_ref_to_match)
 
-            filelocs = mc.find_filelocs(catrefs[ind], catloc, filetype=cat.metadata["filetype"])
+            filelocs = mc.find_filelocs(
+                catrefs[ind], catloc, filetype=cat.metadata["filetype"]
+            )
             filelocs_urlpath.extend(
                 mc.agg_for_date(
                     date,
@@ -662,8 +655,12 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     # store info in source_orig
     # source_orig.metadata["model"] = model
     source_orig.metadata["timing"] = timing
-    source_orig.metadata["start_date"] = start_date.isoformat() if start_date is not None else None,
-    source_orig.metadata["end_date"] = end_date.isoformat() if end_date is not None else None,
+    source_orig.metadata["start_date"] = (
+        start_date.isoformat() if start_date is not None else None,
+    )
+    source_orig.metadata["end_date"] = (
+        end_date.isoformat() if end_date is not None else None,
+    )
     # Add original overall model catalog metadata to this next version
     source_orig.metadata.update(cat.metadata)
 

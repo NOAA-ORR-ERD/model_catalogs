@@ -84,6 +84,7 @@ def parse_bbox(val: str) -> Tuple[float, float, float, float]:
 
 
 def fetch(fetch_config):
+    """Fetch output"""
     print("Setting up source catalog")
     with Timer("\tSource catalog generated in {:.1f} ms"):
         source_catalog = mc.setup_source_catalog()
@@ -132,6 +133,8 @@ def parse_config(
     default_start=None,
     default_end=None,
 ) -> FetchConfig:
+    """Parse config file"""
+
     if standard_names is None:
         standard_names = STANDARD_NAMES
     parser = ArgumentParser(description=main.__doc__)
