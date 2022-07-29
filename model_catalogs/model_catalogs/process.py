@@ -51,7 +51,8 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
         if not isinstance(var_names, list):
             var_names = [var_names]
         for var_name in var_names:
-            ds[var_name].attrs["standard_name"] = stan_name
+            if var_name in ds.data_vars:
+                ds[var_name].attrs["standard_name"] = stan_name
 
     # # Run code to find vertical coordinates
     # try:
