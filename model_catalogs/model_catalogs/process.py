@@ -1,6 +1,7 @@
 """
 This file contains all information for transforming the Datasets.
 """
+from typing import Optional
 
 import cf_xarray  # noqa
 import numpy as np
@@ -25,9 +26,13 @@ class DatasetTransform(GenericTransform):
         """Makes it so can read in model output."""
         if self._ds is None:
             self._pick()
+            kwargs = self._params["transform_kwargs"]
+            kwargs["metadata"] = self.metadata
             self._ds = self._transform(
-                self._source.to_dask(), **self._params["transform_kwargs"]
+                self._source.to_dask(),
+                **kwargs,
             )
+
         return self._ds
 
     def read(self):
@@ -35,19 +40,19 @@ class DatasetTransform(GenericTransform):
         return self.to_dask()
 
 
-def add_attributes(ds, axis, standard_names):
+def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     """Update Dataset metadata.
 
     Using supplied axis variable names and variable name mapping to associated
     standard names (from CF conventions), update the Dataset metadata.
     """
-
     # set standard_names for all variables
     for stan_name, var_names in standard_names.items():
         if not isinstance(var_names, list):
             var_names = [var_names]
         for var_name in var_names:
-            ds[var_name].attrs["standard_name"] = stan_name
+            if var_name in ds.data_vars:
+                ds[var_name].attrs["standard_name"] = stan_name
 
     # # Run code to find vertical coordinates
     # try:
@@ -59,6 +64,9 @@ def add_attributes(ds, axis, standard_names):
     #     ds.cf.decode_vertical_coords(outnames=outnames)
     # except Exception:
     #     pass
+
+    if metadata is not None and "coords" in metadata:
+        ds = ds.assign_coords({k: ds[k] for k in metadata["coords"]})
 
     # set axis attributes (time, lon, lat, z potentially)
     for ax_name, var_names in axis.items():
@@ -90,8 +98,20 @@ def add_attributes(ds, axis, standard_names):
     except KeyError:
         pass
 
-    # decode times if times are floats
-    if ds.cf["T"].dtype == "float64":
+    # decode times if times are floats.
+    # Some datasets like GFS have multiple time coordinates for different phenomena like
+    # precipitation accumulation vs winds vs surface albedo average.
+    if "T" in axis and isinstance(axis["T"], list) and len(axis["T"]) > 1:
+        for time_var in axis["T"]:
+            if ds[time_var].dtype == "float64":
+                ds = xr.decode_cf(ds, decode_times=True)
+                break
+    elif ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
+
+    # This is an internal attribute used by netCDF which xarray doesn't know or care about, but can
+    # be returned from THREDDS.
+    if "_NCProperties" in ds.attrs:
+        del ds.attrs["_NCProperties"]
 
     return ds
