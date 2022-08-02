@@ -14,6 +14,12 @@ In the `LibGOODS/model_catalogs` directory, install conda environment:
 $ conda env create -f environment.yml
 ```
 
+Alternatively, if you have an existing environment you want to add to:
+``` bash
+$ conda install --file conda_requirements.txt
+$ pip install -r pip_requirements.txt
+```
+
 Install `model_catalogs` into new environment (still in `LibGOODS/model_catalogs` directory):
 ``` bash
 $ conda activate model_catalogs
