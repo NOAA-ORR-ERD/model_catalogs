@@ -110,54 +110,6 @@ def make_catalog(
     return cat
 
 
-# def setup_source_catalog(override=False):
-#     """Setup source catalog for models.
-#
-#     Parameters
-#     ----------
-#     override: bool
-#         Will use model catalog files available in "complete" directory if it is
-#         available, or if `override==True` will always use "orig" directory to
-#         set up source catalog.
-#
-#     Returns
-#     -------
-#     Intake catalog `source_cat`.
-#     """
-#
-#     cat_source_description = "Source catalog for models."
-#
-#     # find most recent set of source_catalogs
-#     if not os.path.exists(mc.CATALOG_PATH_DIR):
-#         print(
-#             '"complete" model source files are not yet available. Run `model_catalogs.complete_source_catalog()` to create this directory.'  # noqa: E501
-#         )
-#         cat_dir = mc.CATALOG_PATH_DIR_ORIG
-#     elif override:
-#         cat_dir = mc.CATALOG_PATH_DIR_ORIG
-#     else:
-#         cat_dir = mc.CATALOG_PATH_DIR
-#
-#     # # open catalogs
-#     # cats = []
-#     # for cat_loc in cat_dir.glob("*.yaml"):
-#     #     cat = intake.open_catalog(cat_loc)
-#     #     # cat.metadata['orig_catalog_location'] = str(cat_loc)
-#     #     cats.append(cat)
-#     cats = [intake.open_catalog(cat_loc) for cat_loc in cat_dir.glob("*.yaml")]
-#
-#     metadata = {"source_catalog_dir": str(cat_dir)}
-#
-#     return make_catalog(
-#         cats,
-#         mc.SOURCE_CATALOG_NAME,
-#         cat_source_description,
-#         metadata,
-#         intake.catalog.local.YAMLFileCatalog,
-#         mc.CATALOG_PATH,
-#     )
-
-
 def setup():
     """Setup reference catalogs for models.
 
@@ -235,21 +187,34 @@ def setup():
     return cat
 
 
-def calculate_boundaries():
+def calculate_boundaries(file_locs=None, save_files=True):
     """Calculate boundary information for all models.
 
     This loops over all catalog files available in mc.CATALOG_PATH_DIR_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
 
     The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
 
+    Parameters
+    ----------
+    file_locs : list, optional
+        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml").
+    save_files : boolean, optional
+        Whether to save files or not. Defaults to True. Saves to mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name.
+
     Examples
     --------
     Calculate boundary information for all available models:
     >>> mc.calculate_boundaries()
+
+    Calculate boundary information for CBOFS:
+    >>> mc.calculate_boundaries([mc.CATALOG_PATH_DIR_ORIG / "cbofs.yaml"])
     """
 
+    if file_locs is None:
+        file_locs = mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml")
+
     # loop over all orig catalogs
-    for cat_loc in mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml"):
+    for cat_loc in file_locs:
 
         # open model catalog
         cat_orig = intake.open_catalog(cat_loc)
@@ -306,9 +271,10 @@ def calculate_boundaries():
         ds.close()
 
         # save boundary info to file
-        fname = mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name
-        with open(fname, 'w') as outfile:
-            yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
+        if save_files:
+            fname = mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name
+            with open(fname, 'w') as outfile:
+                yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
 
 
 def find_availability(model, override=False, override_updated=False):

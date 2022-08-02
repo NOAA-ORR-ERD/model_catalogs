@@ -70,16 +70,16 @@ def find_bbox(ds, dd=None, alpha=None):
             hasmask = True
 
     # This is structured, rectilinear
-    # GFS
+    # GFS, RTOFS, HYCOM
     if (lon.ndim == 1) and ("nele" not in ds.dims) and not hasmask:
-
         nlon, nlat = ds["lon"].size, ds["lat"].size
         lonb = np.concatenate(([lon[0]] * nlat, lon[:], [lon[-1]] * nlat, lon[::-1]))
         latb = np.concatenate((lat[:], [lat[-1]] * nlon, lat[::-1], [lat[0]] * nlon))
         # boundary = np.vstack((lonb, latb)).T
         p = shapely.geometry.Polygon(zip(lonb, latb))
         p0 = p.simplify(1)
-        p1 = p
+        # Now using the more simplified version because all of these models are boxes
+        p1 = p0
 
     elif hasmask or ("nele" in ds.dims):  # unstructured
 
