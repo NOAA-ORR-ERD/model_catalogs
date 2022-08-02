@@ -1,5 +1,5 @@
 name: Generic dataset transform skeleton
-description: This is used in `make_user_catalog` to transform the user-requested model.
+description: This is used in `transform_source` to transform the original model source.
 
 sources:
   name:
@@ -8,6 +8,4 @@ sources:
       targets:
         - null
       transform: "model_catalogs.process.add_attributes"
-      transform_kwargs:
-        axis: null
-        standard_names: null
+      transform_kwargs: {}

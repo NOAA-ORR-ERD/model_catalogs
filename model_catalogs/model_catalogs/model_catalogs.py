@@ -10,6 +10,9 @@ import cf_xarray  # noqa
 import intake
 import intake.source.derived
 import pandas as pd
+import yaml
+import tempfile
+from pathlib import Path
 
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
@@ -24,6 +27,7 @@ def make_catalog(
     full_cat_metadata,
     cat_driver,
     cat_path=None,
+    save_catalog=True,
 ):
     """Construct single catalog from multiple catalogs or sources.
 
@@ -46,6 +50,8 @@ def make_catalog(
     cat_path: Path object, optional
        Path with catalog name to use for saving catalog. With or without yaml suffix. If not provided,
        will use `full_cat_name`.
+    save_catalog : bool, optional
+        Defaults to True, and saves to cat_path.
 
     Returns
     -------
@@ -59,15 +65,16 @@ def make_catalog(
 
     >>> make_catalog([list of catalogs], 'catalog name', 'catalog desc', {}, 'opendap')
     """
+    from pathlib import Path
 
-    if cat_path is None:
-        cat_path = full_cat_name
-    else:
+    if cat_path is None and save_catalog:
+        cat_path = Path(full_cat_name)
+    if save_catalog:
         cat_path = cat_path / full_cat_name.lower()
         # cat_path = f"{cat_path}/{full_cat_name.lower()}"
-    if ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
+    if save_catalog and ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
         cat_path = cat_path.with_suffix(".yaml")
-    # import pdb; pdb.set_trace()
+
     if not isinstance(cats, list):
         cats = [cats]
     if not isinstance(cat_driver, list):
@@ -84,7 +91,6 @@ def make_catalog(
             driver=catd,
             args=cat._yaml()["sources"][cat.name]["args"],
             metadata=cat.metadata,
-            # metadata=cat._yaml()["sources"][cat.name]["metadata"],
         )
         for cat, catd in zip(cats, cat_driver)
     }
@@ -98,124 +104,211 @@ def make_catalog(
     )
 
     # save catalog
-    cat.save(cat_path)
+    if save_catalog:
+        cat.save(cat_path)
 
     return cat
 
 
-def setup_source_catalog(override=False):
-    """Setup source catalog for models.
+# def setup_source_catalog(override=False):
+#     """Setup source catalog for models.
+#
+#     Parameters
+#     ----------
+#     override: bool
+#         Will use model catalog files available in "complete" directory if it is
+#         available, or if `override==True` will always use "orig" directory to
+#         set up source catalog.
+#
+#     Returns
+#     -------
+#     Intake catalog `source_cat`.
+#     """
+#
+#     cat_source_description = "Source catalog for models."
+#
+#     # find most recent set of source_catalogs
+#     if not os.path.exists(mc.CATALOG_PATH_DIR):
+#         print(
+#             '"complete" model source files are not yet available. Run `model_catalogs.complete_source_catalog()` to create this directory.'  # noqa: E501
+#         )
+#         cat_dir = mc.CATALOG_PATH_DIR_ORIG
+#     elif override:
+#         cat_dir = mc.CATALOG_PATH_DIR_ORIG
+#     else:
+#         cat_dir = mc.CATALOG_PATH_DIR
+#
+#     # # open catalogs
+#     # cats = []
+#     # for cat_loc in cat_dir.glob("*.yaml"):
+#     #     cat = intake.open_catalog(cat_loc)
+#     #     # cat.metadata['orig_catalog_location'] = str(cat_loc)
+#     #     cats.append(cat)
+#     cats = [intake.open_catalog(cat_loc) for cat_loc in cat_dir.glob("*.yaml")]
+#
+#     metadata = {"source_catalog_dir": str(cat_dir)}
+#
+#     return make_catalog(
+#         cats,
+#         mc.SOURCE_CATALOG_NAME,
+#         cat_source_description,
+#         metadata,
+#         intake.catalog.local.YAMLFileCatalog,
+#         mc.CATALOG_PATH,
+#     )
 
-    Parameters
-    ----------
-    override: bool
-        Will use model catalog files available in "complete" directory if it is
-        available, or if `override==True` will always use "orig" directory to
-        set up source catalog.
+
+def setup():
+    """Setup reference catalogs for models.
+
+    Loops over hard-wired "orig" catalogs available in mc.CATALOG_PATH_DIR_ORIG, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
 
     Returns
     -------
-    Intake catalog `source_cat`.
-    """
-
-    cat_source_description = "Source catalog for models."
-
-    # find most recent set of source_catalogs
-    if not os.path.exists(mc.CATALOG_PATH_DIR):
-        print(
-            '"complete" model source files are not yet available. Run `model_catalogs.complete_source_catalog()` to create this directory.'  # noqa: E501
-        )
-        cat_dir = mc.CATALOG_PATH_DIR_ORIG
-    elif override:
-        cat_dir = mc.CATALOG_PATH_DIR_ORIG
-    else:
-        cat_dir = mc.CATALOG_PATH_DIR
-
-    # open catalogs
-    cats = [intake.open_catalog(cat_loc) for cat_loc in cat_dir.glob("*.yaml")]
-
-    metadata = {"source_catalog_dir": str(cat_dir)}
-
-    return make_catalog(
-        cats,
-        mc.SOURCE_CATALOG_NAME,
-        cat_source_description,
-        metadata,
-        intake.catalog.local.YAMLFileCatalog,
-        mc.CATALOG_PATH,
-    )
-
-
-def complete_source_catalog():
-    """Update model source files in 'source_catalogs/orig'.
-
-    This will add outer boundary files for the model domains and create
-    "complete" directory of model files that mirror those in "orig". If this is
-    run and "complete" directory already exists, it will be overwritten.
-
-    Returns
-    -------
-    Intake catalog, and also resaves all model source catalogs into
-    f"{self.cat_source_base}/complete" with domain boundaries added.
+    Nested Intake catalog with a source for each model in mc.CATALOG_PATH_DIR_ORIG. Each source/model in turn has a source for each timing available (e.g., "forecast", "hindcast").
 
     Examples
     --------
+    Set up master catalog:
+    >>> cat = mc.setup()
 
-    Add boundary calculations to source model files:
-    >>> cats.update_source_files()
+    Examine list of sources/models available in catalog:
+    >>> list(cat)
+
+    Examine the sources for a specific model in the catalog:
+    >>> list(cat['CBOFS'])
     """
 
-    source_cat = mc.setup_source_catalog(override=True)
+    # store intermediary catalog files in temp directory
+    base = Path(tempfile.gettempdir())
 
-    models = list(source_cat)
-    timing = "forecast"
+    cat_transform_locs = []
+    # Loop over all hard-wired original catalog files, one per model
+    for cat_loc in mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml"):
 
-    for model in models:
-        # save original metadata so as to not include Dataset attributes
-        metadata = deepcopy(source_cat[model][timing].metadata)
+        cat_orig = intake.open_catalog(cat_loc)
 
-        # read in model output
-        ds = source_cat[model][timing].to_dask()
+        # add previously-saved boundary info
+        # this was calculated with mc.calculate_boundaries()
+        fname = mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name
+        with open(fname, "r") as stream:
+            boundary = yaml.safe_load(stream)
+        # add to cat_orig metadata
+        cat_orig.metadata['bounding_box'] = boundary['bbox']
+        cat_orig.metadata['geospatial_bounds'] = boundary['wkt']
 
-        # find metadata
-        # select lon/lat for use. There may be more than one and we also want the name.
-        if "alpha_shape" in source_cat[model].metadata:
-            dd, alpha = source_cat[model].metadata["alpha_shape"]
+        # get transform of each original catalog file, which points to
+        # original file but applies metadata from original catalog file
+        # to the resulting dataset after calling `to_dask()`
+        source_transforms = [mc.transform_source(cat_orig[timing]) for timing in list(cat_orig)]
+
+        # need to make catalog to transfer information properly from
+        # source_orig to source_transform
+        mc.make_catalog(
+            source_transforms,
+            full_cat_name=cat_orig.name,  # model name
+            full_cat_description=cat_orig.description,
+            full_cat_metadata=cat_orig.metadata,
+            cat_driver=mc.process.DatasetTransform,
+            cat_path=base,
+            save_catalog=True
+        )
+        loc = (base / cat_orig.name.lower()).with_suffix(".yaml")
+        cat_transform_locs.append(loc)
+
+    # have to read these from disk in order to make them type
+    # intake.catalog.local.YAMLFileCatalog
+    # instead of intake.catalog.base.Catalog
+    cats = [intake.open_catalog(loc) for loc in cat_transform_locs]
+
+    # make master nested catalog
+    cat = mc.make_catalog(
+        cats,
+        full_cat_name=mc.SOURCE_CATALOG_NAME,
+        full_cat_description="Source catalog for models.",
+        full_cat_metadata={"source_catalog_dir": str(mc.CATALOG_PATH_DIR_ORIG)},
+        cat_driver=intake.catalog.local.YAMLFileCatalog,
+        cat_path=None,
+        save_catalog=False
+    )
+
+    return cat
+
+
+def calculate_boundaries():
+    """Calculate boundary information for all models.
+
+    This loops over all catalog files available in mc.CATALOG_PATH_DIR_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+
+    The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
+
+    Examples
+    --------
+    Calculate boundary information for all available models:
+    >>> mc.calculate_boundaries()
+    """
+
+    # loop over all orig catalogs
+    for cat_loc in mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml"):
+
+        # open model catalog
+        cat_orig = intake.open_catalog(cat_loc)
+
+        # try with forecast but if it doesn't work, use nowcast
+        # this avoids problematic NOAA OFS aggregations when they are broken
+        try:
+            timing = "forecast"
+            source_orig = cat_orig[timing]
+            source_transform = transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        except OSError:
+            timing = "nowcast"
+            source_orig = cat_orig[timing]
+            source_transform = transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        # find boundary information for model
+        if "alpha_shape" in cat_orig.metadata:
+            dd, alpha = cat_orig.metadata["alpha_shape"]
         else:
             dd, alpha = None, None
         lonkey, latkey, bbox, wkt = mc.find_bbox(ds, dd=dd, alpha=alpha)
-        # lonkey, latkey, bbox, wkt_low, wkt_high = find_bbox(ds, dd=dd, alpha=alpha)
 
-        # metadata for overall source_id0
-        metadata0 = {
-            "geospatial_bounds": wkt,
-            "bounding_box": bbox,
-        }
         ds.close()
 
-        # # add Dataset metadata to specific source metadata
-        # # change metadata attributes to strings so catalog doesn't barf on them
-        # for attr in ds.attrs:
-        #     source_cat[model][timing].metadata[attr] = str(ds.attrs[attr])
-        # replace model, timing metadata to exclude Dataset attributes
-        source_cat[model][timing].metadata = metadata
-
-        # add 0th level metadata to 0th level model entry
-        source_cat[model].metadata.update(metadata0)
-
-        timings = list(source_cat[model])
-        sources = [source_cat[model][timing] for timing in timings]
-
-        make_catalog(
-            sources,
-            model,
-            source_cat[model].description,
-            source_cat[model].metadata,
-            "opendap",
-            mc.CATALOG_PATH_DIR,
-        )
-
-    return setup_source_catalog()
+        # save boundary info to file
+        fname = mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name
+        with open(fname, 'w') as outfile:
+            yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
 
 
 def find_availability(model, override=False, override_updated=False):
@@ -437,53 +530,41 @@ def find_availability(model, override=False, override_updated=False):
 
 
 def transform_source(source_orig):
-    """DOCSTRINGS"""
+    """Set up transform of original catalog source
 
-    # Now do the transform of the Dataset (or "derived dataset").
+    Parameters
+    ----------
+    source_orig : Intake source
+        Original source, which will be transformed
+
+    Returns
+    -------
+    source_transform, the transformed version of source_orig. This source will point at the source of source_orig as the target.
+    """
+
     # open the skeleton transform cat entry and then alter
     # a few things so can use it with source_orig
     source_transform = intake.open_catalog(mc.SOURCE_TRANSFORM)["name"]
 
-    # change new source information
-    # update source's info with model name since user would probably prefer this over timing?
-    # also other metadata to bring into user catalog
-    source_transform.name = f"{source_orig.cat.name}"
+    # Update name and description for transformed source
+    source_transform.name = source_orig.name
     source_transform.description = (
         f"Catalog entry for transform of dataset {source_orig.name}"
     )
 
-    # copy over axis and standard_names to transform_kwargs and metadata
-    # also fill in target
-    axis = deepcopy(source_orig.metadata["axis"])
-    snames = deepcopy(source_orig.metadata["standard_names"])
-    source_transform.metadata["axis"] = axis
-    source_transform.metadata["standard_names"] = snames
-    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-        "axis"
-    ] = axis
-    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-        "standard_names"
-    ] = snames
+    # make path to source_orig the target
+    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [f"{source_orig.cat.path}:{source_orig.name}"]
 
-    # make source_orig the target since will be made available in same catalog
-    source_orig.name = "temp"
-    target = f"{source_orig.name}"
-    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [target]
-
-    source_transform.metadata["urlpath"] = deepcopy(source_orig.urlpath)
+    # add metadata from source_orig
     source_transform.metadata.update(source_orig.metadata)
 
-    sources = [source_orig, source_transform]
-    new_cat = make_catalog(
-        sources,
-        "User-catalog.",
-        "User-made catalog.",
-        source_transform.metadata,  # this is where the most metadata is, but probably not important for cat  # noqa: E501
-        [source._entry._driver for source in sources],
-        cat_path=mc.CATALOG_PATH_TMP,
-    )
+    # add yesterday if needed (some RTOFS models)
+    if any(['yesterday' in d.values() for d in source_orig.describe()['user_parameters']]):
+        yesterday = pd.Timestamp.today() - pd.Timedelta('1 day')
+        # import pdb; pdb.set_trace()
+        source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"]["yesterday"] = str(yesterday)[:10]
 
-    return new_cat
+    return source_transform
 
 
 def add_url_path(cat, timing=None, start_date=None, end_date=None):
@@ -664,6 +745,15 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
     # Add original overall model catalog metadata to this next version
     source_orig.metadata.update(cat.metadata)
 
-    new_cat = transform_source(source_orig)
+    sources = transform_source(source_orig)
+
+    new_cat = make_catalog(
+        sources,
+        "User-catalog.",
+        "User-made catalog.",
+        sources[1].metadata,  # this is where the most metadata is, but probably not important for cat  # noqa: E501
+        [source._entry._driver for source in sources],
+        cat_path=mc.CATALOG_PATH_TMP,
+    )
 
     return new_cat

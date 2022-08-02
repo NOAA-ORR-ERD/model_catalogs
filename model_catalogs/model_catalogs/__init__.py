@@ -10,10 +10,10 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .model_catalogs import (  # noqa
     add_url_path,
-    complete_source_catalog,
+    calculate_boundaries,
     find_availability,
     make_catalog,
-    setup_source_catalog,
+    setup,
     transform_source,
 )
 from .utils import (  # noqa
@@ -37,6 +37,7 @@ except DistributionNotFound:
 CATALOG_PATH = Path.home() / "catalogs"
 SOURCE_CATALOG_NAME = "source_catalog.yaml"
 CATALOG_PATH_DIR_ORIG = CATALOG_PATH / "orig"
+CATALOG_PATH_DIR_BOUNDARY = CATALOG_PATH / "boundary"
 CATALOG_PATH_DIR = CATALOG_PATH / "complete"
 CATALOG_PATH_UPDATED = CATALOG_PATH / "updated"
 CATALOG_PATH_TMP = CATALOG_PATH / "tmp"
@@ -47,6 +48,7 @@ SOURCE_TRANSFORM = CATALOG_PATH / "transform.yaml"
 CATALOG_PATH_DIR_ORIG.mkdir(parents=True, exist_ok=True)
 CATALOG_PATH_UPDATED.mkdir(parents=True, exist_ok=True)
 CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
+CATALOG_PATH_DIR_BOUNDARY.mkdir(parents=True, exist_ok=True)
 
 # Move "orig" catalog files to catalog dir
 PKG_CATALOG_PATH_DIR_ORIG = Path(__path__[0]) / "catalogs" / "orig"
