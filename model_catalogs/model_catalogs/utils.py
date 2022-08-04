@@ -45,6 +45,8 @@ def get_fresh_parameter(filename):
             mu = mc.FRESH[timing]["start"]
         elif "end" in filename.name:
             mu = mc.FRESH[timing]["end"]
+        elif "catrefs" in filename.name:
+            mu = mc.FRESH[timing]["catrefs"]
     # a compiled catalog file
     elif filename.parent == mc.CATALOG_PATH_DIR_COMPILED:
         mu = mc.FRESH["compiled"]
@@ -174,22 +176,16 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     Parameters
     ----------
     date: str of datetime, pd.Timestamp
-        Date of day to find model output files for. Doesn't pay attention to hours/minutes/seconds.
+        Date of day to find model output files for. Doesn't pay attention to hours/minutes seconds.
     strings: list
-        List of strings to be filtered. Expected to be file locations from a
-        thredds catalog.
+        List of strings to be filtered. Expected to be file locations from a thredds catalog.
     filetype: str
-        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid"
-        or "2ds" also. This availability information is in the source catalog for the model under
+        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid" or "2ds" also. This availability information is in the source catalog for the model under
         `filetypes` metadata.
     is_forecast: bool, optional
-        If True, then date is the last day of the time period being sought and the forecast files
-        should be brought in along with the nowcast files, to get the model output the length of the
-        forecast out in time. The forecast files brought in will have the latest timing cycle of the
-        day that is available. If False, all nowcast files (for all timing cycles) are brought in.
+        If True, then date is the last day of the time period being sought and the forecast files should be brought in along with the nowcast files, to get the model output the length of the forecast out in time. The forecast files brought in will have the latest timing cycle of the day that is available. If False, all nowcast files (for all timing cycles) are brought in.
     pattern: str, optional
-        If a model file pattern doesn't match that assumed in this code, input one that will work.
-        Currently only NYOFS doesn't match but the pattern is built into the catalog file.
+        If a model file pattern doesn't match that assumed in this code, input one that will work. Currently only NYOFS doesn't match but the pattern is built into the catalog file.
 
     Returns
     -------

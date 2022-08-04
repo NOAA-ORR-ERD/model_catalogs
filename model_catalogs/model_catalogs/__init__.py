@@ -14,6 +14,7 @@ from .model_catalogs import (  # noqa
     calculate_boundaries,
     find_availability,
     make_catalog,
+    select_date_range,
     setup,
     transform_source,
 )
@@ -92,10 +93,20 @@ def end_filename(model, timing):
     return CATALOG_PATH_DIR_AVAILABILITY / f"{model}_{timing}_end_datetime.yaml"
 
 
+def boundary_filename(modelyaml):
+    """Return filename for model boundaries information."""
+    return CATALOG_PATH_DIR_BOUNDARY / modelyaml
+
+
+def catrefs_filename(model, timing):
+    """Return filename for model/timing start time."""
+    return CATALOG_PATH_DIR_AVAILABILITY / f"{model}_{timing}_catrefs.yaml"
+
+
 # Fresh parameters: how long until model output will be refreshed if requested
-FRESH = {'forecast': {'start': '1 day', 'end': '4 hours'},
-         'nowcast': {'start': '3 days', 'end': '1 day'},
-         'hindcast': {'start': '7 days', 'end': '7 days'},
-         'hindcast-forecast-aggregation': {'start': '7 days', 'end': '7 days'},
-         'compiled': '1 day',
+FRESH = {'forecast': {'start': '1 day', 'end': '4 hours', 'catrefs': '6 hours'},
+         'nowcast': {'start': '3 days', 'end': '1 day', 'catrefs': '6 hours'},
+         'hindcast': {'start': '7 days', 'end': '1 day', 'catrefs': '1 day'},
+         'hindcast-forecast-aggregation': {'start': '7 days', 'end': '1 day'},
+         'compiled': '6 hours',  # want to be on the same calendar day as when they were compiled; this approximates that.
         }
