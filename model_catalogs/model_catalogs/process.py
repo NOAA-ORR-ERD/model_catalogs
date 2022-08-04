@@ -109,6 +109,10 @@ def add_attributes(ds, axis, standard_names, metadata: Optional[dict] = None):
     elif ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
 
+    if metadata is not None and "formula_terms" in metadata:
+        for varname in metadata["formula_terms"]:
+            ds[varname].attrs["formula_terms"] = metadata["formula_terms"][varname]
+
     # This is an internal attribute used by netCDF which xarray doesn't know or care about, but can
     # be returned from THREDDS.
     if "_NCProperties" in ds.attrs:

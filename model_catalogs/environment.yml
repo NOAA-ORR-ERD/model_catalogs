@@ -8,6 +8,7 @@ dependencies:
   - cf_xarray
   - dask
   - flake8
+  - extract_model>=0.8.0
   - h5netcdf
   # - intake
   # - intake-xarray
