@@ -6,11 +6,77 @@ import fnmatch
 import re
 
 import cf_xarray  # noqa
+import model_catalogs as mc
 import numpy as np
 import pandas as pd
 import shapely.geometry
 
 from siphon.catalog import TDSCatalog
+
+
+def astype(value, type_):
+    """Return string or list as list"""
+    if not isinstance(value, type_):
+        if type_ == list and type(value) == str:
+            return [value]
+        return type_(value)
+    return value
+
+
+def get_fresh_parameter(filename):
+    """Get freshness parameter, based on the filename.
+
+    A freshness parameter is stored in `__init__` for required scenarios which is looked up using the logic in this function, based on the filename.
+
+    Parameters
+    ----------
+    filename : Path
+        Filename to determine freshness
+
+    Returns
+    -------
+    mu, a pandas Timedelta-interpretable string describing the amount of time that filename should be considered fresh before needing to be recalculated.
+    """
+
+    # a start or end datetime file
+    if filename.parent == mc.CATALOG_PATH_DIR_AVAILABILITY:
+        timing = filename.name.split('_')[1]
+        if "start" in filename.name:
+            mu = mc.FRESH[timing]["start"]
+        elif "end" in filename.name:
+            mu = mc.FRESH[timing]["end"]
+    # a compiled catalog file
+    elif filename.parent == mc.CATALOG_PATH_DIR_COMPILED:
+        mu = mc.FRESH["compiled"]
+
+    return mu
+
+
+def is_fresh(filename):
+    """Check if file called filename is fresh.
+
+    If filename doesn't exist, return False.
+
+    Parameters
+    ----------
+    filename : Path
+        Filename to determine freshness
+
+    Returns
+    -------
+    Boolean. True if fresh and False if not or if filename is not found.
+    """
+
+    now = pd.Timestamp.today(tz='UTC')
+    try:
+        filetime = pd.Timestamp(filename.stat().st_mtime_ns).tz_localize('UTC')
+
+        mu = get_fresh_parameter(filename)
+
+        return now - filetime < pd.Timedelta(mu)
+
+    except FileNotFoundError:
+        return False
 
 
 def find_bbox(ds, dd=None, alpha=None):
@@ -285,6 +351,8 @@ def find_filelocs(catref, catloc, filetype="fields"):
 
 def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     """Return either start or end datetime from list of filenames.
+
+    This looks at the actual nowcast and forecast file cycle times to understand the earliest and last model times, as opposed to just the date in the file name.
 
     Parameters
     ----------

@@ -5,15 +5,6 @@ Test process functions.
 import model_catalogs as mc
 
 
-def astype(value, type_):
-    """Return string or list as list"""
-    if not isinstance(value, type_):
-        if type_ == list and type(value) == str:
-            return [value]
-        return type_(value)
-    return value
-
-
 # @pytest.mark.slow
 def test_process():
     """Test all models for transform."""
@@ -46,7 +37,7 @@ def test_process():
             checks = [
                 ds[var_name].attrs["axis"] == axis
                 for axis, var_names in source_transform.metadata["axis"].items()
-                for var_name in astype(var_names, list)
+                for var_name in mc.astype(var_names, list)
                 if var_name in ds.dims
             ]
             assert all(checks)
@@ -57,7 +48,7 @@ def test_process():
                 for st_name, var_names in source_transform.metadata[
                     "standard_names"
                 ].items()
-                for var_name in astype(var_names, list)
+                for var_name in mc.astype(var_names, list)
                 if var_name in ds.data_vars
             ]
             assert all(checks)
