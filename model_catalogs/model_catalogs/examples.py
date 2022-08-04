@@ -5,8 +5,9 @@ import time
 
 from argparse import ArgumentParser
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import pandas as pd
 
@@ -29,6 +30,14 @@ class Timer:
         """Return elapsed time in ms."""
         return (time.time() - self.t0) * 1000.0
 
+    def format(self):
+        time_in_ms = self.tock()
+        if time_in_ms > 60000:
+            return f"{time_in_ms / 60000:.1f} min"
+        if time_in_ms > 2000:
+            return f"{time_in_ms / 1000:.1f} s"
+        return f"{time_in_ms:.1f} ms"
+
     def __enter__(self):
         """With context."""
         self.tick()
@@ -36,7 +45,7 @@ class Timer:
     def __exit__(self, type, value, traceback):
         """With exit."""
         if self.msg is not None:
-            print(self.msg.format(self.tock()))
+            print(self.msg.format(self.format()))
 
 
 STANDARD_NAMES = [
@@ -83,16 +92,23 @@ def parse_bbox(val: str) -> Tuple[float, float, float, float]:
     return tuple(float(i) for i in values)
 
 
-def fetch(fetch_config):
-    """Fetch output"""
+def fetch(fetch_config: FetchConfig):
+    """Downloads and subsets the model data.
+
+    Parameters
+    ----------
+    fetch_config : FetchConfig
+        The configuration object which contains the model name, timing, start/end dates of the
+        request, etc.
+    """
     print("Setting up source catalog")
-    with Timer("\tSource catalog generated in {:.1f} ms"):
+    with Timer("\tSource catalog generated in {}"):
         source_catalog = mc.setup_source_catalog()
 
     print(
         f"Generating catalog specific for {fetch_config.model_name} {fetch_config.timing}"
     )
-    with Timer("\tSpecific catalog generated in {:.1f} ms"):
+    with Timer("\tSpecific catalog generated in {}"):
         catalog = mc.add_url_path(
             source_catalog[fetch_config.model_name],
             timing=fetch_config.timing,
@@ -100,10 +116,10 @@ def fetch(fetch_config):
             end_date=fetch_config.end,
         )
     print("Getting xarray dataset for model data")
-    with Timer("\tCreated dask-based xarray dataset in {:.1f} ms"):
+    with Timer("\tCreated dask-based xarray dataset in {}"):
         ds = catalog[fetch_config.model_name].to_dask()
     print("Subsetting data")
-    with Timer("\tSubsetted dataset in {:.1f} ms"):
+    with Timer("\tSubsetted dataset in {}"):
         ds_ss = (
             ds.em.filter(fetch_config.standard_names)
             .cf.sel(T=slice(fetch_config.start, fetch_config.end))
@@ -118,23 +134,52 @@ def fetch(fetch_config):
     print(
         f"Writing netCDF data to {fetch_config.output_pth}. This may take a long time..."
     )
-    with Timer("\tWrote output to disk in {:.1f} ms"):
+    with Timer("\tWrote output to disk in {}"):
         ds_ss.to_netcdf(fetch_config.output_pth)
     print("Complete")
 
 
 def parse_config(
-    main,
-    model_name,
-    default_bbox,
-    output_dir,
-    default_timing="hindcast",
-    standard_names=None,
-    default_start=None,
-    default_end=None,
+    main: Callable,
+    model_name: str,
+    default_bbox: Tuple[float, float, float, float],
+    output_dir: Path,
+    default_timing: str = "hindcast",
+    standard_names: List[str] = None,
+    default_start: datetime = None,
+    default_end: datetime = None,
 ) -> FetchConfig:
-    """Parse config file"""
+    """Parse command line arguments into a FetchConfig object.
 
+    Parameters
+    ----------
+    main : function
+        A reference to the main function of the script. This is used to fill in the help output
+        while parsing arguments.
+    model_name : str
+        Name of the model (as it appears in the catalog files).
+    default_bbox : tuple of floats
+        The default bounding box to use for subsetting if the user does not specify one in the
+        command line arguments.
+    output_dir : Path
+        The output path for where to write resulting netCDF files to.
+    default_timing : str
+        The default model run-type to use if not specified by CLI arguments. One of "forecast",
+        "nowcast", or "hindcast".
+    standard_names : list of strings
+        The default list of standard names to use to filter on if not specified by CLI arguments.
+    default_start : datetime
+        The default start time of the query to use if not specified by CLI arguments.
+    default_end : datetime
+        The default end time of the query to use if not specified by CLI arguments.
+
+    Returns
+    -------
+    FetchConfig
+        An object which contains all of the information needed by the `fetch` function for
+        requesting, subsetting, and filtering a dataset.
+
+    """
     if standard_names is None:
         standard_names = STANDARD_NAMES
     parser = ArgumentParser(description=main.__doc__)
