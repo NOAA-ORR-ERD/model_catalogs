@@ -574,7 +574,7 @@ def select_date_range(cat, start_date, end_date, timing=None, forecast_forward=F
             except TypeError:
                 continue
         else:
-            print("date range does not fully fit into any model timings")
+            raise ValueError("date range does not fully fit into any model timings")
 
     if forecast_forward and timing == "hindcast":
         raise KeyError("timing 'hindcast' does not have forecast files, so `forecast_forward` should be False.")
