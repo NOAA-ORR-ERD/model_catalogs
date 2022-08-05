@@ -23,6 +23,7 @@ dependencies:
   - pip:
     - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
     - git+https://github.com/intake/intake.git
+    - datetimerange
     - codecov
     - pytest-cov
     - coverage[toml]
