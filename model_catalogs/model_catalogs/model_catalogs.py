@@ -112,7 +112,7 @@ def make_catalog(
 def setup(override=False):
     """Setup reference catalogs for models.
 
-    Loops over hard-wired "orig" catalogs available in mc.CATALOG_PATH_DIR_ORIG, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
+    Loops over hard-wired "orig" catalogs available in mc.CAT_PATH_ORIG, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
 
     Parameters
     ----------
@@ -121,7 +121,7 @@ def setup(override=False):
 
     Returns
     -------
-    Nested Intake catalog with a source for each model in mc.CATALOG_PATH_DIR_ORIG. Each source/model in turn has a source for each timing available (e.g., "forecast", "hindcast").
+    Nested Intake catalog with a source for each model in mc.CAT_PATH_ORIG. Each source/model in turn has a source for each timing available (e.g., "forecast", "hindcast").
 
     Examples
     --------
@@ -137,21 +137,17 @@ def setup(override=False):
 
     cat_transform_locs = []
     # Loop over all hard-wired original catalog files, one per model
-    for cat_loc in mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml"):
-
-        base = mc.CATALOG_PATH_DIR_COMPILED
-        filename = base / cat_loc.name
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
 
         # re-compile together catalog file if user wants to override possibly
         # existing file or if is not fresh
-        if override or not mc.is_fresh(filename):
+        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.name)):
 
             cat_orig = intake.open_catalog(cat_loc)
 
             # add previously-saved boundary info
             # this was calculated with mc.calculate_boundaries()
-            fname = mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name
-            with open(fname, "r") as stream:
+            with open(mc.FILE_PATH_BOUNDARY(cat_loc.name), "r") as stream:
                 boundary = yaml.safe_load(stream)
             # add to cat_orig metadata
             cat_orig.metadata['bounding_box'] = boundary['bbox']
@@ -170,10 +166,10 @@ def setup(override=False):
                 full_cat_description=cat_orig.description,
                 full_cat_metadata=cat_orig.metadata,
                 cat_driver=mc.process.DatasetTransform,
-                cat_path=base,
+                cat_path=mc.CAT_PATH_COMPILED,
                 save_catalog=True
             )
-        cat_transform_locs.append(filename)
+        cat_transform_locs.append(mc.FILE_PATH_COMPILED(cat_loc.name))
 
     # have to read these from disk in order to make them type
     # intake.catalog.local.YAMLFileCatalog
@@ -185,7 +181,7 @@ def setup(override=False):
         cats,
         full_cat_name=mc.SOURCE_CATALOG_NAME,
         full_cat_description="Source catalog for models.",
-        full_cat_metadata={"source_catalog_dir": str(mc.CATALOG_PATH_DIR_ORIG)},
+        full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
         cat_driver=intake.catalog.local.YAMLFileCatalog,
         cat_path=None,
         save_catalog=False
@@ -197,16 +193,16 @@ def setup(override=False):
 def calculate_boundaries(file_locs=None, save_files=True):
     """Calculate boundary information for all models.
 
-    This loops over all catalog files available in mc.CATALOG_PATH_DIR_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+    This loops over all catalog files available in mc.CAT_PATH_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
 
     The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
 
     Parameters
     ----------
     file_locs : Path, list of Paths, optional
-        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml").
+        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at mc.CAT_PATH_ORIG.glob("*.yaml").
     save_files : boolean, optional
-        Whether to save files or not. Defaults to True. Saves to mc.CATALOG_PATH_DIR_BOUNDARY / cat_loc.name.
+        Whether to save files or not. Defaults to True. Saves to mc.CAT_PATH_BOUNDARY / cat_loc.name.
 
     Examples
     --------
@@ -214,11 +210,11 @@ def calculate_boundaries(file_locs=None, save_files=True):
     >>> mc.calculate_boundaries()
 
     Calculate boundary information for CBOFS:
-    >>> mc.calculate_boundaries([mc.CATALOG_PATH_DIR_ORIG / "cbofs.yaml"])
+    >>> mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"])
     """
 
     if file_locs is None:
-        file_locs = mc.CATALOG_PATH_DIR_ORIG.glob("*.yaml")
+        file_locs = mc.CAT_PATH_ORIG.glob("*.yaml")
     else:
         file_locs = mc.astype(file_locs, list)
 
@@ -281,7 +277,7 @@ def calculate_boundaries(file_locs=None, save_files=True):
 
         # save boundary info to file
         if save_files:
-            with open(mc.boundary_filename(cat_loc.name), 'w') as outfile:
+            with open(mc.FILE_PATH_BOUNDARY(cat_loc.name), 'w') as outfile:
                 yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
 
 
@@ -328,13 +324,13 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # for when we need to aggregate which is OFS models nowcast and hindcast
     # and forecast if there is no pre-made aggregation
     else:
-        if not override and mc.is_fresh(mc.catrefs_filename(source.cat.name, source.name)):
-            with open(mc.catrefs_filename(source.cat.name, source.name), "r") as stream:
+        if not override and mc.is_fresh(mc.FILE_PATH_CATREFS(source.cat.name, source.name)):
+            with open(mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r") as stream:
                 catrefs = yaml.safe_load(stream)['catrefs']
         else:
             catrefs = mc.find_catrefs(source.metadata["catloc"])
             catrefs = sorted(catrefs)  # earliest first, most recent last
-            with open(mc.catrefs_filename(source.cat.name, source.name), 'w') as outfile:
+            with open(mc.FILE_PATH_CATREFS(source.cat.name, source.name), 'w') as outfile:
                 yaml.dump({'catrefs': catrefs}, outfile, default_flow_style=False)
 
         if find_start_datetime:
@@ -390,10 +386,10 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 
     # save start/end to files
     if find_start_datetime:
-        with open(mc.start_filename(source.cat.name, source.name), 'w') as outfile:
+        with open(mc.FILE_PATH_START(source.cat.name, source.name), 'w') as outfile:
             yaml.dump({'start_datetime': start_datetime}, outfile, default_flow_style=False)
     if find_end_datetime:
-        with open(mc.end_filename(source.cat.name, source.name), 'w') as outfile:
+        with open(mc.FILE_PATH_END(source.cat.name, source.name), 'w') as outfile:
             yaml.dump({'end_datetime': end_datetime}, outfile, default_flow_style=False)
 
     return start_datetime, end_datetime
@@ -437,15 +433,15 @@ def find_availability(cat, timings=None, override=False):
         # check if already know the time and not stale
         # file times are given in UTC
         # If files are not stale, read in info from there
-        if not override and mc.is_fresh(mc.start_filename(cat.name, timing)):
-            with open(mc.start_filename(cat.name, timing), "r") as stream:
+        if not override and mc.is_fresh(mc.FILE_PATH_START(cat.name, timing)):
+            with open(mc.FILE_PATH_START(cat.name, timing), "r") as stream:
                 start_datetime = yaml.safe_load(stream)['start_datetime']
             find_start_datetime = False
         else:
             find_start_datetime = True  # need to still find the start_datetime
 
-        if not override and mc.is_fresh(mc.end_filename(cat.name, timing)):
-            with open(mc.end_filename(cat.name, timing), "r") as stream:
+        if not override and mc.is_fresh(mc.FILE_PATH_END(cat.name, timing)):
+            with open(mc.FILE_PATH_END(cat.name, timing), "r") as stream:
                 end_datetime = yaml.safe_load(stream)['end_datetime']
             find_end_datetime = False
         else:
@@ -514,10 +510,10 @@ def transform_source(source_orig):
     return source_transform
 
 
-def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast_forward=True, override=False):
+def select_date_range(cat, start_date, end_date, timing=None, forecast_forward=False, override=False):
     """Add urlpath locations to existing catalog/source.
 
-    MORE EXPLANATION
+    NOAA OFS model-timings that require aggregation need to have the specific file paths found for each file that will be read in. This function does that, based on the desired date range, and returns a Source with them in the `urlpath`. This function can be also used with any model that does not require this (because the model paths are either static or deterministic) but in those cases it does not need to be used; they will have the start and end dates applied to filter the resulting model output after `to_dask()` is called.
 
     Parameters
     ----------
@@ -528,14 +524,11 @@ def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast
         determine whether `start_date`, `end_date` are in "forecast" or
         "hindcast". Otherwise timing must be provided for a single timing.
         Normally the options are "forecast", "nowcast", or "hindcast", and
-        sometimes "hindcast-forecast-aggregation".
-    start_date, end_date: datetime-interpretable str or pd.Timestamp, optional
-        These two define the range of model output to include.
-        If model has an aggregated link for timing, start_date and end_date
-        are not used. Otherwise they should be input. Only year-month-day
-        will be used in date. end_date is inclusive.
+        sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
+    start_date, end_date: datetime-interpretable str or pd.Timestamp
+        For models that require aggregation, only year-month-day will be used in date, and end_date is inclusive. For all other models, the start and end date behavior are through `xarray` directly with `ds.cf.sel(T=slice(start_date, end_date))`.
     forecast_forward : bool, optional
-        Nowcast files are aggregated for the dates in the user-defined date range. However, if `forecast_forward==True`, the final date can have forecast files aggregated after the nowcast files to create a forecast going forward in time from the end date. The default is to include the forecast on the end (`forecast_forward==True`).
+        Nowcast files are aggregated for the dates in the user-defined date range. However, if `forecast_forward==True`, the final date can have forecast files aggregated after the nowcast files to create a forecast going forward in time from the end date. The default is to not include the forecast on the end (`forecast_forward=False`).
     override : boolean, optional
         Use `override=True` to find catrefs regardless of freshness.
 
@@ -562,8 +555,12 @@ def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast
 
     """
 
-    if timing is None and ('start_datetime' not in cat[timing].metadata or 'end_datetime' not in cat[timing].metadata):
-        raise KeyError('Run `find_availability()` for this model before running this command. Otherwise input timing that contains desired date range.')
+    # if there is only one timing, use it
+    if timing is None and len(list(cat)) == 1:
+        timing = list(cat)[0]
+
+    elif timing is None and any(['start_datetime' not in cat[timing].metadata or 'end_datetime' not in cat[timing].metadata for timing in list(cat)]):
+        raise KeyError('Run `mc.find_availability()` for this model before running this command. Otherwise input timing that contains desired date range.')
 
     # which source to use from catalog for desired date range
     if timing is None:
@@ -579,19 +576,22 @@ def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast
         else:
             print("date range does not fully fit into any model timings")
 
+    if forecast_forward and timing == "hindcast":
+        raise KeyError("timing 'hindcast' does not have forecast files, so `forecast_forward` should be False.")
+
     source = cat[timing]
 
     # catch the models that require aggregation
     if "catloc" in source.metadata:
         pattern = source.metadata["pattern"] if "pattern" in source.metadata else None
 
-        if not override and mc.is_fresh(mc.catrefs_filename(source.cat.name, source.name)):
-            with open(mc.catrefs_filename(source.cat.name, source.name), "r") as stream:
+        if not override and mc.is_fresh(mc.FILE_PATH_CATREFS(source.cat.name, source.name)):
+            with open(mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r") as stream:
                 catrefs = yaml.safe_load(stream)['catrefs']
         else:
             catrefs = mc.find_catrefs(source.metadata["catloc"])
             catrefs = sorted(catrefs)  # earliest first, most recent last
-            with open(mc.catrefs_filename(source.cat.name, source.name), 'w') as outfile:
+            with open(mc.FILE_PATH_CATREFS(source.cat.name, source.name), 'w') as outfile:
                 yaml.dump({'catrefs': catrefs}, outfile, default_flow_style=False)
 
         # loop over dates
@@ -599,19 +599,30 @@ def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast
         for date in pd.date_range(start=start_date, end=end_date, freq="1D"):
             is_forecast = True if date == pd.Timestamp(end_date) and forecast_forward else False
 
-            # translate date to catrefs to select which catref to use
-            if len(catrefs[0]) == 3:
-                cat_ref_to_match = (date.strftime('%Y'), date.strftime('%m'), date.strftime('%d'))
-            elif len(catrefs[0]) == 2:
-                cat_ref_to_match = (date.strftime('%Y'), date.strftime('%m'))
+            fname = mc.FILE_PATH_AGG_FILE_LOCS(source.cat.name, timing,
+                                               date, is_forecast)
 
-            ind = catrefs.index(cat_ref_to_match)
+            if not override and mc.is_fresh(fname):
+                with open(fname, "r") as stream:
+                    agg_filelocs = yaml.safe_load(stream)['agg_filelocs']
 
-            filelocs = mc.find_filelocs(catrefs[ind], source.metadata["catloc"], cat.metadata["filetype"])
+            else:
+                # translate date to catrefs to select which catref to use
+                if len(catrefs[0]) == 3:
+                    cat_ref_to_match = (date.strftime('%Y'), date.strftime('%m'), date.strftime('%d'))
+                elif len(catrefs[0]) == 2:
+                    cat_ref_to_match = (date.strftime('%Y'), date.strftime('%m'))
 
-            filelocs_urlpath.extend(
-                mc.agg_for_date(date, filelocs, cat.metadata["filetype"], is_forecast, pattern)
-            )
+                ind = catrefs.index(cat_ref_to_match)
+
+                filelocs = mc.find_filelocs(catrefs[ind], source.metadata["catloc"], cat.metadata["filetype"])
+
+                agg_filelocs = mc.agg_for_date(date, filelocs, cat.metadata["filetype"], is_forecast, pattern)
+
+                with open(fname, 'w') as outfile:
+                    yaml.dump({'agg_filelocs': agg_filelocs}, outfile, default_flow_style=False)
+
+            filelocs_urlpath.extend(agg_filelocs)
 
         # This is how we input the newly found urlpaths in so they will be used
         # in the processing of the dataset, and overwrite the old urlpath
@@ -619,16 +630,15 @@ def select_date_range(cat, timing=None, start_date=None, end_date=None, forecast
 
     # urlpath is already available if the link is consistent in time
     else:
-        print(
-            "`start_date` and `end_date` were not used since static link available."
-        )  # noqa: E501
-        # source_orig = source
+        # Pass start and end dates to the transform so they can be implemented
+        # there for static and deterministic model files (includes RTOFS)
+        source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["start_date"] = str(start_date)
+        source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["end_date"] = str(end_date)
 
     # store info in source_orig
-    # source_orig.metadata["model"] = model
     metadata = {"timing": timing,
-                "start_date": start_date if start_date is not None else None,
-                "end_date": end_date if end_date is not None else None,
+                "start_date": start_date,
+                "end_date": end_date,
                 }
     source.metadata.update(metadata)
     # Add original overall model catalog metadata to this next version

@@ -3,6 +3,7 @@ Set up for using package.
 """
 
 import shutil
+import pandas as pd
 
 from pathlib import Path
 from appdirs import AppDirs
@@ -10,7 +11,6 @@ from appdirs import AppDirs
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .model_catalogs import (  # noqa
-    add_url_path,
     calculate_boundaries,
     find_availability,
     make_catalog,
@@ -43,38 +43,35 @@ cache_dir = Path(dirs.user_cache_dir)
 
 # set up known locations for catalogs. Can be overwritten HOW
 # By default, put catalog directory in home directory
-# CATALOG_PATH = cache_dir / "catalogs"
-CATALOG_PATH = Path.home() / "catalogs"
+CAT_PATH = cache_dir / "catalogs"
+# CAT_PATH = Path.home() / "catalogs"
 # UPDATE THESE
 SOURCE_CATALOG_NAME = "source_catalog.yaml"
-CATALOG_PATH_DIR_ORIG = CATALOG_PATH / "orig"
-CATALOG_PATH_DIR_BOUNDARY = CATALOG_PATH / "boundaries"
-CATALOG_PATH_DIR_COMPILED = CATALOG_PATH / "compiled"
-CATALOG_PATH_DIR_AVAILABILITY = CATALOG_PATH / "availability"
-CATALOG_PATH_DIR = CATALOG_PATH / "complete"
-CATALOG_PATH_UPDATED = CATALOG_PATH / "updated"
-CATALOG_PATH_TMP = CATALOG_PATH / "tmp"
-SOURCE_TRANSFORM = CATALOG_PATH / "transform.yaml"
+CAT_PATH_ORIG = CAT_PATH / "orig"
+CAT_PATH_BOUNDARY = CAT_PATH / "boundaries"
+CAT_PATH_COMPILED = CAT_PATH / "compiled"
+CAT_PATH_AVAILABILITY = CAT_PATH / "availability"
+CAT_PATH_FILE_LOCS = CAT_PATH / "file_locs"
+SOURCE_TRANSFORM = CAT_PATH / "transform.yaml"
 
 # make directories
-# CATALOG_PATH.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_DIR_ORIG.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_UPDATED.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_DIR_BOUNDARY.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_DIR_AVAILABILITY.mkdir(parents=True, exist_ok=True)
-CATALOG_PATH_DIR_COMPILED.mkdir(parents=True, exist_ok=True)
+# CAT_PATH.mkdir(parents=True, exist_ok=True)
+CAT_PATH_ORIG.mkdir(parents=True, exist_ok=True)
+CAT_PATH_BOUNDARY.mkdir(parents=True, exist_ok=True)
+CAT_PATH_AVAILABILITY.mkdir(parents=True, exist_ok=True)
+CAT_PATH_COMPILED.mkdir(parents=True, exist_ok=True)
+CAT_PATH_FILE_LOCS.mkdir(parents=True, exist_ok=True)
 
 # Move "orig" catalog files to catalog dir
-PKG_CATALOG_PATH_DIR_ORIG = Path(__path__[0]) / "catalogs" / "orig"
+PKG_CAT_PATH_ORIG = Path(__path__[0]) / "catalogs" / "orig"
 [
-    shutil.copy(fname, CATALOG_PATH_DIR_ORIG)
-    for fname in PKG_CATALOG_PATH_DIR_ORIG.glob("*.yaml")
+    shutil.copy(fname, CAT_PATH_ORIG)
+    for fname in PKG_CAT_PATH_ORIG.glob("*.yaml")
 ]
-PKG_CATALOG_PATH_DIR_BOUNDARY = Path(__path__[0]) / "catalogs" / "boundaries"
+PKG_CAT_PATH_BOUNDARY = Path(__path__[0]) / "catalogs" / "boundaries"
 [
-    shutil.copy(fname, CATALOG_PATH_DIR_BOUNDARY)
-    for fname in PKG_CATALOG_PATH_DIR_BOUNDARY.glob("*.yaml")
+    shutil.copy(fname, CAT_PATH_BOUNDARY)
+    for fname in PKG_CAT_PATH_BOUNDARY.glob("*.yaml")
 ]
 
 # Move "transform.yaml" to catalog dir
@@ -82,31 +79,49 @@ SOURCE_TRANSFORM_REPO = Path(__path__[0]) / "catalogs" / "transform.yaml"
 shutil.copy(SOURCE_TRANSFORM_REPO, SOURCE_TRANSFORM)
 
 
-# availability file names
-def start_filename(model, timing):
-    """Return filename for model/timing start time."""
-    return CATALOG_PATH_DIR_AVAILABILITY / f"{model}_{timing}_start_datetime.yaml"
-
-
-def end_filename(model, timing):
-    """Return filename for model/timing end time."""
-    return CATALOG_PATH_DIR_AVAILABILITY / f"{model}_{timing}_end_datetime.yaml"
-
-
-def boundary_filename(modelyaml):
+def FILE_PATH_COMPILED(modelyaml):
     """Return filename for model boundaries information."""
-    return CATALOG_PATH_DIR_BOUNDARY / modelyaml
+    return CAT_PATH_COMPILED / modelyaml
 
 
-def catrefs_filename(model, timing):
+# availability file names
+def FILE_PATH_START(model, timing):
     """Return filename for model/timing start time."""
-    return CATALOG_PATH_DIR_AVAILABILITY / f"{model}_{timing}_catrefs.yaml"
+    return CAT_PATH_AVAILABILITY / f"{model}_{timing}_start_datetime.yaml"
 
 
-# Fresh parameters: how long until model output will be refreshed if requested
-FRESH = {'forecast': {'start': '1 day', 'end': '4 hours', 'catrefs': '6 hours'},
-         'nowcast': {'start': '3 days', 'end': '1 day', 'catrefs': '6 hours'},
-         'hindcast': {'start': '7 days', 'end': '1 day', 'catrefs': '1 day'},
+def FILE_PATH_END(model, timing):
+    """Return filename for model/timing end time."""
+    return CAT_PATH_AVAILABILITY / f"{model}_{timing}_end_datetime.yaml"
+
+
+def FILE_PATH_BOUNDARY(modelyaml):
+    """Return filename for model boundaries information."""
+    return CAT_PATH_BOUNDARY / modelyaml
+
+
+def FILE_PATH_CATREFS(model, timing):
+    """Return filename for model/timing start time."""
+    return CAT_PATH_AVAILABILITY / f"{model}_{timing}_catrefs.yaml"
+
+
+def FILE_PATH_AGG_FILE_LOCS(model, timing, date, is_fore):
+    """Return filename for aggregated file locations.
+
+    Date included to day."""
+    date = astype(date, pd.Timestamp)
+    name = f"{model}_{timing}_{date.isoformat()[:10]}_is-forecast_{is_fore}.yaml"
+    return CAT_PATH_FILE_LOCS / name
+
+
+# Fresh parameters: how long until model output avialability will be refreshed
+# for `find_availabililty()` if requested
+FRESH = {'forecast': {'start': '1 day', 'end': '4 hours', 'catrefs': '6 hours',
+                        'file_locs': '4 hours'},
+         'nowcast': {'start': '3 days', 'end': '4 hours', 'catrefs': '6 hours',
+                    'file_locs': '4 hours'},
+         'hindcast': {'start': '7 days', 'end': '1 day', 'catrefs': '1 day',
+                    'file_locs': '1 day'},
          'hindcast-forecast-aggregation': {'start': '7 days', 'end': '1 day'},
          'compiled': '6 hours',  # want to be on the same calendar day as when they were compiled; this approximates that.
         }

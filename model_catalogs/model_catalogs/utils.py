@@ -39,7 +39,7 @@ def get_fresh_parameter(filename):
     """
 
     # a start or end datetime file
-    if filename.parent == mc.CATALOG_PATH_DIR_AVAILABILITY:
+    if filename.parent == mc.CAT_PATH_AVAILABILITY:
         timing = filename.name.split('_')[1]
         if "start" in filename.name:
             mu = mc.FRESH[timing]["start"]
@@ -47,8 +47,12 @@ def get_fresh_parameter(filename):
             mu = mc.FRESH[timing]["end"]
         elif "catrefs" in filename.name:
             mu = mc.FRESH[timing]["catrefs"]
+    # a file of file locs for aggregation
+    elif filename.parent == mc.CAT_PATH_FILE_LOCS:
+        timing = filename.name.split('_')[1]
+        mu = mc.FRESH[timing]["file_locs"]
     # a compiled catalog file
-    elif filename.parent == mc.CATALOG_PATH_DIR_COMPILED:
+    elif filename.parent == mc.CAT_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
 
     return mu
@@ -192,8 +196,7 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     List of URLs for where to find all of the model output files that match the keyword arguments.
     """
 
-    if not isinstance(date, pd.Timestamp):
-        date = pd.Timestamp(date)
+    date = astype(date, pd.Timestamp)
 
     # # brings in nowcast and forecast for any date in the catalog
     # pattern0 = f'*{filetype}*.t??z.*'

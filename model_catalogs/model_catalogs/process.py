@@ -33,11 +33,21 @@ class DatasetTransform(GenericTransform):
             if 'yesterday' in kwargs:
                 self._source = self._source(yesterday=kwargs['yesterday'])
 
+            # check for 'urlpath' update being sent in, if so use it to update
+            if 'urlpath' in kwargs:
+                self._source.urlpath = kwargs['urlpath']
+
             # This sends the metadata to `add_attributes()`
             self._ds = self._transform(
                 self._source.to_dask(),
                 metadata=self.metadata,
             )
+
+            # check for 'urlpath' update being sent in, if so use it to
+            # subselect ds in time
+            if 'start_date' in kwargs and 'end_date' in kwargs:
+                self._ds = self._ds.cf.sel(T=slice(kwargs['start_date'],
+                                                   kwargs['end_date']))
 
         return self._ds
 
