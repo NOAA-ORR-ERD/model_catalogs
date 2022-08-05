@@ -63,7 +63,7 @@ sources:
     description: Columbia River model in SELFE from 2015 until 4 days ago.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       compat: override
       combine: by_coords
       parallel: True
