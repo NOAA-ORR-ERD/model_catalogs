@@ -1,4 +1,4 @@
-name: CREOFS_REGULARGRID
+name: CREOFS-REGULARGRID
 description: Columbia River model in SELFE, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [612,1111,39]

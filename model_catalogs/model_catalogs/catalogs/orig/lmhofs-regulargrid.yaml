@@ -1,4 +1,4 @@
-name: LMHOFS_REGULARGRID
+name: LMHOFS-REGULARGRID
 description: Lake Michigan and Huron model in FVCOM, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [837,478,24]

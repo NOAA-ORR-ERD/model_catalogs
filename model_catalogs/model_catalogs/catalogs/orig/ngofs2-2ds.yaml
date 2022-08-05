@@ -1,4 +1,4 @@
-name: NGOFS2_2DS
+name: NGOFS2-2DS
 description: Northern Gulf of Mexico model in FVCOM, 2D variables.
 metadata:
   grid_dim_(node,nele,siglay): [303714,569405,1]

@@ -1,4 +1,4 @@
-name: GOMOFS_2DS
+name: GOMOFS-2DS
 description: Gulf of Maine model in ROMS, 2D variables.
 metadata:
   grid_dim_(xyz): [777,1173,1]

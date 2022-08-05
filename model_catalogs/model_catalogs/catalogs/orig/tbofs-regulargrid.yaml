@@ -1,4 +1,4 @@
-name: TBOFS_REGULARGRID
+name: TBOFS-REGULARGRID
 description: Tampa Bay model in ROMS, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [329,393,11]

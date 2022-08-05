@@ -1,4 +1,4 @@
-name: WCOFS_2DS
+name: WCOFS-2DS
 description: West Coast model in ROMS, 2D variables.
 metadata:
   grid_dim_(xyz): [696,2032,1]

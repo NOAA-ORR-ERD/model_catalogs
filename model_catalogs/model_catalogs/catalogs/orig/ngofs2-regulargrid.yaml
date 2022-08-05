@@ -1,4 +1,4 @@
-name: NGOFS2_REGULARGRID
+name: NGOFS2-REGULARGRID
 description: Northern Gulf of Mexico model in FVCOM, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [1217,904,35]

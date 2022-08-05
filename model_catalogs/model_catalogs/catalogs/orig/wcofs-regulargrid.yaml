@@ -1,4 +1,4 @@
-name: WCOFS_REGULARGRID
+name: WCOFS-REGULARGRID
 description: West Coast model in ROMS, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [833,935,40]

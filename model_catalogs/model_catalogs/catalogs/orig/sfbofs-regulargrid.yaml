@@ -1,4 +1,4 @@
-name: SFBOFS_REGULARGRID
+name: SFBOFS-REGULARGRID
 description: San Francisco Bay model in FVCOM, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [553,329,20]

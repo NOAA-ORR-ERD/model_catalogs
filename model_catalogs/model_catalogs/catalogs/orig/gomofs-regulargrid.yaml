@@ -1,4 +1,4 @@
-name: GOMOFS_REGULARGRID
+name: GOMOFS-REGULARGRID
 description: Gulf of Maine model in ROMS, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [1066,737,39]

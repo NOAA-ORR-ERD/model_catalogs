@@ -1,4 +1,4 @@
-name: LEOFS_REGULARGRID
+name: LEOFS-REGULARGRID
 description: Lake Erie model in FVCOM, interpolated to regular grid.
 metadata:
   grid_dim_(node,nele,siglay): [933,313,16]
