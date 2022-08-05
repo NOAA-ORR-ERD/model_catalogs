@@ -5,6 +5,7 @@ dependencies:
   - python=3.9
   ############## These will have to be adjusted to your specific project
   - alphashape
+  - appdirs
   - cf_xarray
   - dask
   - extract_model>=0.8.0
