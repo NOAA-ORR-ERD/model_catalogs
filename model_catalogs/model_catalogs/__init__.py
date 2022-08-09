@@ -40,15 +40,22 @@ except DistributionNotFound:
 # set up known locations for catalogs.
 # this is where the original model catalog files and previously-calculated
 # model boundaries can be found, which are hard-wired in the repo
-with importlib.resources.path("model_catalogs", "catalogs") as pth:
-    CAT_PATH = pth
+# version change for this behavior
+try:  # >= Python 3.9
+    CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
+except AttributeError:  # < Python3.9
+    with importlib.resources.path("model_catalogs", "catalogs") as pth:
+        CAT_PATH = pth
 CAT_PATH_ORIG = CAT_PATH / "orig"
 CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
 CAT_PATH_TRANSFORM = CAT_PATH / "transform.yaml"
 
 # test files
-with importlib.resources.path("model_catalogs", "tests") as pth:
-    TEST_PATH = pth
+try:  # >= Python 3.9
+    TEST_PATH = importlib.resources.files("model_catalogs") / "tests"
+except AttributeError:  # < Python3.9
+    with importlib.resources.path("model_catalogs", "tests") as pth:
+        TEST_PATH = pth
 TEST_PATH_FILES = TEST_PATH / "test_files"
 
 # set up cache directories for package to use
