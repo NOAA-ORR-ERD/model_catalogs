@@ -45,6 +45,11 @@ CAT_PATH_ORIG = CAT_PATH / "orig"
 CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
 CAT_PATH_TRANSFORM = CAT_PATH / "transform.yaml"
 
+# test files
+with importlib.resources.path('model_catalogs', 'tests') as pth:
+    TEST_PATH = pth
+TEST_PATH_FILES = TEST_PATH / "test_files"
+
 # set up cache directories for package to use
 # user application cache directory, appropriate to each OS
 dirs = AppDirs("model_catalogs", "NOAA-ORR-ERD")
@@ -62,9 +67,20 @@ CACHE_PATH_AVAILABILITY.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_FILE_LOCS.mkdir(parents=True, exist_ok=True)
 
 
-def FILE_PATH_COMPILED(modelyaml):
+def TEST_PATH_FILE(model, timing):
+    """Return file path to test file."""
+    model = model.lower().replace('-', '_')
+    return (TEST_PATH_FILES / f"{model}_{timing}").with_suffix(".nc")
+
+
+def FILE_PATH_ORIG(model):
+    """Return file path to original model catalog file."""
+    return (CAT_PATH_ORIG / model).with_suffix(".yaml")
+
+
+def FILE_PATH_COMPILED(model):
     """Return filename for model boundaries information."""
-    return CACHE_PATH_COMPILED / modelyaml
+    return (CACHE_PATH_COMPILED / model).with_suffix(".yaml")
 
 
 # availability file names
@@ -78,9 +94,9 @@ def FILE_PATH_END(model, timing):
     return CACHE_PATH_AVAILABILITY / f"{model}_{timing}_end_datetime.yaml"
 
 
-def FILE_PATH_BOUNDARIES(modelyaml):
+def FILE_PATH_BOUNDARIES(model):
     """Return filename for model boundaries information."""
-    return CAT_PATH_BOUNDARIES / modelyaml
+    return (CAT_PATH_BOUNDARIES / model).with_suffix(".yaml")
 
 
 def FILE_PATH_CATREFS(model, timing):

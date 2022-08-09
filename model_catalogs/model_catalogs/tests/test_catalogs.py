@@ -7,236 +7,183 @@ of this script, commented out, and I will run abbreviated sample versions of
 them instead.
 """
 
-import os
-import tempfile
+import warnings
+import yaml
 
-from pathlib import Path
-
-import numpy as np
 import pandas as pd
 import pytest
 
 import model_catalogs as mc
 
 
-# make temp dir
-temp_dir = tempfile.TemporaryDirectory()
+def test_setup():
+    """Make sure main catalog is created correctly."""
 
-# overwrite built in catalog locations
-mc.CATALOG_PATH = Path(temp_dir.name)
-# no need to replace orig path, just use from where they are
-# mc.CATALOG_PATH_DIR_ORIG = mc.CATALOG_PATH / "orig"
-mc.CATALOG_PATH_DIR = mc.CATALOG_PATH / "complete"
-mc.CATALOG_PATH_UPDATED = mc.CATALOG_PATH / "updated"
+    main_cat = mc.setup()
 
-# set up catalog directories for this testing file
-mc.CATALOG_PATH_UPDATED.mkdir(parents=True, exist_ok=True)
-mc.CATALOG_PATH_TMP.mkdir(parents=True, exist_ok=True)
+    # check that all compiled catalog files exist
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+        fname = mc.FILE_PATH_COMPILED(cat_loc.name)
+        assert fname.exists()
+        assert mc.is_fresh(fname)
 
-
-def test_setup_source_catalog():
-    """Make sure source_catalog is created correctly."""
-
-    source_cat = mc.setup_source_catalog(override=True)
-
-    # source_catalog.yaml in main dir?
-    path = mc.CATALOG_PATH / "source_catalog.yaml"
-    # path = f"{mc.__path__[0]}/tests/catalogs/source_catalog.yaml"
-    assert os.path.exists(path)
-
-    # has specific date/source catalog files encoded in the catalog to trace which
-    # files are being used? Just check one.
-    loc = f"{source_cat.metadata['source_catalog_dir']}/cbofs.yaml"
-    assert source_cat["CBOFS"].path == loc
-
-    assert sorted(list(source_cat["CBOFS"])) == ["forecast", "hindcast", "nowcast"]
-
-
-# def test_find_availability():
-#     """Make sure one test case works for this."""
-
-#     cat = mc.find_availability(model="DBOFS", override_updated=True)
-
-#     assert "start_datetime" in cat["forecast"].metadata
-#     assert "time_last_checked" in cat["forecast"].metadata
+    # Check that timings are correct for one test case
+    assert sorted(list(main_cat["CBOFS"])) == ["forecast", "hindcast", "nowcast"]
+    assert main_cat["CBOFS"].metadata["geospatial_bounds"]
 
 
 @pytest.mark.slow
-def test_make_complete_catalog():
-    """Make sure complete version of source model catalogs works."""
+def test_find_availability():
+    """Test find_availability.
 
-    source_cat = mc.complete_source_catalog()
+    Using warnings instead of exception since sometimes servers aren't reliable.
+    """
 
-    assert os.path.exists(f"{mc.CATALOG_PATH_DIR}")
+    # test models with fast static links and that require aggregations
+    test_models = {"RTOFS-ALASKA": "forecast",
+                   "HYCOM": "forecast",
+                   "DBOFS": "nowcast",
+                   "SFBOFS": "hindcast",
+                   }
 
-    assert source_cat["CBOFS"].metadata["geospatial_bounds"]
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        cat = mc.find_availability(main_cat[model], timings=timing)
+        if "start_datetime" not in cat[timing].metadata:
+            warnings.warn(f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",
+            RuntimeWarning,
+        )
+        fname = mc.FILE_PATH_START(model, timing)
+        if not mc.is_fresh(fname):
+            warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
 
 
 @pytest.mark.slow
-def test_derived():
-    """Test known hindcast model that will break without
-    derived dataset."""
+def test_boundaries():
+    """Test one faster model and compare with existing file."""
 
-    day = pd.Timestamp("2021-02-20")
-    # cat = mc.find_availability(model="CBOFS")
-    source_cat = mc.setup_source_catalog()
-    cat = mc.add_url_path(
-        source_cat["CBOFS"], timing="hindcast", start_date=day, end_date=day
-    )
-    # make sure can load model output for source
-    ds = cat["CBOFS"].to_dask()
-    ds.close()
+    model = "HYCOM"
 
-    assert isinstance(ds.ocean_time.values[0], np.datetime64)
+    # Calculate
+    boundaries = mc.calculate_boundaries(file_locs=mc.FILE_PATH_ORIG(model), save_files=False, return_boundaries=True)
+
+    # Read in saved
+    with open(mc.FILE_PATH_BOUNDARIES(model), "r") as stream:
+        boundaries_read = yaml.safe_load(stream)
+
+    assert boundaries[model]["bbox"] == boundaries_read["bbox"]
+    assert boundaries[model]["wkt"] == boundaries_read["wkt"]
 
 
-# # even this one won't run consistently
-# # @pytest.mark.slow
-# # def test_forecast():
-# #     """Test two known models for running in forecast mode."""
-# #
-# #     source_cat = mc.setup_source_catalog()
-# #
-# #     yes = pd.Timestamp.today() - pd.Timedelta('1 day')
-# #     today = pd.Timestamp.today()
-# #
-# #     for model in ['NGOFS2']:#, 'LEOFS_REGULARGRID']:# list(source_cat):
-# #         if "forecast" in list(source_cat[model]):
-# #             cat = source_cat[model]
-# #             if "REGULARGRID" in model:
-# #                 source = mc.add_url_path(cat, timing='forecast', start_date=today, end_date=today)
-# #             else:
-# #                 source = mc.add_url_path(cat, timing='forecast', start_date=yes, end_date=yes)
-# #             # time.sleep(60)  # this did not help
-# #             ds = source.to_dask()
-# #             ds.close()
-#
-#
 @pytest.mark.slow
-def test_nowcast():
-    """Test two known models for running in nowcast mode."""
+def test_select_date_range():
+    """Test functionality in `select_date_range()`.
 
-    source_cat = mc.setup_source_catalog(override=True)
+    Should filter date range for static and nonstatic links.
+    """
+
+    test_models = {"HYCOM": "forecast",
+                   "CIOFS": "nowcast"}
 
     today = pd.Timestamp.today()
+    tom = today + pd.Timedelta('1 day')
 
-    model = "LMHOFS"
-    cat = mc.add_url_path(
-        source_cat[model], timing="nowcast", start_date=today, end_date=today
-    )
-    ds = cat[model].to_dask()
-    ds.close()
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        source = mc.select_date_range(main_cat[model], today, tom, timing=timing)
+
+        try:
+            ds = source.to_dask()
+            assert pd.Timestamp(ds.cf['T'].cf.isel(T=0).values).date() == today.date()
+            assert pd.Timestamp(ds.cf['T'].cf.isel(T=-1).values).date() == tom.date()
+
+        except OSError:
+            warnings.warn(f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",
+            RuntimeWarning,
+        )
+
+
+@pytest.mark.slow
+def test_process():
+    """Test that dataset is processed."""
+
+    main_cat = mc.setup()
+
+    # if this dataset hasn't been processed, lon and lat won't be in coords
+    assert "lon" in main_cat["LOOFS"]["nowcast"].to_dask().coords
+
+
+@pytest.mark.slow
+def test_forecast():
+    """Test all known models for running in forecast mode.
+
+    Fails gracefully. Does not require running `select_date_range()` because forecasts always have some known files included or a static link.
+    """
+
+    main_cat = mc.setup()
+    timing = "forecast"
+
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+        model = cat_loc.stem.upper()
+        try:
+            ds = main_cat[model][timing].to_dask()
+            ds.close()
+        except OSError:
+            warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
+
+
+@pytest.mark.slow
+def test_nowcast():
+    """Test all known models for running in nowcast mode.
+
+    Fails gracefully. Does not require running `select_date_range()` because they always have some known files included or a static link.
+    """
+
+    main_cat = mc.setup()
+    timing = "nowcast"
+
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+        model = cat_loc.stem.upper()
+
+        if timing in list(main_cat[model]):
+            try:
+                ds = main_cat[model][timing].to_dask()
+                ds.close()
+            except OSError:
+                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
 
 
 @pytest.mark.slow
 def test_hindcast():
-    """Test two known models for running in hindcast mode."""
+    """Test all known models for running in hindcast mode."""
 
-    source_cat = mc.setup_source_catalog()
+    main_cat = mc.setup()
+    timing = "hindcast"
 
-    day = pd.Timestamp.today() - pd.Timedelta("150 days")
-    nextday = day + pd.Timedelta("1 day")
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+        model = cat_loc.stem.upper()
 
-    model = "CIOFS"
-    cat = mc.add_url_path(
-        source_cat[model], timing="hindcast", start_date=day, end_date=nextday
-    )
-    ds = cat[model].to_dask()
-    ds.close()
+        if timing in list(main_cat[model]):
+            try:
+                ds = main_cat[model][timing].to_dask()
+                ds.close()
+            except OSError:
+                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
 
 
 @pytest.mark.slow
 def test_hindcast_forecast_aggregation():
-    """Test all known models for running in hindcast mode."""
+    """Test all known models for running in hindcast aggregation mode."""
 
-    source_cat = mc.setup_source_catalog()
+    main_cat = mc.setup()
+    timing = "hindcast-forecast-aggregation"
 
-    day = pd.Timestamp.today() - pd.Timedelta("365 days")
-    nextday = day + pd.Timedelta("1 day")
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+        model = cat_loc.stem.upper()
 
-    model = "TBOFS"
-    cat = mc.add_url_path(
-        source_cat[model],
-        timing="hindcast-forecast-aggregation",
-        start_date=day,
-        end_date=nextday,
-    )
-    ds = cat[model].to_dask()
-    ds.close()
-
-
-# # These are the tests that won't run due to connection issues. #
-#
-# @pytest.mark.slow
-# def test_forecast():
-#     """Test all known models for running in forecast mode."""
-#
-#     source_cat = mc.setup_source_catalog()
-#
-#     yes = pd.Timestamp.today() - pd.Timedelta('1 day')
-#     today = pd.Timestamp.today()
-#
-#     for model in list(source_cat):
-#         if "forecast" in list(source_cat[model]):
-#             cat = source_cat[model]
-#             if "REGULARGRID" in model:
-#                 source = mc.add_url_path(cat, timing='forecast', start_date=today, end_date=today)
-#             else:
-#                 source = mc.add_url_path(cat, timing='forecast', start_date=yes, end_date=yes)
-#             # time.sleep(60)  # this did not help
-#             ds = source.to_dask()
-#             ds.close()
-#
-#
-# @pytest.mark.slow
-# def test_nowcast():
-#     """Test all known models for running in nowcast mode."""
-#
-#     source_cat = mc.setup_source_catalog(override=True)
-#
-#     today = pd.Timestamp.today()
-#
-#     for model in list(source_cat):
-#         if "nowcast" in list(source_cat[model]):
-#             cat = source_cat[model]
-#             source = mc.add_url_path(cat, timing='nowcast', start_date=today, end_date=today)
-#             ds = source.to_dask()
-#             ds.close()
-#
-#
-# @pytest.mark.slow
-# def test_hindcast():
-#     """Test all known models for running in hindcast mode."""
-#
-#     source_cat = mc.setup_source_catalog()
-#
-#     day = pd.Timestamp.today() - pd.Timedelta("150 days")
-#     nextday = day + pd.Timedelta("1 day")
-#
-#     for model in list(source_cat):
-#         if "hindcast" in list(source_cat[model]):
-#             cat = mc.find_availability(model=model)
-#             source = mc.add_url_path(cat, start_date=day, end_date=nextday)
-#             ds = source.to_dask()
-#             ds.close()
-#
-#
-# @pytest.mark.slow
-# def test_hindcast_forecast_aggregation():
-#     """Test all known models for running in hindcast mode."""
-#
-#     source_cat = mc.setup_source_catalog()
-#
-#     day = pd.Timestamp.today() - pd.Timedelta("365 days")
-#     nextday = day + pd.Timedelta("1 day")
-#
-#     for model in list(source_cat):
-#         if "hindcast-forecast-aggregation" in list(source_cat[model]):
-#             cat = mc.find_availability(model=model)
-#             source = mc.add_url_path(cat, start_date=day, end_date=nextday)
-#             ds = source.to_dask()
-#             ds.close()
-
-
-# after these tests, remove temp dir:
-temp_dir.cleanup()
+        if timing in list(main_cat[model]):
+            try:
+                ds = main_cat[model][timing].to_dask()
+                ds.close()
+            except OSError:
+                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
