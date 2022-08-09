@@ -9,7 +9,7 @@ dependencies:
   - cf_xarray
   - dask
   - flake8
-  - extract_model>=0.8.0
+  # - extract_model>=0.8.0
   - h5netcdf
   # - intake
   # - intake-xarray
@@ -17,6 +17,7 @@ dependencies:
   - jupyter
   - jupyterlab
   - matplotlib
+  - netcdf4
   - numpy
   - openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
   - pandas
