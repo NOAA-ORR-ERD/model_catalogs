@@ -29,10 +29,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: [
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak",
-      ]
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak"
     metadata:
       overall_start_datetime: '2 days before present day.'
       overall_end_datetime: '5 days after present day'
@@ -70,10 +69,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: [
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak",
-      ]
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_nowcast_6hrly_ak"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_6hrly_ak"
     metadata:
       overall_start_datetime: 'Yesterday.'
       overall_end_datetime: '5 days after present day.'

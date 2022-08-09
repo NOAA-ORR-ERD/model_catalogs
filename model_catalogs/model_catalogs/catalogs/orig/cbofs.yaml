@@ -52,9 +52,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: ["https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      ]
+      urlpath:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
     parameters:
       tod:
         description: Pandas like Timestamp for today
@@ -63,9 +63,9 @@ sources:
     metadata:
       # these will fill in `tod` parameter to provide 2 sample file locations for output
       # only recent output is available so have to use a variable date
-      sample_locs: ["https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      ]
+      sample_locs:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.fields.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
       output_period_(hr): 1
       # thredds catalog url
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CBOFS/MODELS/catalog.xml'
@@ -103,15 +103,18 @@ sources:
       decode_times: False
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t06z.nc"
     metadata:
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-cbofs-files/catalog.xml'
       overall_start_datetime: 'Available starting 2015-08-01. Stations files are inconsistently available back into 2014.'
       overall_end_datetime: 'Available through 4 days before present time'
       output_period_(hr): 1
       # Sample files with known dates
-      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t00z.nc",
-      "https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t06z.nc"]
+      sample_locs:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t06z.nc"
       axis:
         T: ocean_time
         X: [xi_rho, xi_u, xi_v, xi_psi]

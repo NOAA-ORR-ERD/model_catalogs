@@ -21,9 +21,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: ["https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      ]
+      urlpath:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
     parameters:
       tod:
         description: Pandas like Timestamp for today
@@ -32,9 +32,9 @@ sources:
     metadata:
       # these will fill in `tod` parameter to provide 2 sample file locations for output
       # only recent output is available so have to use a variable date
-      sample_locs: ["https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      ]
+      sample_locs:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.cbofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CBOFS/MODELS/catalog.xml'
       overall_start_datetime: 'Available starting 1 day before present day.'
       overall_end_datetime: 'Available through 48 hours after present time'

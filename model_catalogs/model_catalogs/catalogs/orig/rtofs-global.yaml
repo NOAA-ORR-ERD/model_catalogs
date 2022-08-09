@@ -25,12 +25,11 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: [
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel",
-      ]
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
     metadata:
       overall_start_datetime: 'Daily starting present day.'
       overall_end_datetime: '8 days after present day'
@@ -62,12 +61,11 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: [
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel",
-      "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel",
-      ]
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
     metadata:
       overall_start_datetime: 'Daily starting present day.'
       overall_end_datetime: '8 days after present day'

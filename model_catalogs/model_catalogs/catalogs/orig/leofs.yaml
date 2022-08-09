@@ -117,11 +117,14 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: triangularmesh_netcdf
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"
     metadata:
       # Sample files with known dates
-      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc",
-      "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"]
+      sample_locs:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-leofs/catalog.xml'
       overall_start_datetime: 'Available starting 2016-03-10'
       overall_end_datetime: 'Available through 4 days before present time'
