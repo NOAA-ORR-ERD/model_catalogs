@@ -6,10 +6,12 @@ import fnmatch
 import re
 
 import cf_xarray  # noqa
+import intake
 import model_catalogs as mc
 import numpy as np
 import pandas as pd
 import shapely.geometry
+import yaml
 
 from siphon.catalog import TDSCatalog
 
@@ -39,7 +41,7 @@ def get_fresh_parameter(filename):
     """
 
     # a start or end datetime file
-    if filename.parent == mc.CAT_PATH_AVAILABILITY:
+    if filename.parent == mc.CACHE_PATH_AVAILABILITY:
         timing = filename.name.split('_')[1]
         if "start" in filename.name:
             mu = mc.FRESH[timing]["start"]
@@ -48,11 +50,11 @@ def get_fresh_parameter(filename):
         elif "catrefs" in filename.name:
             mu = mc.FRESH[timing]["catrefs"]
     # a file of file locs for aggregation
-    elif filename.parent == mc.CAT_PATH_FILE_LOCS:
+    elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
         timing = filename.name.split('_')[1]
         mu = mc.FRESH[timing]["file_locs"]
     # a compiled catalog file
-    elif filename.parent == mc.CAT_PATH_COMPILED:
+    elif filename.parent == mc.CACHE_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
 
     return mu
@@ -389,3 +391,94 @@ def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     datetime = date + pd.Timedelta(f"{cycle} hours") + pd.Timedelta(f"{filetime} hours")
 
     return datetime
+
+
+def calculate_boundaries(file_locs=None, save_files=True):
+    """Calculate boundary information for all models.
+
+    This loops over all catalog files available in mc.CAT_PATH_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+
+    The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
+
+    Parameters
+    ----------
+    file_locs : Path, list of Paths, optional
+        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at mc.CAT_PATH_ORIG.glob("*.yaml").
+    save_files : boolean, optional
+        Whether to save files or not. Defaults to True. Saves to mc.CAT_PATH_BOUNDARY / cat_loc.name.
+
+    Examples
+    --------
+    Calculate boundary information for all available models:
+    >>> mc.calculate_boundaries()
+
+    Calculate boundary information for CBOFS:
+    >>> mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"])
+    """
+
+    if file_locs is None:
+        file_locs = mc.CAT_PATH_ORIG.glob("*.yaml")
+    else:
+        file_locs = mc.astype(file_locs, list)
+
+    # loop over all orig catalogs
+    for cat_loc in file_locs:
+
+        # open model catalog
+        cat_orig = intake.open_catalog(cat_loc)
+
+        # try with forecast but if it doesn't work, use nowcast
+        # this avoids problematic NOAA OFS aggregations when they are broken
+        try:
+            timing = "forecast"
+            source_orig = cat_orig[timing]
+            source_transform = mc.transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        except OSError:
+            timing = "nowcast"
+            source_orig = cat_orig[timing]
+            source_transform = mc.transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        # find boundary information for model
+        if "alpha_shape" in cat_orig.metadata:
+            dd, alpha = cat_orig.metadata["alpha_shape"]
+        else:
+            dd, alpha = None, None
+        lonkey, latkey, bbox, wkt = mc.find_bbox(ds, dd=dd, alpha=alpha)
+
+        ds.close()
+
+        # save boundary info to file
+        if save_files:
+            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.name), 'w') as outfile:
+                yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
