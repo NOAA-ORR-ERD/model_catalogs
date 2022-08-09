@@ -81,7 +81,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.2ds.n000.20220701.t03z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.2ds.n000.20220701.t09z.nc"
     metadata:
       # Sample files with known dates
       sample_locs:

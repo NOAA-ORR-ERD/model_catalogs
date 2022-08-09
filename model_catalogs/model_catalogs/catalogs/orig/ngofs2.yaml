@@ -118,7 +118,9 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: triangularmesh_netcdf
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.fields.n000.20220701.t03z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.fields.n000.20220701.t09z.nc"
     metadata:
       # Sample files with known dates
       sample_locs:
