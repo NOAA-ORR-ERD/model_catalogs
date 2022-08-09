@@ -8,10 +8,10 @@ them instead.
 """
 
 import warnings
-import yaml
 
 import pandas as pd
 import pytest
+import yaml
 
 import model_catalogs as mc
 
@@ -40,19 +40,21 @@ def test_find_availability():
     """
 
     # test models with fast static links and that require aggregations
-    test_models = {"RTOFS-ALASKA": "forecast",
-                   "HYCOM": "forecast",
-                   "DBOFS": "nowcast",
-                   "SFBOFS": "hindcast",
-                   }
+    test_models = {
+        "RTOFS-ALASKA": "forecast",
+        "HYCOM": "forecast",
+        "DBOFS": "nowcast",
+        "SFBOFS": "hindcast",
+    }
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
         cat = mc.find_availability(main_cat[model], timings=timing)
         if "start_datetime" not in cat[timing].metadata:
-            warnings.warn(f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",
-            RuntimeWarning,
-        )
+            warnings.warn(
+                f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
+                RuntimeWarning,
+            )
         fname = mc.FILE_PATH_START(model, timing)
         if not mc.is_fresh(fname):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
@@ -65,7 +67,9 @@ def test_boundaries():
     model = "HYCOM"
 
     # Calculate
-    boundaries = mc.calculate_boundaries(file_locs=mc.FILE_PATH_ORIG(model), save_files=False, return_boundaries=True)
+    boundaries = mc.calculate_boundaries(
+        file_locs=mc.FILE_PATH_ORIG(model), save_files=False, return_boundaries=True
+    )
 
     # Read in saved
     with open(mc.FILE_PATH_BOUNDARIES(model), "r") as stream:
@@ -82,11 +86,10 @@ def test_select_date_range():
     Should filter date range for static and nonstatic links.
     """
 
-    test_models = {"HYCOM": "forecast",
-                   "CIOFS": "nowcast"}
+    test_models = {"HYCOM": "forecast", "CIOFS": "nowcast"}
 
     today = pd.Timestamp.today()
-    tom = today + pd.Timedelta('1 day')
+    tom = today + pd.Timedelta("1 day")
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
@@ -94,13 +97,14 @@ def test_select_date_range():
 
         try:
             ds = source.to_dask()
-            assert pd.Timestamp(ds.cf['T'].cf.isel(T=0).values).date() == today.date()
-            assert pd.Timestamp(ds.cf['T'].cf.isel(T=-1).values).date() == tom.date()
+            assert pd.Timestamp(ds.cf["T"].cf.isel(T=0).values).date() == today.date()
+            assert pd.Timestamp(ds.cf["T"].cf.isel(T=-1).values).date() == tom.date()
 
         except OSError:
-            warnings.warn(f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",
-            RuntimeWarning,
-        )
+            warnings.warn(
+                f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
+                RuntimeWarning,
+            )
 
 
 @pytest.mark.slow
@@ -117,7 +121,8 @@ def test_process():
 def test_forecast():
     """Test all known models for running in forecast mode.
 
-    Fails gracefully. Does not require running `select_date_range()` because forecasts always have some known files included or a static link.
+    Fails gracefully. Does not require running `select_date_range()` because forecasts always have some
+    known files included or a static link.
     """
 
     main_cat = mc.setup()
@@ -129,14 +134,18 @@ def test_forecast():
             ds = main_cat[model][timing].to_dask()
             ds.close()
         except OSError:
-            warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
+            warnings.warn(
+                f"Model {model} with timing {timing} is not working right now.",
+                RuntimeWarning,
+            )
 
 
 @pytest.mark.slow
 def test_nowcast():
     """Test all known models for running in nowcast mode.
 
-    Fails gracefully. Does not require running `select_date_range()` because they always have some known files included or a static link.
+    Fails gracefully. Does not require running `select_date_range()` because they always have some known
+    files included or a static link.
     """
 
     main_cat = mc.setup()
@@ -150,7 +159,10 @@ def test_nowcast():
                 ds = main_cat[model][timing].to_dask()
                 ds.close()
             except OSError:
-                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
+                warnings.warn(
+                    f"Model {model} with timing {timing} is not working right now.",
+                    RuntimeWarning,
+                )
 
 
 @pytest.mark.slow
@@ -168,7 +180,10 @@ def test_hindcast():
                 ds = main_cat[model][timing].to_dask()
                 ds.close()
             except OSError:
-                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
+                warnings.warn(
+                    f"Model {model} with timing {timing} is not working right now.",
+                    RuntimeWarning,
+                )
 
 
 @pytest.mark.slow
@@ -186,4 +201,7 @@ def test_hindcast_forecast_aggregation():
                 ds = main_cat[model][timing].to_dask()
                 ds.close()
             except OSError:
-                warnings.warn(f"Model {model} with timing {timing} is not working right now.", RuntimeWarning)
+                warnings.warn(
+                    f"Model {model} with timing {timing} is not working right now.",
+                    RuntimeWarning,
+                )

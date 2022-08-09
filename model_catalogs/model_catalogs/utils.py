@@ -3,11 +3,11 @@ Utilities to help with catalogs.
 """
 
 import fnmatch
+import pathlib
 import re
 
 import cf_xarray  # noqa
 import intake
-import model_catalogs as mc
 import numpy as np
 import pandas as pd
 import shapely.geometry
@@ -15,11 +15,13 @@ import yaml
 
 from siphon.catalog import TDSCatalog
 
+import model_catalogs as mc
+
 
 def astype(value, type_):
     """Return string or list as list"""
     if not isinstance(value, type_):
-        if type_ == list and type(value) == str:
+        if type_ == list and isinstance(value, (str, pathlib.PosixPath)):
             return [value]
         return type_(value)
     return value
@@ -28,7 +30,8 @@ def astype(value, type_):
 def get_fresh_parameter(filename):
     """Get freshness parameter, based on the filename.
 
-    A freshness parameter is stored in `__init__` for required scenarios which is looked up using the logic in this function, based on the filename.
+    A freshness parameter is stored in `__init__` for required scenarios which is looked up using the
+    logic in this function, based on the filename.
 
     Parameters
     ----------
@@ -37,12 +40,13 @@ def get_fresh_parameter(filename):
 
     Returns
     -------
-    mu, a pandas Timedelta-interpretable string describing the amount of time that filename should be considered fresh before needing to be recalculated.
+    mu, a pandas Timedelta-interpretable string describing the amount of time that filename should be
+    considered fresh before needing to be recalculated.
     """
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
-        timing = filename.name.split('_')[1]
+        timing = filename.name.split("_")[1]
         if "start" in filename.name:
             mu = mc.FRESH[timing]["start"]
         elif "end" in filename.name:
@@ -51,7 +55,7 @@ def get_fresh_parameter(filename):
             mu = mc.FRESH[timing]["catrefs"]
     # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
-        timing = filename.name.split('_')[1]
+        timing = filename.name.split("_")[1]
         mu = mc.FRESH[timing]["file_locs"]
     # a compiled catalog file
     elif filename.parent == mc.CACHE_PATH_COMPILED:
@@ -75,9 +79,9 @@ def is_fresh(filename):
     Boolean. True if fresh and False if not or if filename is not found.
     """
 
-    now = pd.Timestamp.today(tz='UTC')
+    now = pd.Timestamp.today(tz="UTC")
     try:
-        filetime = pd.Timestamp(filename.stat().st_mtime_ns).tz_localize('UTC')
+        filetime = pd.Timestamp(filename.stat().st_mtime_ns).tz_localize("UTC")
 
         mu = get_fresh_parameter(filename)
 
@@ -186,12 +190,17 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     strings: list
         List of strings to be filtered. Expected to be file locations from a thredds catalog.
     filetype: str
-        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid" or "2ds" also. This availability information is in the source catalog for the model under
+        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid"
+        or "2ds" also. This availability information is in the source catalog for the model under
         `filetypes` metadata.
     is_forecast: bool, optional
-        If True, then date is the last day of the time period being sought and the forecast files should be brought in along with the nowcast files, to get the model output the length of the forecast out in time. The forecast files brought in will have the latest timing cycle of the day that is available. If False, all nowcast files (for all timing cycles) are brought in.
+        If True, then date is the last day of the time period being sought and the forecast files should
+        be brought in along with the nowcast files, to get the model output the length of the forecast
+        out in time. The forecast files brought in will have the latest timing cycle of the day that is
+        available. If False, all nowcast files (for all timing cycles) are brought in.
     pattern: str, optional
-        If a model file pattern doesn't match that assumed in this code, input one that will work. Currently only NYOFS doesn't match but the pattern is built into the catalog file.
+        If a model file pattern doesn't match that assumed in this code, input one that will work.
+        Currently only NYOFS doesn't match but the pattern is built into the catalog file.
 
     Returns
     -------
@@ -353,7 +362,8 @@ def find_filelocs(catref, catloc, filetype="fields"):
 def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     """Return either start or end datetime from list of filenames.
 
-    This looks at the actual nowcast and forecast file cycle times to understand the earliest and last model times, as opposed to just the date in the file name.
+    This looks at the actual nowcast and forecast file cycle times to understand the earliest and last
+    model times, as opposed to just the date in the file name.
 
     Parameters
     ----------
@@ -393,19 +403,27 @@ def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     return datetime
 
 
-def calculate_boundaries(file_locs=None, save_files=True):
+def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=False):
     """Calculate boundary information for all models.
 
-    This loops over all catalog files available in mc.CAT_PATH_ORIG, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+    This loops over all catalog files available in mc.CAT_PATH_ORIG, tries first with forecast source and
+    then with nowcast source if necessary to access the example model output files and calculate the
+    bounding box and numerical domain boundary. The numerical domain boundary is calculated using
+    `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The
+    bounding box and boundary string representation (as WKT) are then saved to files.
 
-    The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
+    The files that are saved by running this function have been previously saved into the repository, so
+    this function should only be run if you suspect that a model domain has changed.
 
     Parameters
     ----------
     file_locs : Path, list of Paths, optional
-        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at mc.CAT_PATH_ORIG.glob("*.yaml").
+        List of Path objects for model catalog files to read from. If not input, will use all catalog
+        files available at mc.CAT_PATH_ORIG.glob("*.yaml").
     save_files : boolean, optional
         Whether to save files or not. Defaults to True. Saves to mc.CAT_PATH_BOUNDARY / cat_loc.name.
+    return_boundaries : boolean, optional
+        Whether to return boundaries information from this call. Defaults to False.
 
     Examples
     --------
@@ -422,6 +440,7 @@ def calculate_boundaries(file_locs=None, save_files=True):
         file_locs = mc.astype(file_locs, list)
 
     # loop over all orig catalogs
+    boundaries = {}
     for cat_loc in file_locs:
 
         # open model catalog
@@ -443,7 +462,7 @@ def calculate_boundaries(file_locs=None, save_files=True):
                 full_cat_metadata=cat_orig.metadata,
                 cat_driver=mc.process.DatasetTransform,
                 cat_path=None,
-                save_catalog=False
+                save_catalog=False,
             )
 
             # read in model output
@@ -463,7 +482,7 @@ def calculate_boundaries(file_locs=None, save_files=True):
                 full_cat_metadata=cat_orig.metadata,
                 cat_driver=mc.process.DatasetTransform,
                 cat_path=None,
-                save_catalog=False
+                save_catalog=False,
             )
 
             # read in model output
@@ -480,5 +499,11 @@ def calculate_boundaries(file_locs=None, save_files=True):
 
         # save boundary info to file
         if save_files:
-            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.name), 'w') as outfile:
-                yaml.dump({'bbox': bbox, 'wkt': wkt}, outfile, default_flow_style=False)
+            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.name), "w") as outfile:
+                yaml.dump({"bbox": bbox, "wkt": wkt}, outfile, default_flow_style=False)
+
+        if return_boundaries:
+            boundaries[cat_loc.stem] = {"bbox": bbox, "wkt": wkt}
+
+    if return_boundaries:
+        return boundaries

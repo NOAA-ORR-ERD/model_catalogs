@@ -1,4 +1,4 @@
+datetimerange
 git+https://github.com/intake/intake-xarray.git
 git+https://github.com/intake/intake.git
 siphon  # can get from conda-forge but isn't recognized
-datetimerange

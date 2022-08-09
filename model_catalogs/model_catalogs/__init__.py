@@ -3,11 +3,12 @@ Set up for using package.
 """
 
 import importlib
-import pandas as pd
 
 from pathlib import Path
-from appdirs import AppDirs
 
+import pandas as pd
+
+from appdirs import AppDirs
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .model_catalogs import (  # noqa
@@ -26,7 +27,7 @@ from .utils import (  # noqa
     find_filelocs,
     get_dates_from_ofs,
     get_fresh_parameter,
-    is_fresh
+    is_fresh,
 )
 
 
@@ -39,14 +40,14 @@ except DistributionNotFound:
 # set up known locations for catalogs.
 # this is where the original model catalog files and previously-calculated
 # model boundaries can be found, which are hard-wired in the repo
-with importlib.resources.path('model_catalogs', 'catalogs') as pth:
+with importlib.resources.path("model_catalogs", "catalogs") as pth:
     CAT_PATH = pth
 CAT_PATH_ORIG = CAT_PATH / "orig"
 CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
 CAT_PATH_TRANSFORM = CAT_PATH / "transform.yaml"
 
 # test files
-with importlib.resources.path('model_catalogs', 'tests') as pth:
+with importlib.resources.path("model_catalogs", "tests") as pth:
     TEST_PATH = pth
 TEST_PATH_FILES = TEST_PATH / "test_files"
 
@@ -69,7 +70,7 @@ CACHE_PATH_FILE_LOCS.mkdir(parents=True, exist_ok=True)
 
 def TEST_PATH_FILE(model, timing):
     """Return file path to test file."""
-    model = model.lower().replace('-', '_')
+    model = model.lower().replace("-", "_")
     return (TEST_PATH_FILES / f"{model}_{timing}").with_suffix(".nc")
 
 
@@ -115,12 +116,25 @@ def FILE_PATH_AGG_FILE_LOCS(model, timing, date, is_fore):
 
 # Fresh parameters: how long until model output avialability will be refreshed
 # for `find_availabililty()` if requested
-FRESH = {'forecast': {'start': '1 day', 'end': '4 hours', 'catrefs': '6 hours',
-                      'file_locs': '4 hours'},
-         'nowcast': {'start': '3 days', 'end': '4 hours', 'catrefs': '6 hours',
-                     'file_locs': '4 hours'},
-         'hindcast': {'start': '7 days', 'end': '1 day', 'catrefs': '1 day',
-                      'file_locs': '1 day'},
-         'hindcast-forecast-aggregation': {'start': '7 days', 'end': '1 day'},
-         'compiled': '6 hours',  # want to be on the same calendar day as when they were compiled; this approximates that.
-         }
+FRESH = {
+    "forecast": {
+        "start": "1 day",
+        "end": "4 hours",
+        "catrefs": "6 hours",
+        "file_locs": "4 hours",
+    },
+    "nowcast": {
+        "start": "3 days",
+        "end": "4 hours",
+        "catrefs": "6 hours",
+        "file_locs": "4 hours",
+    },
+    "hindcast": {
+        "start": "7 days",
+        "end": "1 day",
+        "catrefs": "1 day",
+        "file_locs": "1 day",
+    },
+    "hindcast-forecast-aggregation": {"start": "7 days", "end": "1 day"},
+    "compiled": "6 hours",  # want to be on the same calendar day as when they were compiled; this approximates that.  # noqa: E501
+}

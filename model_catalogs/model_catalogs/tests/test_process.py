@@ -2,8 +2,9 @@
 Test process functions.
 """
 
-import model_catalogs as mc
 import warnings
+
+import model_catalogs as mc
 
 
 # @pytest.mark.slow
@@ -20,11 +21,15 @@ def test_process():
             # use local version of model output
             # Some of the test files still don't exist.
             if not mc.TEST_PATH_FILE(model, timing).exists():
-                warnings.warn(f"Test file for model {model} with timing {timing} does not exist yet. This test is being skipped",
-                RuntimeWarning)
+                warnings.warn(
+                    f"Test file for model {model} with timing {timing} does not exist yet. This test is being skipped",  # noqa: E501
+                    RuntimeWarning,
+                )
                 continue
 
-            source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["urlpath"] = [mc.TEST_PATH_FILE(model, timing)]
+            source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["urlpath"] = [
+                mc.TEST_PATH_FILE(model, timing)
+            ]
 
             ds = source.to_dask()
 
@@ -40,9 +45,7 @@ def test_process():
             # check standard_names attributes have been assigned
             checks = [
                 ds[var_name].attrs["standard_name"] == st_name
-                for st_name, var_names in source.metadata[
-                    "standard_names"
-                ].items()
+                for st_name, var_names in source.metadata["standard_names"].items()
                 for var_name in mc.astype(var_names, list)
                 if var_name in ds.data_vars
             ]

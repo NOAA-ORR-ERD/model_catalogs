@@ -30,12 +30,32 @@ class DatasetTransform(GenericTransform):
 
             # check for "yesterday" in kwargs and use it if present
             # this is for some RTOFS models
-            if 'yesterday' in kwargs:
-                self._source = self._source(yesterday=kwargs['yesterday'])
+            if "yesterday" in kwargs:
+                self._source = self._source(yesterday=kwargs["yesterday"])
 
             # check for 'urlpath' update being sent in, if so use it to update
-            if 'urlpath' in kwargs:
-                self._source.urlpath = kwargs['urlpath']
+            if "urlpath" in kwargs:
+                self._source.urlpath = kwargs["urlpath"]
+
+            # Checks to catch potential user pitfalls
+            # Make sure that user has filled in urlpath if needed: OFS nowcast
+            # and some OFS forecast. These are unaggregated and come with 2
+            # sample files but user should be warned if they haven't been
+            # replaced since it might be a mistake
+            if "sample_locs" in self._source.metadata:
+                if self._source.urlpath == self._source.metadata["sample_locs"]:
+                    # CHANGE TO LOGGER WARNING and also print warning
+                    print(
+                        "Note that you are using the original example files in your input source. You may want to instead first run `mc.select_date_range()` to search for and add the correct model output files for your desired date range, then run `to_dask()`."  # noqa: E501
+                    )
+
+            # Make sure that user has filled in urlpath if needed: OFS hindcast
+            # check for if the urlpath is null and if so `select_date_range()`
+            # needs to be run to fill it in
+            elif self._source.urlpath is None:
+                raise KeyError(
+                    "The input source `urlpath` does not have a value. You probably want to run `mc.select_date_range()` before running `to_dask()`."  # noqa: E501
+                )
 
             # This sends the metadata to `add_attributes()`
             self._ds = self._transform(
@@ -45,9 +65,10 @@ class DatasetTransform(GenericTransform):
 
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time
-            if 'start_date' in kwargs and 'end_date' in kwargs:
-                self._ds = self._ds.cf.sel(T=slice(kwargs['start_date'],
-                                                   kwargs['end_date']))
+            if "start_date" in kwargs and "end_date" in kwargs:
+                self._ds = self._ds.cf.sel(
+                    T=slice(kwargs["start_date"], kwargs["end_date"])
+                )
 
         return self._ds
 
@@ -129,7 +150,11 @@ def add_attributes(ds, metadata: Optional[dict] = None):
     # decode times if times are floats.
     # Some datasets like GFS have multiple time coordinates for different phenomena like
     # precipitation accumulation vs winds vs surface albedo average.
-    if "T" in metadata["axis"] and isinstance(metadata["axis"]["T"], list) and len(metadata["axis"]["T"]) > 1:
+    if (
+        "T" in metadata["axis"]
+        and isinstance(metadata["axis"]["T"], list)
+        and len(metadata["axis"]["T"]) > 1
+    ):
         for time_var in metadata["axis"]["T"]:
             if ds[time_var].dtype == "float64":
                 ds = xr.decode_cf(ds, decode_times=True)
