@@ -13,7 +13,7 @@ sources:
     description: Lake Erie model in FVCOM from 30 days ago with 120 hour forecast.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: &drop_variables
         - Itime
         - Itime2
@@ -81,7 +81,7 @@ sources:
     description: Lake Erie model in FVCOM from 30 days ago with 120 hour forecast (identical to forecast).
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: *drop_variables
       preload_varmap: *preload_varmap
       compat: override
@@ -108,7 +108,7 @@ sources:
     description: Lake Erie model in FVCOM from 2016 until 4 days ago.
     args:
       chunks:
-        ocean_time: 1
+        time: 1
       drop_variables: *drop_variables
       preload_varmap: *preload_varmap
       compat: override
