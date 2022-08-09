@@ -3,7 +3,6 @@ Set up for using package.
 """
 
 import importlib
-import shutil
 import pandas as pd
 
 from pathlib import Path
@@ -37,11 +36,9 @@ except DistributionNotFound:
     # package is not installed
     __version__ = "unknown"
 
-# set up known locations for catalogs. Can be overwritten HOW
+# set up known locations for catalogs.
 # this is where the original model catalog files and previously-calculated
 # model boundaries can be found, which are hard-wired in the repo
-# CAT_PATH = importlib.resources.path('model_catalogs', 'catalogs')
-# CAT_PATH = Path(__file__).parent / "catalogs"
 with importlib.resources.path('model_catalogs', 'catalogs') as pth:
     CAT_PATH = pth
 CAT_PATH_ORIG = CAT_PATH / "orig"
@@ -54,35 +51,15 @@ dirs = AppDirs("model_catalogs", "NOAA-ORR-ERD")
 cache_dir = Path(dirs.user_cache_dir)
 
 # This is where files are saved to refer back to for saving time
-CACHE_PATH = cache_dir / "catalogs"
-# SOURCE_CATALOG_NAME = "source_catalog.yaml"
+CACHE_PATH = cache_dir
 CACHE_PATH_COMPILED = CACHE_PATH / "compiled"
 CACHE_PATH_AVAILABILITY = CACHE_PATH / "availability"
 CACHE_PATH_FILE_LOCS = CACHE_PATH / "file_locs"
 
 # make directories
-# CAT_PATH.mkdir(parents=True, exist_ok=True)
-# CAT_PATH_ORIG.mkdir(parents=True, exist_ok=True)
-# CAT_PATH_BOUNDARIES.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_COMPILED.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_AVAILABILITY.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_FILE_LOCS.mkdir(parents=True, exist_ok=True)
-
-# # Move "orig" catalog files to catalog dir
-# PKG_CAT_PATH_ORIG = Path(__path__[0]) / "catalogs" / "orig"
-# [
-#     shutil.copy(fname, CAT_PATH_ORIG)
-#     for fname in PKG_CAT_PATH_ORIG.glob("*.yaml")
-# ]
-# PKG_CAT_PATH_BOUNDARY = Path(__path__[0]) / "catalogs" / "boundaries"
-# [
-#     shutil.copy(fname, CAT_PATH_BOUNDARIES)
-#     for fname in PKG_CAT_PATH_BOUNDARY.glob("*.yaml")
-# ]
-
-# # Move "transform.yaml" to catalog dir
-# SOURCE_TRANSFORM_REPO = Path(__path__[0]) / "catalogs" / "transform.yaml"
-# shutil.copy(SOURCE_TRANSFORM_REPO, SOURCE_TRANSFORM)
 
 
 def FILE_PATH_COMPILED(modelyaml):
@@ -123,11 +100,11 @@ def FILE_PATH_AGG_FILE_LOCS(model, timing, date, is_fore):
 # Fresh parameters: how long until model output avialability will be refreshed
 # for `find_availabililty()` if requested
 FRESH = {'forecast': {'start': '1 day', 'end': '4 hours', 'catrefs': '6 hours',
-                        'file_locs': '4 hours'},
+                      'file_locs': '4 hours'},
          'nowcast': {'start': '3 days', 'end': '4 hours', 'catrefs': '6 hours',
-                    'file_locs': '4 hours'},
+                     'file_locs': '4 hours'},
          'hindcast': {'start': '7 days', 'end': '1 day', 'catrefs': '1 day',
-                    'file_locs': '1 day'},
+                      'file_locs': '1 day'},
          'hindcast-forecast-aggregation': {'start': '7 days', 'end': '1 day'},
          'compiled': '6 hours',  # want to be on the same calendar day as when they were compiled; this approximates that.
-        }
+         }
