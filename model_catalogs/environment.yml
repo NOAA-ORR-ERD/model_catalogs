@@ -19,7 +19,7 @@ dependencies:
   - matplotlib
   - netcdf4
   - numpy
-  - openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
+  # - openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
   - pandas
   - pip
   # - pyproj

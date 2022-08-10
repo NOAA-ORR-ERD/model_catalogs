@@ -41,7 +41,6 @@ def test_find_availability():
 
     # test models with fast static links and that require aggregations
     test_models = {
-        "RTOFS-ALASKA": "forecast",
         "HYCOM": "forecast",
         "DBOFS": "nowcast",
         "SFBOFS": "hindcast",
