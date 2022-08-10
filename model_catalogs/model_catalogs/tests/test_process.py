@@ -31,11 +31,7 @@ def test_process():
                 mc.TEST_PATH_FILE(model, timing)
             ]
 
-            try:
-                ds = source.to_dask()
-            except OSError:
-                warnings.warn(f'MODEL {model} timing {timing} would not run', RuntimeWarning)
-                continue
+            ds = source.to_dask()
 
             # check axis attributes have been assigned
             checks = [
