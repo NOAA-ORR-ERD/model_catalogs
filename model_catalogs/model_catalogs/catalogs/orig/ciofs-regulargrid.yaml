@@ -1,0 +1,52 @@
+name: CIOFS-REGULARGRID
+description: Cook Inlet model in ROMS, interpolated to regular grid.
+metadata:
+  grid_dim_(xyz): [1461,973,26]
+  grid_res_min_(km): 0.5
+  grid_res_max_(km): 0.5
+  grid_type: 'rectangular'
+  alpha_shape: [5,5]  # dd, alpha
+  filetype: 'regulargrid'
+
+sources:
+  forecast:
+    driver: opendap
+    description: 3D Cook Inlet model in ROMS, interpolated to regular grid, from 1 day ago with 48 hour forecast.
+    args:
+      chunks:
+        ocean_time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CIOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ciofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CIOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ciofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+    parameters:
+      tod:
+        description: Pandas like Timestamp for today
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+        default: today
+    metadata:
+      sample_locs:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CIOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ciofs.regulargrid.n001.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CIOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ciofs.regulargrid.n002.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CIOFS/MODELS/catalog.xml'
+      overall_start_datetime: 'Available starting 1 day before present day.'
+      overall_end_datetime: 'Available through 48 hours after present time'
+      output_period_(hr): 1
+      axis:
+        T: ocean_time
+        X: nx
+        Y: ny
+        Z: Depth
+      standard_names:
+        eastward_sea_water_velocity: u_eastward
+        northward_sea_water_velocity: v_northward
+        sea_floor_depth: h
+        sea_surface_height_above_mean_sea_level: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salt
+        time: ocean_time

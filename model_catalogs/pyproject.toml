@@ -20,8 +20,8 @@ quiet = false
 color = true
 
 [tool.isort]
-known_third_party = ["alphashape", "cf_xarray", "dask", "extract_model",
-                     "flake8", "h5netcdf",
+known_third_party = ["alphashape", "appdirs", "cf_xarray", "dask", "datetimerange",
+                     "extract_model", "flake8", "h5netcdf",
                      "ipython",  "numpy", "pandas", "pip",
                      "pytest", "setuptools", "shapely", "xarray"]
 

@@ -5,14 +5,17 @@ dependencies:
   - python=3.8
   ############## These will have to be adjusted to your specific project
   - alphashape
+  - appdirs
   - cf_xarray
   - dask
-  - extract_model>=0.8.0
+  # - extract_model>=0.8.0
   - flake8
   - h5netcdf
   # - intake
   # - intake-xarray
+  # - netcdf4
   - numpy
+  # - openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
   - pandas
   - pip
   - shapely
@@ -22,6 +25,7 @@ dependencies:
   - pip:
     - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
     - git+https://github.com/intake/intake.git
+    - datetimerange
     - codecov
     - pytest-cov
     - coverage[toml]

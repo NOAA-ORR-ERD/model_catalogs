@@ -2,15 +2,15 @@
 Everything dealing with the catalogs.
 """
 
-import os
-
-from copy import deepcopy
+from pathlib import Path
 
 import cf_xarray  # noqa
 import intake
 import intake.source.derived
 import pandas as pd
+import yaml
 
+from datetimerange import DateTimeRange
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
@@ -24,6 +24,7 @@ def make_catalog(
     full_cat_metadata,
     cat_driver,
     cat_path=None,
+    save_catalog=True,
 ):
     """Construct single catalog from multiple catalogs or sources.
 
@@ -46,6 +47,8 @@ def make_catalog(
     cat_path: Path object, optional
        Path with catalog name to use for saving catalog. With or without yaml suffix. If not provided,
        will use `full_cat_name`.
+    save_catalog : bool, optional
+        Defaults to True, and saves to cat_path.
 
     Returns
     -------
@@ -57,17 +60,18 @@ def make_catalog(
 
     Make catalog:
 
-    >>> make_catalog([list of catalogs], 'catalog name', 'catalog desc', {}, 'opendap')
+    >>> make_catalog([list of Intake sources or catalogs], 'catalog name', 'catalog desc', {}, 'opendap',
+    save_catalog=False)
     """
 
-    if cat_path is None:
-        cat_path = full_cat_name
-    else:
+    if cat_path is None and save_catalog:
+        cat_path = Path(full_cat_name)
+    if save_catalog:
         cat_path = cat_path / full_cat_name.lower()
         # cat_path = f"{cat_path}/{full_cat_name.lower()}"
-    if ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
+    if save_catalog and ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
         cat_path = cat_path.with_suffix(".yaml")
-    # import pdb; pdb.set_trace()
+
     if not isinstance(cats, list):
         cats = [cats]
     if not isinstance(cat_driver, list):
@@ -79,12 +83,11 @@ def make_catalog(
     # create dictionary of catalog entries
     entries = {
         cat.name: LocalCatalogEntry(
-            cat.name.upper(),
+            cat.name.upper() if isinstance(cat, Catalog) else cat.name,
             description=cat.description,
             driver=catd,
             args=cat._yaml()["sources"][cat.name]["args"],
             metadata=cat.metadata,
-            # metadata=cat._yaml()["sources"][cat.name]["metadata"],
         )
         for cat, catd in zip(cats, cat_driver)
     }
@@ -98,412 +101,413 @@ def make_catalog(
     )
 
     # save catalog
-    cat.save(cat_path)
+    if save_catalog:
+        cat.save(cat_path)
 
     return cat
 
 
-def setup_source_catalog(override=False):
-    """Setup source catalog for models.
+def setup(override=False):
+    """Setup reference catalogs for models.
+
+    Loops over hard-wired "orig" catalogs available in mc.CAT_PATH_ORIG, reads in previously-saved model
+    boundary information, saves temporary catalog files for each model, and links those together into the
+    returned master catalog. For some models, reading in the original catalogs applies a "today" and/or
+    "yesterday" date Intake user parameter that supplies two example model files that can be used for
+    examining the model output for the example times. Those are rerun each time this function is rerun,
+    filling the parameters using the proper dates.
 
     Parameters
     ----------
-    override: bool
-        Will use model catalog files available in "complete" directory if it is
-        available, or if `override==True` will always use "orig" directory to
-        set up source catalog.
+    override : boolean, optional
+        Use `override=True` to compile the catalog files together regardless of freshness.
 
     Returns
     -------
-    Intake catalog `source_cat`.
+    Nested Intake catalog with a source for each model in mc.CAT_PATH_ORIG. Each source/model in turn has
+    a source for each timing available (e.g., "forecast", "hindcast").
+
+    Examples
+    --------
+    Set up master catalog:
+    >>> cat = mc.setup()
+
+    Examine list of sources/models available in catalog:
+    >>> list(cat)
+
+    Examine the sources for a specific model in the catalog:
+    >>> list(cat['CBOFS'])
     """
 
-    cat_source_description = "Source catalog for models."
+    cat_transform_locs = []
+    # Loop over all hard-wired original catalog files, one per model
+    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
 
-    # find most recent set of source_catalogs
-    if not os.path.exists(mc.CATALOG_PATH_DIR):
-        print(
-            '"complete" model source files are not yet available. Run `model_catalogs.complete_source_catalog()` to create this directory.'  # noqa: E501
-        )
-        cat_dir = mc.CATALOG_PATH_DIR_ORIG
-    elif override:
-        cat_dir = mc.CATALOG_PATH_DIR_ORIG
-    else:
-        cat_dir = mc.CATALOG_PATH_DIR
+        # re-compile together catalog file if user wants to override possibly
+        # existing file or if is not fresh
+        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.stem)):
 
-    # open catalogs
-    cats = [intake.open_catalog(cat_loc) for cat_loc in cat_dir.glob("*.yaml")]
+            cat_orig = intake.open_catalog(cat_loc)
 
-    metadata = {"source_catalog_dir": str(cat_dir)}
+            # add previously-saved boundary info
+            # this was calculated with mc.calculate_boundaries()
+            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.stem), "r") as stream:
+                boundary = yaml.safe_load(stream)
+            # add to cat_orig metadata
+            cat_orig.metadata["bounding_box"] = boundary["bbox"]
+            cat_orig.metadata["geospatial_bounds"] = boundary["wkt"]
 
-    return make_catalog(
+            # get transform of each original catalog file, which points to
+            # original file but applies metadata from original catalog file
+            # to the resulting dataset after calling `to_dask()`
+            source_transforms = [
+                mc.transform_source(cat_orig[timing]) for timing in list(cat_orig)
+            ]
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            mc.make_catalog(
+                source_transforms,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=mc.CACHE_PATH_COMPILED,
+                save_catalog=True,
+            )
+        cat_transform_locs.append(mc.FILE_PATH_COMPILED(cat_loc.stem))
+
+    # have to read these from disk in order to make them type
+    # intake.catalog.local.YAMLFileCatalog
+    # instead of intake.catalog.base.Catalog
+    cats = [intake.open_catalog(loc) for loc in cat_transform_locs]
+
+    # make master nested catalog
+    cat = mc.make_catalog(
         cats,
-        mc.SOURCE_CATALOG_NAME,
-        cat_source_description,
-        metadata,
-        intake.catalog.local.YAMLFileCatalog,
-        mc.CATALOG_PATH,
+        full_cat_name="MAIN-CATALOG",
+        full_cat_description="Main catalog for models; a catalog of nested catalogs.",
+        full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
+        cat_driver=intake.catalog.local.YAMLFileCatalog,
+        cat_path=None,
+        save_catalog=False,
     )
 
-
-def complete_source_catalog():
-    """Update model source files in 'source_catalogs/orig'.
-
-    This will add outer boundary files for the model domains and create
-    "complete" directory of model files that mirror those in "orig". If this is
-    run and "complete" directory already exists, it will be overwritten.
-
-    Returns
-    -------
-    Intake catalog, and also resaves all model source catalogs into
-    f"{self.cat_source_base}/complete" with domain boundaries added.
-
-    Examples
-    --------
-
-    Add boundary calculations to source model files:
-    >>> cats.update_source_files()
-    """
-
-    source_cat = mc.setup_source_catalog(override=True)
-
-    models = list(source_cat)
-    timing = "forecast"
-
-    for model in models:
-        # save original metadata so as to not include Dataset attributes
-        metadata = deepcopy(source_cat[model][timing].metadata)
-
-        # read in model output
-        ds = source_cat[model][timing].to_dask()
-
-        # find metadata
-        # select lon/lat for use. There may be more than one and we also want the name.
-        if "alpha_shape" in source_cat[model].metadata:
-            dd, alpha = source_cat[model].metadata["alpha_shape"]
-        else:
-            dd, alpha = None, None
-        lonkey, latkey, bbox, wkt = mc.find_bbox(ds, dd=dd, alpha=alpha)
-        # lonkey, latkey, bbox, wkt_low, wkt_high = find_bbox(ds, dd=dd, alpha=alpha)
-
-        # metadata for overall source_id0
-        metadata0 = {
-            "geospatial_bounds": wkt,
-            "bounding_box": bbox,
-        }
-        ds.close()
-
-        # # add Dataset metadata to specific source metadata
-        # # change metadata attributes to strings so catalog doesn't barf on them
-        # for attr in ds.attrs:
-        #     source_cat[model][timing].metadata[attr] = str(ds.attrs[attr])
-        # replace model, timing metadata to exclude Dataset attributes
-        source_cat[model][timing].metadata = metadata
-
-        # add 0th level metadata to 0th level model entry
-        source_cat[model].metadata.update(metadata0)
-
-        timings = list(source_cat[model])
-        sources = [source_cat[model][timing] for timing in timings]
-
-        make_catalog(
-            sources,
-            model,
-            source_cat[model].description,
-            source_cat[model].metadata,
-            "opendap",
-            mc.CATALOG_PATH_DIR,
-        )
-
-    return setup_source_catalog()
+    return cat
 
 
-def find_availability(model, override=False, override_updated=False):
-    """Find availability for model for 'forecast' and 'hindcast'.
+def find_datetimes(source, find_start_datetime, find_end_datetime, override=False):
+    """Find the start and/or end datetimes for source.
+
+    For sources with static urlpaths, this opens the Dataset and checks the first time for start_datetime
+    and the last time for end_datetime. Some NOAA OFS models require aggregation: some forecasts, all
+    nowcasts, and all hindcasts. For these, the available year and months of the thredd server
+    subcatalogs are found with `find_catrefs()`. `start_datetime` is found by further evaluating to make
+    sure that files in the subcatalogs are both available on the page and that the days represented by
+    model output files are consecutive (there are missing dates). `end_datetime` is found from the most
+    recent subcatalog files since there aren't missing files and dates on the recent end of the time
+    ranges.
+
+    Uses `cf-xarray` to determine the time axis.
 
     Parameters
     ----------
-    model: str
-        Name of model, e.g., CBOFS
-    override: bool
-        Will use model catalog files available in "complete" directory if it is
-        available, or if `override==True` will always use "orig" directory to
-        set up source catalog.
-    override_updated: bool
-        Will use model "updated" catalog file if available in "updated"
-        directory if it is not stale, or if `override==True` will remake updated
-        catalog file regardless.
+    source : Intake source
+        Model source for which to find start and/or end datetimes
+    find_start_datetime : bool
+        True to calculate start_datetime, otherwise returns None
+    find_start_datetime : bool
+        True to calculate start_datetime, otherwise returns None
+    override : boolean, optional
+        Use `override=True` to find catrefs regardless of freshness. This is passed in from
+        `find_availability()` so has the same value as input there.
 
     Returns
     -------
-    Intake catalog with some added metadata about the availability.
+    (start_datetime, end_datetime) where each are strings or can be None if they didn't need to be found.
+    """
+
+    filetype = source.cat.metadata["filetype"]
+
+    # For any model/timing pairs with static links or known file address,
+    # which is all non-OFS models and OFS models that are already aggregated
+    if "catloc" not in source.metadata:
+
+        try:
+            ds = source.to_dask()
+            # import pdb; pdb.set_trace()
+            # use one T in case there are more than one
+            start_datetime = (
+                str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
+            )
+            end_datetime = (
+                str(ds[ds.cf.axes["T"][0]].values[-1]) if find_end_datetime else None
+            )
+            ds.close()
+        except OSError:
+            print(
+                f"Model {source.cat.name} with timing {source.name} cannot connect to server."
+            )
+            return None, None
+
+    # for when we need to aggregate which is OFS models nowcast and hindcast
+    # and forecast if there is no pre-made aggregation
+    else:
+        if not override and mc.is_fresh(
+            mc.FILE_PATH_CATREFS(source.cat.name, source.name)
+        ):
+            with open(
+                mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r"
+            ) as stream:
+                catrefs = yaml.safe_load(stream)["catrefs"]
+        else:
+            catrefs = mc.find_catrefs(source.metadata["catloc"])
+            catrefs = sorted(catrefs)  # earliest first, most recent last
+            with open(
+                mc.FILE_PATH_CATREFS(source.cat.name, source.name), "w"
+            ) as outfile:
+                yaml.dump({"catrefs": catrefs}, outfile, default_flow_style=False)
+
+        if find_start_datetime:
+            # Getting start date #
+            # first make sure the dates actually have model files available
+            filelocs = []
+            i = 0
+            while len(filelocs) == 0:
+                # print(catrefs[i])
+                filelocs = sorted(
+                    mc.find_filelocs(
+                        catrefs[i], source.metadata["catloc"], filetype=filetype
+                    )
+                )
+                i += 1
+
+            # second make sure we only count when dates are consecutive, since servers tend to have some
+            # spotty model output at the earliest dates get dates from file names
+            all_dates = [
+                pd.to_datetime(fileloc, format="%Y%m%d", exact=False)
+                for fileloc in filelocs
+            ]
+            unique_dates = list(set(all_dates))
+
+            # if any dates are not consecutive, need to start after that date
+            df = pd.Series(unique_dates)
+            ddf = df.diff() > pd.Timedelta(
+                "1d"
+            )  # which differences in consecutive dates are over 1 day
+            if ddf.any():
+                # first date after last jump in dates is desired start day
+                start_day = df.where(ddf).dropna().iloc[-1]
+                # subset filelocs to match discovered consecutive dates
+                df_filelocs = pd.Series(index=all_dates, data=filelocs)
+                filelocs_ss = list(
+                    df_filelocs.where(df_filelocs.index >= start_day).dropna().values
+                )
+
+                # want first nowcast file (no forecast files available)
+                start_datetime = str(
+                    mc.get_dates_from_ofs(filelocs_ss, filetype, "n", "first")
+                )
+
+            # all dates were fine, so just use earliest fileloc
+            else:
+                # running the following gives the actual first time. This might not be necessary in which
+                # case want first nowcast file (no forecast files available)
+                start_datetime = str(
+                    mc.get_dates_from_ofs(filelocs, filetype, "n", "first")
+                )
+                # # just use earliest day date
+                # start_datetime = df.iloc[0]
+        else:
+            start_datetime = None
+
+        if find_end_datetime:
+            # Getting end date #
+            filelocs = mc.find_filelocs(
+                catrefs[-1], source.metadata["catloc"], filetype=filetype
+            )
+            # want last file
+            if source.name == "hindcast":
+                norf = "n"
+            elif source.name == "nowcast":
+                norf = "f"
+            end_datetime = str(mc.get_dates_from_ofs(filelocs, filetype, norf, "last"))
+        else:
+            end_datetime = None
+
+    # save start/end to files
+    if find_start_datetime:
+        with open(mc.FILE_PATH_START(source.cat.name, source.name), "w") as outfile:
+            yaml.dump(
+                {"start_datetime": start_datetime}, outfile, default_flow_style=False
+            )
+    if find_end_datetime:
+        with open(mc.FILE_PATH_END(source.cat.name, source.name), "w") as outfile:
+            yaml.dump({"end_datetime": end_datetime}, outfile, default_flow_style=False)
+
+    return start_datetime, end_datetime
+
+
+def find_availability(cat, timings=None, override=False):
+    """Find availability for model timings.
+
+    The code will check for previously-calculated availability. If found, the "freshness" of the
+    information is checked as compared with mc.FRESH parameters specified in `__init__`.
+
+    Start and end datetimes are allowed to be calculated separately to save time.
+
+    Parameters
+    ----------
+    cat : Intake catalog
+        Catalog containing timing sources for which to find availability.
+    timings : str, list of strings, optional
+        Specified timing to find the availability for. If unspecified, loop over all timings and find
+        availability for all.
+    override : boolean, optional
+        Use `override=True` to find availability regardless of freshness.
+
+    Returns
+    -------
+    The input Intake catalog but with `start_datetime` and `end_datetime` added to metadata for the
+    timings that were evaluated.
 
     Examples
     --------
-    >> cat = mc.find_availability(model='DBOFS')
+    Setup source catalog, then find availability for all timings of CIOFS model:
+    >>> source_cat = mc.setup()
+    >>> cat = mc.find_availability(source_cat['CIOFS']))
+
+    Find availability for only nowcast of CBOFS model:
+    >>> cat = mc.find_availability(source_cat['CBOFS'], 'nowcast')
     """
 
-    model = model.upper()
+    # if no timings input, loop through all
+    timings = list(cat) if timings is None else mc.astype(timings, list)
 
-    ran_forecast, ran_hindcast = False, False
-
-    complete_path = (mc.CATALOG_PATH_UPDATED / model.lower()).with_suffix(".yaml")
-    # complete_path = f"{mc.CATALOG_PATH_UPDATED}/{model.lower()}.yaml"
-    if os.path.exists(complete_path):
-        cat = intake.open_catalog(complete_path)
-    else:
-        ref_cat = setup_source_catalog(override=override)
-        cat = ref_cat[model]
-
-    # deal with RTOFS completely separately
-    if "RTOFS" in model:
-        ds = cat["forecast"].to_dask()
-        start_datetime = str(ds.time.values[0])
-        end_datetime = str(ds.time.values[-1])
-        cat["forecast"].metadata["start_datetime"] = start_datetime
-        cat["forecast"].metadata["end_datetime"] = end_datetime
-        cat_metadata = cat.metadata
-        metadata = {
-            "catalog_path": str(mc.CATALOG_PATH),
-            # "source_catalog_name": mc.SOURCE_CATALOG_NAME,
-            # "filetype": cat.metadata["filetype"]
-        }
-        cat_metadata.update(metadata)
-        new_user_cat = mc.make_catalog(
-            cat["forecast"],
-            f"{model.upper()}",
-            f"Model {model} with availability included.",
-            cat_metadata,
-            cat["forecast"]._entry._driver,
-            cat_path=mc.CATALOG_PATH_UPDATED,
-        )
-        return new_user_cat
-
-    # determine filetype to send to `agg_for_date`
-    if "regulargrid" in model.lower():
-        filetype = "regulargrid"
-    elif "2ds" in model.lower():
-        filetype = "2ds"
-    else:
-        filetype = "fields"
-
-    timings = ["forecast", "hindcast"]
-    # if both aren't available for cat, then this chooses those that are
-    # hindcast isn't available for regulargrid
-    timings = list(set(list(cat)).intersection(timings))
-
-    new_sources = []
     for timing in timings:
-
-        metadata = deepcopy(cat[timing].metadata)  # save metadata
-
-        # forecast: don't need to check for consecutive dates bc files are by day
-        # just find first file from earliest catref and last file from last catref
-        if "stale" in cat[timing].metadata:
-            stale = pd.Timedelta(cat[timing].metadata["stale"])
+        # check if start and end datetime files already exist and are new enough to use
+        # check if already know the time and not stale
+        # file times are given in UTC
+        # If files are not stale, read in info from there
+        if not override and mc.is_fresh(mc.FILE_PATH_START(cat.name, timing)):
+            with open(mc.FILE_PATH_START(cat.name, timing), "r") as stream:
+                start_datetime = yaml.safe_load(stream)["start_datetime"]
+            find_start_datetime = False
         else:
-            stale = pd.Timedelta("1 minute")
-        if "time_last_checked" in cat[timing].metadata:
-            time_last_checked = pd.Timestamp(cat[timing].metadata["time_last_checked"])
+            find_start_datetime = True  # need to still find the start_datetime
+
+        if not override and mc.is_fresh(mc.FILE_PATH_END(cat.name, timing)):
+            with open(mc.FILE_PATH_END(cat.name, timing), "r") as stream:
+                end_datetime = yaml.safe_load(stream)["end_datetime"]
+            find_end_datetime = False
         else:
-            time_last_checked = pd.Timestamp.today() - pd.Timedelta(
-                "30 days"
-            )  # just a big number
-        dt = pd.Timestamp.now() - time_last_checked
+            find_end_datetime = True  # need to still find the end_datetime
 
-        if timing == "forecast" and (dt > stale or override_updated):
+        # start and end temp could be None, depending on values of
+        # find_start_datetime, find_end_datetime
+        if find_start_datetime or find_end_datetime:
+            start_temp, end_temp = find_datetimes(
+                cat[timing], find_start_datetime, find_end_datetime, override=override
+            )
 
-            if "catloc" in cat[timing].metadata:
-                catloc = cat[timing].metadata["catloc"]
-                catrefs = mc.find_catrefs(catloc)
+        start_datetime = start_temp if find_start_datetime else start_datetime
+        end_datetime = end_temp if find_end_datetime else end_datetime
 
-                # find start_datetime. Have to loop bc there are fewer files for
-                # e.g. filetype=='regulargrid'
-                for catref in catrefs[::-1]:
-                    filelocs = mc.find_filelocs(catref, catloc, filetype=filetype)
-                    if len(filelocs) == 0:
-                        continue
-                start_datetime = mc.get_dates_from_ofs(filelocs, filetype, "n", "first")
+        cat[timing].metadata["start_datetime"] = start_datetime
+        cat[timing].metadata["end_datetime"] = end_datetime
 
-                # find end_datetime
-                filelocs = mc.find_filelocs(catrefs[0], catloc, filetype=filetype)
-                end_datetime = mc.get_dates_from_ofs(filelocs, filetype, "f", "last")
+    # Make new catalog to remember the new metadata
+    new_user_cat = mc.make_catalog(
+        [cat[timing] for timing in list(cat)],
+        full_cat_name=cat.name,
+        full_cat_description=cat.description,
+        full_cat_metadata=cat.metadata,
+        cat_driver=[cat[timing]._entry._driver for timing in list(cat)],
+        cat_path=None,
+        save_catalog=False,
+    )
 
-            else:
-                ds = cat["forecast"].to_dask()
-                start_datetime = str(ds.time.values[0])
-                end_datetime = str(ds.time.values[-1])
-
-            ran_forecast = True
-            # time_last_checked = pd.Timestamp.now()
-
-        elif timing == "hindcast" and (dt > stale or override_updated):
-
-            catloc = cat[timing].metadata["catloc"]
-            catrefs = mc.find_catrefs(catloc)
-
-            # Find start_datetime by checking catrefs from the old end [-1]
-            for catref in catrefs[::-1]:
-                filelocs = mc.find_filelocs(catref, catloc, filetype=filetype)
-                if len(filelocs) == 0:
-                    continue
-
-                # determine unique dates
-                dates = sorted(
-                    list(
-                        set(
-                            [
-                                pd.Timestamp(fileloc.split("/")[-1].split(".")[4])
-                                for fileloc in filelocs
-                            ]
-                        )
-                    )
-                )
-
-                # determine consecutive dates
-                dates = [
-                    dates[i]
-                    for i in range(len(dates) - 2)
-                    if (dates[i] + pd.Timedelta("1 day") in dates)
-                    and (dates[i] + pd.Timedelta("2 days") in dates)
-                ]
-                if len(dates) > 0:
-                    # keep filelocs if their date matches one in dates
-                    # filelocs that don't exceed date range found
-                    filelocs = [
-                        fileloc
-                        for fileloc in filelocs
-                        if dates[0]
-                        <= pd.Timestamp(fileloc.split("/")[-1].split(".")[4])
-                        <= dates[-1]
-                    ]
-                    start_datetime = mc.get_dates_from_ofs(
-                        filelocs, filetype, "n", "first"
-                    )
-                    break
-
-            # find end_datetime, no need to search through files on this end of time
-            filelocs = mc.find_filelocs(catrefs[0], catloc, filetype=filetype)
-            end_datetime = mc.get_dates_from_ofs(filelocs, filetype, "n", "last")
-
-            ran_hindcast = True
-            # time_last_checked = pd.Timestamp.now()
-        else:
-            start_datetime = cat[timing].metadata["start_datetime"]
-            end_datetime = cat[timing].metadata["end_datetime"]
-
-        # stale parameter: 4 hours for forecast, 1 day for hindcast
-        if timing == "forecast":
-            stale = "4 hours"
-        elif timing == "hindcast":
-            stale = "1 day"
-
-        # replace model, timing metadata to exclude Dataset attributes
-        cat[timing].metadata = metadata
-
-        metadata = {
-            "model": model,
-            "timing": timing,
-            "filetype": filetype,
-            "time_last_checked": str(pd.Timestamp.now()),
-            "stale": stale,
-            "start_datetime": str(start_datetime),
-            "end_datetime": str(end_datetime),
-        }
-        cat[timing].metadata.update(metadata)
-        new_sources.append(cat[timing])
-
-    if not (ran_forecast or ran_hindcast):
-        return cat
-    else:
-
-        cat_metadata = cat.metadata
-        metadata = {
-            "catalog_path": str(mc.CATALOG_PATH),
-            # "source_catalog_name": mc.SOURCE_CATALOG_NAME,
-            "filetype": new_sources[0].metadata["filetype"],
-        }
-        cat_metadata.update(metadata)
-
-        new_user_cat = mc.make_catalog(
-            new_sources,
-            f"{model.upper()}",
-            f"Model {model} with availability included.",
-            cat_metadata,
-            [source._entry._driver for source in new_sources],
-            cat_path=mc.CATALOG_PATH_UPDATED,
-        )
-        return new_user_cat
+    return new_user_cat
 
 
 def transform_source(source_orig):
-    """DOCSTRINGS"""
+    """Set up transform of original catalog source
 
-    # Now do the transform of the Dataset (or "derived dataset").
+    Parameters
+    ----------
+    source_orig : Intake source
+        Original source, which will be transformed
+
+    Returns
+    -------
+    source_transform, the transformed version of source_orig. This source will point at the source of
+    source_orig as the target.
+    """
+
     # open the skeleton transform cat entry and then alter
     # a few things so can use it with source_orig
-    source_transform = intake.open_catalog(mc.SOURCE_TRANSFORM)["name"]
+    source_transform = intake.open_catalog(mc.CAT_PATH_TRANSFORM)["name"]
 
-    # change new source information
-    # update source's info with model name since user would probably prefer this over timing?
-    # also other metadata to bring into user catalog
-    source_transform.name = f"{source_orig.cat.name}"
+    # Update name and description for transformed source
+    source_transform.name = source_orig.name
     source_transform.description = (
         f"Catalog entry for transform of dataset {source_orig.name}"
     )
 
-    # copy over axis and standard_names to transform_kwargs and metadata
-    # also fill in target
-    axis = deepcopy(source_orig.metadata["axis"])
-    snames = deepcopy(source_orig.metadata["standard_names"])
-    source_transform.metadata["axis"] = axis
-    source_transform.metadata["standard_names"] = snames
-    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-        "axis"
-    ] = axis
-    source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-        "standard_names"
-    ] = snames
+    # make path to source_orig the target
+    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [
+        f"{source_orig.cat.path}:{source_orig.name}"
+    ]
 
-    # make source_orig the target since will be made available in same catalog
-    source_orig.name = "temp"
-    target = f"{source_orig.name}"
-    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [target]
-
-    source_transform.metadata["urlpath"] = deepcopy(source_orig.urlpath)
+    # add metadata from source_orig
     source_transform.metadata.update(source_orig.metadata)
 
-    sources = [source_orig, source_transform]
-    new_cat = make_catalog(
-        sources,
-        "User-catalog.",
-        "User-made catalog.",
-        source_transform.metadata,  # this is where the most metadata is, but probably not important for cat  # noqa: E501
-        [source._entry._driver for source in sources],
-        cat_path=mc.CATALOG_PATH_TMP,
-    )
+    # add yesterday if needed (some RTOFS models)
+    if any(
+        ["yesterday" in d.values() for d in source_orig.describe()["user_parameters"]]
+    ):
+        yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
+        # import pdb; pdb.set_trace()
+        source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+            "yesterday"
+        ] = str(yesterday)[:10]
 
-    return new_cat
+    return source_transform
 
 
-def add_url_path(cat, timing=None, start_date=None, end_date=None):
+def select_date_range(
+    cat, start_date, end_date, timing=None, forecast_forward=False, override=False
+):
     """Add urlpath locations to existing catalog/source.
+
+    NOAA OFS model-timings that require aggregation need to have the specific file paths found for each
+    file that will be read in. This function does that, based on the desired date range, and returns a
+    Source with them in the `urlpath`. This function can be also used with any model that does not
+    require this (because the model paths are either static or deterministic) but in those cases it does
+    not need to be used; they will have the start and end dates applied to filter the resulting model
+    output after `to_dask()` is called.
 
     Parameters
     ----------
     cat: Intake catalog
         An intake catalog for a specific model entry.
     timing: str, optional
-        Which timing to use. If `find_availability` has been run, the code will
-        determine whether `start_date`, `end_date` are in "forecast" or
-        "hindcast". Otherwise timing must be provided for a single timing.
-        Normally the options are "forecast", "nowcast", or "hindcast", and
-        sometimes "hindcast-forecast-aggregation".
-    start_date, end_date: datetime-interpretable str or pd.Timestamp, optional
-        These two define the range of model output to include.
-        If model has an aggregated link for timing, start_date and end_date
-        are not used. Otherwise they should be input. Only year-month-day
-        will be used in date. end_date is inclusive.
+        Which timing to use. If `find_availability` has been run, the code will determine whether
+        `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing must be provided for a
+        single timing. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes
+        "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat,
+        that one will be used without specifying it.
+    start_date, end_date: datetime-interpretable str or pd.Timestamp
+        For models that require aggregation, the end_date is inclusive. For all models, the start and end
+        date are used with `xarray` directly with `ds.cf.sel(T=slice(start_date, end_date))` in
+        `to_dask()`.
+    forecast_forward : bool, optional
+        Nowcast files are aggregated for the dates in the user-defined date range. However, if
+        `forecast_forward==True`, the final date can have forecast files aggregated after the nowcast
+        files to create a forecast going forward in time from the end date. The default is to not include
+        the forecast on the end (`forecast_forward=False`).
+    override : boolean, optional
+        Use `override=True` to find catrefs regardless of freshness.
 
     Returns
     -------
@@ -528,142 +532,148 @@ def add_url_path(cat, timing=None, start_date=None, end_date=None):
 
     """
 
-    # either `find_availability` needs to have been run and therefore certain
-    # metadata present in cat (start_datetime, end_datetime), or don't need to
-    #  have run `find_availability` but need to input which "timing" to use.
-    dates = set(cat["forecast"].metadata).intersection(
-        set(["start_datetime", "end_datetime"])
-    )  # noqa
-    assertion = 'Either `find_availability` needs to have been run and therefore certain metadata present in cat (start_datetime, end_datetime), or do not need to have run `find_availability` but need to input which "timing" to use.'  # noqa
-    assert len(dates) > 1 or timing is not None, assertion
+    end_date = mc.astype(end_date, pd.Timestamp)
 
-    # model = model.upper()
-    model = cat.name.upper()
+    # if there is only one timing, use it
+    if timing is None and len(list(cat)) == 1:
+        timing = list(cat)[0]
 
-    if not isinstance(start_date, pd.Timestamp):
-        start_date = pd.Timestamp(start_date)
-    if not isinstance(end_date, pd.Timestamp):
-        end_date = pd.Timestamp(end_date)
+    elif timing is None and any(
+        [
+            "start_datetime" not in cat[timing].metadata
+            or "end_datetime" not in cat[timing].metadata
+            for timing in list(cat)
+        ]
+    ):
+        raise KeyError(
+            "Run `mc.find_availability()` for this model before running this command. Otherwise input timing that contains desired date range."  # noqa: E501
+        )
 
     # which source to use from catalog for desired date range
     if timing is None:
-        if start_date >= pd.Timestamp(
-            cat["forecast"].metadata["start_datetime"]
-        ).normalize() and end_date <= pd.Timestamp(
-            cat["forecast"].metadata["end_datetime"]
-        ):
-            timing = "forecast"
-        elif (
-            "hindcast" in list(cat)
-            and start_date
-            >= pd.Timestamp(cat["hindcast"].metadata["start_datetime"]).normalize()
-            and end_date <= pd.Timestamp(cat["hindcast"].metadata["end_datetime"])
-        ):
-            timing = "hindcast"
+        user_range = DateTimeRange(start_date, end_date)
+
+        for timing in list(cat):
+            timing_range = DateTimeRange(
+                cat[timing].metadata["start_datetime"],
+                cat[timing].metadata["end_datetime"],
+            )
+            try:  # use this timing if it is in the date range
+                if user_range in timing_range:
+                    break
+            except TypeError:
+                continue
         else:
-            print("date range does not easily fit into forecast or hindcast")
+            raise ValueError("date range does not fully fit into any model timings")
+
+    if forecast_forward and timing == "hindcast":
+        raise KeyError(
+            "timing 'hindcast' does not have forecast files, so `forecast_forward` should be False."
+        )
 
     source = cat[timing]
 
-    # RTOFS has special issues to form the paths for the model output available right now
-    if "RTOFS-EAST" in model or "RTOFS-ALASKA" in model or "RTOFS-WEST" in model:
-        # RTOFS needs to have yesterday's date input, then it is able to
-        # create the necessary file names to get the model output
-        source_orig = cat[timing](
-            yesterday=pd.Timestamp.today() - pd.Timedelta("1 day")
-        )
+    # catch the models that require aggregation
+    if "catloc" in source.metadata:
+        pattern = source.metadata["pattern"] if "pattern" in source.metadata else None
 
-    elif "RTOFS-GLOBAL" in model or "RTOFS-GLOBAL_2D" in model:
-        source_orig = cat[timing]
-
-    # urlpath is None or a list of filler files if the filepaths need to be determined
-    elif (
-        source.urlpath is None or isinstance(source.urlpath, list)
-    ) and "catloc" in source.metadata:
-
-        if "pattern" in source.metadata:
-            pattern = source.metadata["pattern"]
+        if not override and mc.is_fresh(
+            mc.FILE_PATH_CATREFS(source.cat.name, source.name)
+        ):
+            with open(
+                mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r"
+            ) as stream:
+                catrefs = yaml.safe_load(stream)["catrefs"]
         else:
-            pattern = None
+            catrefs = mc.find_catrefs(source.metadata["catloc"])
+            catrefs = sorted(catrefs)  # earliest first, most recent last
+            with open(
+                mc.FILE_PATH_CATREFS(source.cat.name, source.name), "w"
+            ) as outfile:
+                yaml.dump({"catrefs": catrefs}, outfile, default_flow_style=False)
 
-        catloc = source.metadata["catloc"]
-        catrefs = mc.find_catrefs(catloc)
+        # For forecast OFS aggregations, the latest date available by catalog day
+        # is today, and the forecast files within today extend forward in time.
+        # in that case, use today as end date in loop below, and use
+        # `forecast_forward=True`.
+        today = pd.Timestamp.today()
+        if end_date > today:
+            end_date_use = today
+            forecast_forward = True
+        else:
+            end_date_use = end_date
 
         # loop over dates
         filelocs_urlpath = []
-        for date in pd.date_range(start=start_date, end=end_date, freq="1D"):
-            if date == end_date and (
-                (
-                    "timing" in source.metadata
-                    and source.metadata["timing"] == "forecast"
-                )
-                or (timing == "forecast")
-            ):
-                is_forecast = True
+        for date in pd.date_range(start=start_date, end=end_date_use, freq="1D"):
+            is_forecast = (
+                True
+                if date.date() == end_date_use.date() and forecast_forward
+                else False
+            )
+
+            fname = mc.FILE_PATH_AGG_FILE_LOCS(
+                source.cat.name, timing, date, is_forecast
+            )
+
+            if not override and mc.is_fresh(fname):
+                with open(fname, "r") as stream:
+                    agg_filelocs = yaml.safe_load(stream)["agg_filelocs"]
+
             else:
-                is_forecast = False
+                # translate date to catrefs to select which catref to use
+                if len(catrefs[0]) == 3:
+                    cat_ref_to_match = (
+                        date.strftime("%Y"),
+                        date.strftime("%m"),
+                        date.strftime("%d"),
+                    )
+                elif len(catrefs[0]) == 2:
+                    cat_ref_to_match = (date.strftime("%Y"), date.strftime("%m"))
 
-            # translate date to catrefs to select which catref to use
-            if len(catrefs[0]) == 3:
-                cat_ref_to_match = (
-                    str(date.year),
-                    str(date.month).zfill(2),
-                    str(date.day).zfill(2),
+                ind = catrefs.index(cat_ref_to_match)
+
+                filelocs = mc.find_filelocs(
+                    catrefs[ind], source.metadata["catloc"], cat.metadata["filetype"]
                 )
-            elif len(catrefs[0]) == 2:
-                cat_ref_to_match = (str(date.year), str(date.month).zfill(2))
 
-            ind = catrefs.index(cat_ref_to_match)
-
-            filelocs = mc.find_filelocs(
-                catrefs[ind], catloc, filetype=cat.metadata["filetype"]
-            )
-            filelocs_urlpath.extend(
-                mc.agg_for_date(
-                    date,
-                    filelocs,
-                    cat.metadata["filetype"],
-                    # source.metadata['filetype'],
-                    is_forecast=is_forecast,
-                    pattern=pattern,
+                agg_filelocs = mc.agg_for_date(
+                    date, filelocs, cat.metadata["filetype"], is_forecast, pattern
                 )
-            )
 
-        source_orig = source(urlpath=filelocs_urlpath)  # [:2])
+                with open(fname, "w") as outfile:
+                    yaml.dump(
+                        {"agg_filelocs": agg_filelocs},
+                        outfile,
+                        default_flow_style=False,
+                    )
 
-    # urlpath is already available if the link is consistent in time
-    else:
-        print(
-            "`start_date` and `end_date` were not used since static link available."
-        )  # noqa: E501
-        source_orig = source
+            filelocs_urlpath.extend(agg_filelocs)
 
-    # save "orig" source to a tempfile
-    # import tempfile
-    # temp_dir = tempfile.TemporaryDirectory()
-    # print(temp_dir.name)
-    # fp = tempfile.NamedTemporaryFile()
-    # temp_cat = make_catalog(
-    #                 source_orig,
-    #                 "User-catalog",
-    #                 "User-made catalog",
-    #                 {},#metadata,
-    #                 source_orig._entry._driver,
-    #                 cat_path=mc.CATALOG_PATH_TMP,
-    #             )
+        # This is how we input the newly found urlpaths in so they will be used
+        # in the processing of the dataset, and overwrite the old urlpath
+        source.__dict__["_captured_init_kwargs"]["transform_kwargs"][
+            "urlpath"
+        ] = filelocs_urlpath
+
+    # Pass start and end dates to the transform so they can be implemented
+    # there for static and deterministic model files (includes RTOFS) as well
+    # as the OFS aggregated models.
+    source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["start_date"] = str(
+        start_date
+    )
+    source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["end_date"] = str(
+        end_date
+    )
 
     # store info in source_orig
-    # source_orig.metadata["model"] = model
-    source_orig.metadata["timing"] = timing
-    source_orig.metadata["start_date"] = (
-        start_date.isoformat() if start_date is not None else None,
-    )
-    source_orig.metadata["end_date"] = (
-        end_date.isoformat() if end_date is not None else None,
-    )
+    metadata = {
+        "timing": timing,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    source.metadata.update(metadata)
     # Add original overall model catalog metadata to this next version
-    source_orig.metadata.update(cat.metadata)
+    source.metadata.update(cat.metadata)
 
-    new_cat = transform_source(source_orig)
-
-    return new_cat
+    return source

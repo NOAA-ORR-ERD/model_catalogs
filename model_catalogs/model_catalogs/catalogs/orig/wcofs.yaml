@@ -67,11 +67,14 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220701.t03z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220702.t03z.nc"
     metadata:
       # Sample files with known dates
-      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220701.t03z.nc",
-      "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220702.t03z.nc"]
+      sample_locs:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220701.t03z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220702.t03z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-wcofs-files/catalog.xml'
       overall_start_datetime: 'Available starting 2021-03-22'
       overall_end_datetime: 'Available through 4 days before present time'

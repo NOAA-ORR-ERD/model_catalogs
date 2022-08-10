@@ -103,34 +103,28 @@ def fetch(fetch_config: FetchConfig):
     """
     print("Setting up source catalog")
     with Timer("\tSource catalog generated in {}"):
-        source_catalog = mc.setup_source_catalog()
+        main_cat = mc.setup()
 
     print(
         f"Generating catalog specific for {fetch_config.model_name} {fetch_config.timing}"
     )
     with Timer("\tSpecific catalog generated in {}"):
-        catalog = mc.add_url_path(
-            source_catalog[fetch_config.model_name],
-            timing=fetch_config.timing,
+        source = mc.select_date_range(
+            main_cat[fetch_config.model_name],
             start_date=fetch_config.start,
             end_date=fetch_config.end,
+            timing=fetch_config.timing,
         )
     print("Getting xarray dataset for model data")
     with Timer("\tCreated dask-based xarray dataset in {}"):
-        ds = catalog[fetch_config.model_name].to_dask()
+        ds = source.to_dask()
     print("Subsetting data")
     with Timer("\tSubsetted dataset in {}"):
         ds_ss = (
             ds.em.filter(fetch_config.standard_names)
-            .cf.sel(T=slice(fetch_config.start, fetch_config.end))
+            # .cf.sel(T=slice(fetch_config.start, fetch_config.end))
             .em.sub_grid(bbox=fetch_config.bbox)
         )
-        # TODO: This is going to get moved into model_catalogs, but some models from CO-OPS contain
-        #   a global attribute that originates from NETCDF3. However when xarray attempts to write
-        #   this special global attribute to disk, the netCDF-C library will throw an exception. See
-        #   https://github.com/pydata/xarray/issues/2822 for details.
-        if "_NCProperties" in ds_ss.attrs:
-            del ds_ss.attrs["_NCProperties"]
     print(
         f"Writing netCDF data to {fetch_config.output_pth}. This may take a long time..."
     )

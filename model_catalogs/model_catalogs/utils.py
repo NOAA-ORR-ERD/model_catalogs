@@ -3,14 +3,92 @@ Utilities to help with catalogs.
 """
 
 import fnmatch
+import pathlib
 import re
 
 import cf_xarray  # noqa
+import intake
 import numpy as np
 import pandas as pd
 import shapely.geometry
+import yaml
 
 from siphon.catalog import TDSCatalog
+
+import model_catalogs as mc
+
+
+def astype(value, type_):
+    """Return string or list as list"""
+    if not isinstance(value, type_):
+        if type_ == list and isinstance(value, (str, pathlib.PosixPath)):
+            return [value]
+        return type_(value)
+    return value
+
+
+def get_fresh_parameter(filename):
+    """Get freshness parameter, based on the filename.
+
+    A freshness parameter is stored in `__init__` for required scenarios which is looked up using the
+    logic in this function, based on the filename.
+
+    Parameters
+    ----------
+    filename : Path
+        Filename to determine freshness
+
+    Returns
+    -------
+    mu, a pandas Timedelta-interpretable string describing the amount of time that filename should be
+    considered fresh before needing to be recalculated.
+    """
+
+    # a start or end datetime file
+    if filename.parent == mc.CACHE_PATH_AVAILABILITY:
+        timing = filename.name.split("_")[1]
+        if "start" in filename.name:
+            mu = mc.FRESH[timing]["start"]
+        elif "end" in filename.name:
+            mu = mc.FRESH[timing]["end"]
+        elif "catrefs" in filename.name:
+            mu = mc.FRESH[timing]["catrefs"]
+    # a file of file locs for aggregation
+    elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
+        timing = filename.name.split("_")[1]
+        mu = mc.FRESH[timing]["file_locs"]
+    # a compiled catalog file
+    elif filename.parent == mc.CACHE_PATH_COMPILED:
+        mu = mc.FRESH["compiled"]
+
+    return mu
+
+
+def is_fresh(filename):
+    """Check if file called filename is fresh.
+
+    If filename doesn't exist, return False.
+
+    Parameters
+    ----------
+    filename : Path
+        Filename to determine freshness
+
+    Returns
+    -------
+    Boolean. True if fresh and False if not or if filename is not found.
+    """
+
+    now = pd.Timestamp.today(tz="UTC")
+    try:
+        filetime = pd.Timestamp(filename.stat().st_mtime_ns).tz_localize("UTC")
+
+        mu = get_fresh_parameter(filename)
+
+        return now - filetime < pd.Timedelta(mu)
+
+    except FileNotFoundError:
+        return False
 
 
 def find_bbox(ds, dd=None, alpha=None):
@@ -70,16 +148,16 @@ def find_bbox(ds, dd=None, alpha=None):
             hasmask = True
 
     # This is structured, rectilinear
-    # GFS
+    # GFS, RTOFS, HYCOM
     if (lon.ndim == 1) and ("nele" not in ds.dims) and not hasmask:
-
         nlon, nlat = ds["lon"].size, ds["lat"].size
         lonb = np.concatenate(([lon[0]] * nlat, lon[:], [lon[-1]] * nlat, lon[::-1]))
         latb = np.concatenate((lat[:], [lat[-1]] * nlon, lat[::-1], [lat[0]] * nlon))
         # boundary = np.vstack((lonb, latb)).T
         p = shapely.geometry.Polygon(zip(lonb, latb))
         p0 = p.simplify(1)
-        p1 = p
+        # Now using the more simplified version because all of these models are boxes
+        p1 = p0
 
     elif hasmask or ("nele" in ds.dims):  # unstructured
 
@@ -108,19 +186,18 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     Parameters
     ----------
     date: str of datetime, pd.Timestamp
-        Date of day to find model output files for. Doesn't pay attention to hours/minutes/seconds.
+        Date of day to find model output files for. Doesn't pay attention to hours/minutes seconds.
     strings: list
-        List of strings to be filtered. Expected to be file locations from a
-        thredds catalog.
+        List of strings to be filtered. Expected to be file locations from a thredds catalog.
     filetype: str
         Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid"
         or "2ds" also. This availability information is in the source catalog for the model under
         `filetypes` metadata.
     is_forecast: bool, optional
-        If True, then date is the last day of the time period being sought and the forecast files
-        should be brought in along with the nowcast files, to get the model output the length of the
-        forecast out in time. The forecast files brought in will have the latest timing cycle of the
-        day that is available. If False, all nowcast files (for all timing cycles) are brought in.
+        If True, then date is the last day of the time period being sought and the forecast files should
+        be brought in along with the nowcast files, to get the model output the length of the forecast
+        out in time. The forecast files brought in will have the latest timing cycle of the day that is
+        available. If False, all nowcast files (for all timing cycles) are brought in.
     pattern: str, optional
         If a model file pattern doesn't match that assumed in this code, input one that will work.
         Currently only NYOFS doesn't match but the pattern is built into the catalog file.
@@ -130,8 +207,7 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     List of URLs for where to find all of the model output files that match the keyword arguments.
     """
 
-    if not isinstance(date, pd.Timestamp):
-        date = pd.Timestamp(date)
+    date = astype(date, pd.Timestamp)
 
     # # brings in nowcast and forecast for any date in the catalog
     # pattern0 = f'*{filetype}*.t??z.*'
@@ -286,6 +362,9 @@ def find_filelocs(catref, catloc, filetype="fields"):
 def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     """Return either start or end datetime from list of filenames.
 
+    This looks at the actual nowcast and forecast file cycle times to understand the earliest and last
+    model times, as opposed to just the date in the file name.
+
     Parameters
     ----------
     filelocs: list
@@ -322,3 +401,109 @@ def get_dates_from_ofs(filelocs, filetype, norf, firstorlast):
     datetime = date + pd.Timedelta(f"{cycle} hours") + pd.Timedelta(f"{filetime} hours")
 
     return datetime
+
+
+def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=False):
+    """Calculate boundary information for all models.
+
+    This loops over all catalog files available in mc.CAT_PATH_ORIG, tries first with forecast source and
+    then with nowcast source if necessary to access the example model output files and calculate the
+    bounding box and numerical domain boundary. The numerical domain boundary is calculated using
+    `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The
+    bounding box and boundary string representation (as WKT) are then saved to files.
+
+    The files that are saved by running this function have been previously saved into the repository, so
+    this function should only be run if you suspect that a model domain has changed.
+
+    Parameters
+    ----------
+    file_locs : Path, list of Paths, optional
+        List of Path objects for model catalog files to read from. If not input, will use all catalog
+        files available at mc.CAT_PATH_ORIG.glob("*.yaml").
+    save_files : boolean, optional
+        Whether to save files or not. Defaults to True. Saves to mc.CAT_PATH_BOUNDARY / cat_loc.name.
+    return_boundaries : boolean, optional
+        Whether to return boundaries information from this call. Defaults to False.
+
+    Examples
+    --------
+    Calculate boundary information for all available models:
+    >>> mc.calculate_boundaries()
+
+    Calculate boundary information for CBOFS:
+    >>> mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"])
+    """
+
+    if file_locs is None:
+        file_locs = mc.CAT_PATH_ORIG.glob("*.yaml")
+    else:
+        file_locs = mc.astype(file_locs, list)
+
+    # loop over all orig catalogs
+    boundaries = {}
+    for cat_loc in file_locs:
+
+        # open model catalog
+        cat_orig = intake.open_catalog(cat_loc)
+
+        # try with forecast but if it doesn't work, use nowcast
+        # this avoids problematic NOAA OFS aggregations when they are broken
+        try:
+            timing = "forecast"
+            source_orig = cat_orig[timing]
+            source_transform = mc.transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False,
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        except OSError:
+            timing = "nowcast"
+            source_orig = cat_orig[timing]
+            source_transform = mc.transform_source(source_orig)
+
+            # need to make catalog to transfer information properly from
+            # source_orig to source_transform
+            cat_transform = mc.make_catalog(
+                source_transform,
+                full_cat_name=cat_orig.name,  # model name
+                full_cat_description=cat_orig.description,
+                full_cat_metadata=cat_orig.metadata,
+                cat_driver=mc.process.DatasetTransform,
+                cat_path=None,
+                save_catalog=False,
+            )
+
+            # read in model output
+            ds = cat_transform[timing].to_dask()
+
+        # find boundary information for model
+        if "alpha_shape" in cat_orig.metadata:
+            dd, alpha = cat_orig.metadata["alpha_shape"]
+        else:
+            dd, alpha = None, None
+        lonkey, latkey, bbox, wkt = mc.find_bbox(ds, dd=dd, alpha=alpha)
+
+        ds.close()
+
+        # save boundary info to file
+        if save_files:
+            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.name), "w") as outfile:
+                yaml.dump({"bbox": bbox, "wkt": wkt}, outfile, default_flow_style=False)
+
+        if return_boundaries:
+            boundaries[cat_loc.stem] = {"bbox": bbox, "wkt": wkt}
+
+    if return_boundaries:
+        return boundaries

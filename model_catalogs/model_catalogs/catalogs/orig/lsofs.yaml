@@ -56,20 +56,18 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: [
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t06z.nc",
-      ]
+      urlpath:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t06z.nc"
     parameters:
       tod:
         description: Pandas like Timestamp for today
         type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
         default: today
     metadata:
-      sample_locs: [
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc",
-      "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t06z.nc",
-      ]
+      sample_locs:
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LSOFS/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/glofs.lsofs.fields.nowcast.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t06z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LSOFS/MODELS/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
       overall_end_datetime: 'Available through 120 hours after present time.'
@@ -111,11 +109,14 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: netcdf4
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t06z.nc"
     metadata:
       # Sample files with known dates
-      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t00z.nc",
-      "https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t06z.nc"]
+      sample_locs:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-lsofs-files/2022/07/glofs.lsofs.fields.nowcast.20220701.t06z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-lsofs-files/catalog.xml'
       overall_start_datetime: 'Available starting 2016-03-06.'
       overall_end_datetime: 'Available through 4 days before present time.'

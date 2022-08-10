@@ -77,32 +77,6 @@ sources:
         - latc
         - lonc
 
-  nowcast:
-    description: Lake Erie model in FVCOM from 30 days ago with 120 hour forecast (identical to forecast).
-    args:
-      chunks:
-        time: 1
-      drop_variables: *drop_variables
-      preload_varmap: *preload_varmap
-      compat: override
-      combine: by_coords
-      parallel: True
-      data_vars: minimal
-      coords: minimal
-      engine: triangularmesh_netcdf
-      urlpath: null
-    driver: opendap
-    metadata:
-      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/catalog.xml'
-      # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LEOFS/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 120 hours after present time'
-      output_period_(hr): 1
-      axis: *axis
-      standard_names: *standard_names
-      coords: *coords
-      formula_terms: *formula_terms
-
   hindcast:
     driver: opendap
     description: Lake Erie model in FVCOM from 2016 until 4 days ago.
@@ -117,11 +91,14 @@ sources:
       data_vars: minimal
       coords: minimal
       engine: triangularmesh_netcdf
-      urlpath: null
+      urlpath:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"
     metadata:
       # Sample files with known dates
-      sample_locs: ["https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc",
-      "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"]
+      sample_locs:
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t00z.nc"
+        - "https://www.ncei.noaa.gov/thredds/dodsC/model-leofs-files/2022/07/nos.leofs.fields.n000.20220701.t06z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-leofs/catalog.xml'
       overall_start_datetime: 'Available starting 2016-03-10'
       overall_end_datetime: 'Available through 4 days before present time'
