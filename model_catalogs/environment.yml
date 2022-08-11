@@ -29,7 +29,7 @@ dependencies:
     # - git+https://github.com/axiom-data-science/extract_model.git
     # - git+https://github.com/xarray-contrib/cf-xarray.git
     #- git+https://github.com/intake/intake-xarray.git #@open_mfdataset
-    - git+https://github.com/intake/intake-xarray.git@b78950df8d1ca1250909ee2aaa0bc28cf1f0b59e
+    - git+https://github.com/intake/intake-xarray.git@f8368225d6957e5fb0a4b2f24f0b0be28b42a5ea
     #- git+https://github.com/intake/intake.git
     - git+https://github.com/intake/intake.git@d28391c54c875a47bf34f640e46c5f68109ba8b5
     #- git+https://github.com/axiom-data-science/extract_model.git
