@@ -23,7 +23,8 @@ dependencies:
   ##############
   - pytest
   - pip:
-    - git+https://github.com/intake/intake-xarray.git #@open_mfdataset
+      # intake-xarray version on 2022-07-28 which has fixes for using non-standard engine
+    - git+https://github.com/intake/intake-xarray.git
     - git+https://github.com/intake/intake.git
     - datetimerange
     - codecov

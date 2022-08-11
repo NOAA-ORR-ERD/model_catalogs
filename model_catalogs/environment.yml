@@ -9,7 +9,7 @@ dependencies:
   - cf_xarray
   - dask
   - flake8
-  # - extract_model>=0.8.0
+  - extract_model
   - h5netcdf
   # - intake
   # - intake-xarray
@@ -27,9 +27,7 @@ dependencies:
   - xarray
   - pip:  # install from github to get recent PRs I contributed
     # - git+https://github.com/axiom-data-science/extract_model.git
-    # - git+https://github.com/xarray-contrib/cf-xarray.git
-    #- git+https://github.com/intake/intake-xarray.git #@open_mfdataset
-    - git+https://github.com/intake/intake-xarray.git@b78950df8d1ca1250909ee2aaa0bc28cf1f0b59e
+    - git+https://github.com/intake/intake-xarray.git
     #- git+https://github.com/intake/intake.git
     - git+https://github.com/intake/intake.git@d28391c54c875a47bf34f640e46c5f68109ba8b5
     #- git+https://github.com/axiom-data-science/extract_model.git
