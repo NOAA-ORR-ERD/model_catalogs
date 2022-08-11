@@ -24,7 +24,7 @@ dependencies:
   - pytest
   - pip:
       # intake-xarray version on 2022-07-28 which has fixes for using non-standard engine
-    - git+https://github.com/intake/intake-xarray.git@f8368225d6957e5fb0a4b2f24f0b0be28b42a5ea
+    - git+https://github.com/intake/intake-xarray.git
     - git+https://github.com/intake/intake.git
     - datetimerange
     - codecov
