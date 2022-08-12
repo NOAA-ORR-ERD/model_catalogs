@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Callable, List, Tuple
 
 import pandas as pd
+import xarray as xr
+
+from extract_model import utils as em_utils
 
 import model_catalogs as mc
 
@@ -70,6 +73,7 @@ class FetchConfig:
     bbox: Tuple[float, float, float, float]
     timing: str
     standard_names: List[str] = field(default_factory=lambda: STANDARD_NAMES)
+    surface_only: bool = False
 
 
 def parse_bbox(val: str) -> Tuple[float, float, float, float]:
@@ -90,6 +94,23 @@ def parse_bbox(val: str) -> Tuple[float, float, float, float]:
             "bbox should include four numbers: lon_min,lat_min,lon_max,lat_max"
         )
     return tuple(float(i) for i in values)
+
+
+def get_surface(ds: xr.Dataset) -> xr.Dataset:
+    """Return a dataset that is reduced to only the surface layer."""
+    model_guess = em_utils.guess_model_type(ds)
+    if all([ds[zaxis].ndim < 2 for zaxis in ds.cf.axes["Z"]]):
+        return ds.cf.sel(Z=0, method="nearest")
+    elif model_guess == "FVCOM":
+        vertical_dims = set()
+        for varname in ds.cf.axes["Z"]:
+            vertical_dim = ds[varname].dims[0]
+            vertical_dims.add(vertical_dim)
+        sel_kwargs = {vdim: 0 for vdim in vertical_dims}
+        return ds.isel(**sel_kwargs)
+    elif model_guess == "SELFE":
+        return ds.isel(nv=-1)
+    raise ValueError("Can't decode vertical coordinates.")
 
 
 def fetch(fetch_config: FetchConfig):
@@ -118,6 +139,11 @@ def fetch(fetch_config: FetchConfig):
     print("Getting xarray dataset for model data")
     with Timer("\tCreated dask-based xarray dataset in {}"):
         ds = source.to_dask()
+
+    if fetch_config.surface_only:
+        print("Selecting only surface data.")
+        with Timer("\tIndexed surface data in {}"):
+            ds = get_surface(ds)
     print("Subsetting data")
     with Timer("\tSubsetted dataset in {}"):
         ds_ss = (
@@ -200,6 +226,9 @@ def parse_config(
     parser.add_argument(
         "--bbox", type=parse_bbox, default=default_bbox, help="Specify the bounding box"
     )
+    parser.add_argument(
+        "--surface", action="store_true", default=False, help="Fetch only surface data."
+    )
     args = parser.parse_args()
 
     # Sanity check on start/end time
@@ -230,4 +259,5 @@ def parse_config(
         bbox=args.bbox,
         timing=args.timing,
         standard_names=standard_names,
+        surface_only=args.surface,
     )
