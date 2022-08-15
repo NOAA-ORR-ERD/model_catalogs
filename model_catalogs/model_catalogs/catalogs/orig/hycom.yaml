@@ -12,8 +12,9 @@ sources:
     driver: opendap
     description: 3D Global Ocean Forecasting System (GOFS) 3.1 forecast from a week ago through 5 days from now.
     args:
-      chunks:
-        time: 1
+      # do not use chunks with this server!
+      # chunks:
+      #   time: 1
       drop_variables: ['tau']
       engine: netcdf4
       urlpath: http://tds.hycom.org/thredds/dodsC/GLBy0.08/latest
