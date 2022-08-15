@@ -8,7 +8,7 @@ dependencies:
   - appdirs
   - cf_xarray
   - dask
-  # - extract_model>=0.8.0
+  - extract_model
   - flake8
   - h5netcdf
   # - intake
