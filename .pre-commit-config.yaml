@@ -67,6 +67,6 @@ repos:
   rev: v2.1.0
   hooks:
     - id: codespell
-      exclude: ^(model_catalogs/notebooks|model_catalogs/docs)
+      exclude: ^(model_catalogs/notebooks|docs)
       args:
         - --quiet-level=2

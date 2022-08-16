@@ -12,9 +12,9 @@ on:
 
 jobs:
   build:
-    defaults:
-      run:
-        working-directory: model_catalogs
+    # defaults:
+    #   run:
+    #     working-directory: model_catalogs
     name: Build (${{ matrix.python-version }} | ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
