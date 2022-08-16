@@ -1,4 +1,13 @@
-# GOODS catalog
+model_catalogs
+==============================
+[![Build Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/Tests?logo=github&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
+[![Code Coverage](https://img.shields.io/codecov/c/github/NOAA-ORR-ERD/model_catalogs.svg?style=for-the-badge)](https://codecov.io/gh/NOAA-ORR-ERD/model_catalogs)
+[![License:MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://img.shields.io/readthedocs/model_catalogs/latest.svg?style=for-the-badge)](https://model_catalogs.readthedocs.io/en/latest/?badge=latest)
+[![Code Style Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/linting%20with%20pre-commit?label=Code%20Style&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs)
+
+Provides access through catalogs to a set of ocean models.
 
 ## Get code, setup environment, install package
 
@@ -6,10 +15,10 @@
 
 Clone the repo:
 ``` bash
-$ git clone http://github.com/NOAA-ORR-ERD/LibGOODS.git
+$ git clone http://github.com/NOAA-ORR-ERD/model_catalogs.git
 ```
 
-In the `LibGOODS/model_catalogs` directory, install conda environment:
+In the `model_catalogs` directory, install conda environment:
 ``` bash
 $ conda env create -f environment.yml
 ```
@@ -20,7 +29,7 @@ $ conda install --file conda_requirements.txt
 $ pip install -r pip_requirements.txt
 ```
 
-Install `model_catalogs` into new environment (still in `LibGOODS/model_catalogs` directory):
+Install `model_catalogs` into new environment (still in `model_catalogs` directory):
 ``` bash
 $ conda activate model_catalogs
 $ pip install -e .
