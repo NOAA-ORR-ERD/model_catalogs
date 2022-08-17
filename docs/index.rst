@@ -3,22 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-`model_catalogs`
-================
+``model_catalogs``
+==================
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
+   :caption: Documentation
 
    demo
    subsetting
+   paths
+   standard_names
    whats_new
    api
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
