@@ -15,5 +15,7 @@
    subsetting
    paths
    standard_names
+   update_boundaries
    whats_new
    api
+   GitHub repository <https://github.com/NOAA-ORR-ERD/model_catalogs>

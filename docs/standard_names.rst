@@ -1,12 +1,12 @@
-`standard_names` used
-=====================
+``standard_names`` used
+=======================
 
 .. toctree::
    :maxdepth: 2
    :hidden:
    :caption: Documentation
 
-These are the `standard_names` used in ``model_catalogs``:
+These are the ``standard_names`` used in ``model_catalogs``:
 
 * air_temperature
 * dew_point_temperature
