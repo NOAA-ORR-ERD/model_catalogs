@@ -10,7 +10,6 @@ import cf_xarray  # noqa
 import intake
 import numpy as np
 import pandas as pd
-import shapely.geometry
 import yaml
 
 from siphon.catalog import TDSCatalog
@@ -110,6 +109,8 @@ def find_bbox(ds, dd=None, alpha=None):
     geographic bounding box of model output: [min_lon, min_lat, max_lon,
     max_lat], low res and high res wkt representation of model boundary.
     """
+
+    import shapely.geometry
 
     hasmask = False
 
