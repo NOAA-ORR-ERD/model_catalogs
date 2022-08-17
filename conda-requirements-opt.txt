@@ -1,0 +1,5 @@
+alphashape
+extract_model
+#openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
+pyproj
+shapely

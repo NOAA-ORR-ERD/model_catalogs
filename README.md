@@ -9,9 +9,41 @@ model_catalogs
 [![Python Package Index](https://img.shields.io/pypi/v/model_catalogs.svg?style=for-the-badge)](https://pypi.org/project/model_catalogs)
 
 
-Provides access through catalogs to a set of ocean models.
+Provides access through Intake catalogs to a set of ocean models, especially the NOAA OFS models.
 
-## Get code, setup environment, install package
+Specific functionality includes:
+* Sets up an `Intake` catalog for known models to provide direct access to model output.
+* Provides access to model output as an `xarray` Dataset.
+* Models are known by their catalog files; see set [here](https://github.com/NOAA-ORR-ERD/model_catalogs/tree/main/model_catalogs/catalogs/orig). They include
+  * NOAA OFS Models:
+    * CBOFS
+    * CIOFS
+    * CREOFS
+    * DBOFS
+    * GOMOFS
+    * LEOFS
+    * LMHOFS
+    * LOOFS
+    * NGOFS2
+    * NYOFS
+    * SFBOFS
+    * TBOFS
+    * WCOFS
+    * Full 3D fields, or regularly gridded or 2D versions when available
+  * GFS models
+  * Global GOFS HYCOM
+* Multiple time ranges and sources of model output are provided when known. For example for the NOAA OFS models there are both forecast and historical sources for all models, and some have others as well.
+* `model_catalogs` knows how to aggregate NOAA OFS model output between nowcast and forecast files.
+* Known models have cleaned up and filled-in metadata so they are easy to work with in `xarray` and with `cf-xarray`.
+  * `cf-xarray` will understand dimension and coordinate names, as well as a set of standard_names mapped to the variables.
+* Metadata about models is included in the `Intake` catalogs, such as:
+  * polygon boundary of numerical domain
+  * grid parameters
+  * arguments for optimal read-in with `xarray`
+* Can request the availability of each model source.
+
+
+## Installation
 
 ### To use provided environment
 
@@ -62,7 +94,13 @@ pip install -e .
 
 ### Install Optional Dependencies
 
-UPDATE
+Install additional dependencies for full functionality and running the demonstration notebooks. Activate your Python environment, then:
+
+``` bash
+$ mamba install -c conda-forge --file model_catalogs/conda-requirements-opt.txt
+```
+or use `conda` in place of `mamba` if you don't have `mamba` installed.
+
 
 ## Run demo
 
@@ -75,9 +113,7 @@ Then double-click the "demo.ipynb" notebook and run through the cells with "shif
 
 ## Develop Package
 
-DESCRIBE CLONING ETC
-
-To develop the code, clone locally and you can install additional dependencies for development and testing with
+To develop the code, follow instructions above for "To use provided environment". Then you can install additional dependencies for development and testing with
 ``` bash
 $ conda install --file requirements-dev.txt
 ```
