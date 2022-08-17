@@ -20,10 +20,10 @@ quiet = false
 color = true
 
 [tool.isort]
-known_third_party = ["alphashape", "appdirs", "cf_xarray", "dask", "datetimerange",
-                     "extract_model", "flake8", "h5netcdf",
-                     "ipython",  "numpy", "pandas", "pip",
-                     "pytest", "setuptools", "shapely", "xarray"]
+known_third_party = ["appdirs", "cf_xarray", "dask", "datetimerange",
+                     "h5netcdf",
+                     "numpy", "pandas", "pip",
+                     "setuptools", "xarray"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
