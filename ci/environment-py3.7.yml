@@ -2,7 +2,7 @@ name: test-env-model-catalogs
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
+  - python=3.7
   ############## These will have to be adjusted to your specific project
   - alphashape
   - appdirs

@@ -1,4 +1,4 @@
-name: test_env_model_catalogs
+name: test-env-model-catalogs
 channels:
   - conda-forge
 dependencies:
