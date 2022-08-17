@@ -27,7 +27,7 @@ root = pathlib.Path(__file__).parent.parent.absolute()
 os.environ["PYTHONPATH"] = str(root)
 sys.path.insert(0, str(root))
 
-import model_catalogs  # isort:skip
+import model_catalogs  # noqa: F401, E402, isort:skip
 
 # -- Project information -----------------------------------------------------
 
