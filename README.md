@@ -27,8 +27,8 @@ $ conda env create -f environment.yml
 
 Alternatively, if you have an existing environment you want to add to:
 ``` bash
-$ conda install --file conda_requirements.txt
-$ pip install -r pip_requirements.txt
+$ conda install --file conda-requirements.txt
+$ pip install -r pip-requirements.txt
 ```
 
 Install `model_catalogs` into new environment (still in `model_catalogs` directory):
@@ -50,8 +50,8 @@ conda create --name libgoods_env  # create new environment, if you want
 conda activate libgoods_env  # activate whichever environment you want to use
 conda install -c conda-forge mamba  # mamba installs packages fast
 mamba install -c conda-forge --file libgoods/conda_requirements.txt  # install LibGOODS conda requirements
-mamba install -c conda-forge --file model_catalogs/conda_requirements.txt  # install model_catalogs conda requirements
-pip install -r model_catalogs/pip_requirements.txt  # install model_catalogs pip requirements
+mamba install -c conda-forge --file model_catalogs/conda-requirements.txt  # install model_catalogs conda requirements
+pip install -r model_catalogs/pip-requirements.txt  # install model_catalogs pip requirements
 ```
 
 Install `model_catalogs` locally into environment:
@@ -59,6 +59,10 @@ Install `model_catalogs` locally into environment:
 cd model_catalogs
 pip install -e .
 ```
+
+### Install Optional Dependencies
+
+UPDATE
 
 ## Run demo
 
@@ -69,7 +73,16 @@ $ jupyter lab
 
 Then double-click the "demo.ipynb" notebook and run through the cells with "shift-enter".
 
-## Run tests
+## Develop Package
+
+DESCRIBE CLONING ETC
+
+To develop the code, clone locally and you can install additional dependencies for development and testing with
+``` bash
+$ conda install --file requirements-dev.txt
+```
+
+### Run tests
 
 Run tests that haven't been marked as "slow" with
 ``` bash
@@ -82,21 +95,16 @@ $ pytest --runslow
 ```
 Note that the slow tests are not run during CI.
 
-Also note that when running tests locally, the conda environment is apparently not used for the tests unless you prefix the command as follows, where `model_catalogs` is the default name of the conda environment:
+<!-- Also note that when running tests locally, the conda environment is apparently not used for the tests unless you prefix the command as follows, where `model_catalogs` is the default name of the conda environment:
 
 ``` base
 conda run -n model_catalogs pytest --runslow
-```
+``` -->
 
-## Set up to check linting locally
-
-Install additional packages:
-``` bash
-$ conda install --file requirements-dev.txt
-```
+### Check precommits locally before pushing
 
 To then check code before committing and pushing it to github, locally run
 ``` bash
 $ pre-commit run --all-files
 ```
-These checks can change your files so it is best to check the changes before committing.
+These checks can change your files so it is best to check the changes before pushing to github.
