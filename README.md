@@ -69,26 +69,34 @@ $ conda activate model_catalogs
 $ pip install -e .
 ```
 
-### To install with LibGOODS requirements
+### To install alongside LibGOODS requirements
 
-Clone the repo:
+Clone the `LibGOODS` repo:
 ``` bash
 $ git clone http://github.com/NOAA-ORR-ERD/LibGOODS.git
 ```
 
-Navigate to the LibGOODS directory and then:
+Navigate to the `LibGOODS` directory and then:
 ``` bash
 conda create --name libgoods_env  # create new environment, if you want
 conda activate libgoods_env  # activate whichever environment you want to use
 conda install -c conda-forge mamba  # mamba installs packages fast
 mamba install -c conda-forge --file libgoods/conda_requirements.txt  # install LibGOODS conda requirements
-mamba install -c conda-forge --file model_catalogs/conda-requirements.txt  # install model_catalogs conda requirements
-pip install -r model_catalogs/pip-requirements.txt  # install model_catalogs pip requirements
+```
+
+Clone the `model_catalogs` repo in a good location:
+``` bash
+$ git clone http://github.com/NOAA-ORR-ERD/model_catalogs.git
+```
+
+Navigate to the `model_catalogs` directory, then:
+``` bash
+mamba install -c conda-forge --file conda-requirements.txt  # install model_catalogs conda requirements
+pip install -r pip-requirements.txt  # install model_catalogs pip requirements
 ```
 
 Install `model_catalogs` locally into environment:
 ``` bash
-cd model_catalogs
 pip install -e .
 ```
 
