@@ -1,7 +1,7 @@
 name: Tests
 on:
   schedule:
-    - cron: "47 19 * * 3"
+    - cron: "00 17 * * 4"
 
 
 jobs:
