@@ -63,7 +63,7 @@ def test_find_availability():
 def test_boundaries():
     """Test one faster model and compare with existing file."""
 
-    model = "HYCOM"
+    model = "hycom"
 
     # Calculate
     boundaries = mc.calculate_boundaries(
