@@ -1,7 +1,15 @@
+# run for one OS since these are slow
+# also same cron schedule as the other tests
 name: Tests-Slow
 on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "*"
   schedule:
-    - cron: "00 17 * * 4"
+    - cron: "0 13 * * 1"
 
 
 jobs:
