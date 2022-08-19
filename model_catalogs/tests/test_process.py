@@ -11,7 +11,7 @@ import model_catalogs as mc
 def test_process():
     """Test all models for transform."""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(override=True)
 
     for model in list(main_cat):
         for timing in list(main_cat[model]):

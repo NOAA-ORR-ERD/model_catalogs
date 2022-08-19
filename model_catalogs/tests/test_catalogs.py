@@ -19,7 +19,7 @@ import model_catalogs as mc
 def test_setup():
     """Make sure main catalog is created correctly."""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(override=True)
 
     # check that all compiled catalog files exist
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):

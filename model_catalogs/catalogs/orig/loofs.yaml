@@ -26,7 +26,7 @@ sources:
         T: time
         X: nx
         Y: ny
-        # Z: z
+        Z: sigma
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: air_u
@@ -76,7 +76,7 @@ sources:
         T: time
         X: nx
         Y: ny
-        # Z: z
+        Z: sigma
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: air_u
@@ -122,7 +122,7 @@ sources:
         T: time
         X: nx
         Y: ny
-        # Z: z
+        Z: sigma
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: air_u
@@ -155,7 +155,7 @@ sources:
         T: time
         X: nx
         Y: ny
-        # Z: z
+        Z: sigma
       standard_names:
         eastward_sea_water_velocity: u
         eastward_wind: air_u

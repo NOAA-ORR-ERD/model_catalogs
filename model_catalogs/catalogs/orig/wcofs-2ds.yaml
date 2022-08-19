@@ -41,6 +41,7 @@ sources:
         T: ocean_time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [s_rho, s_w]
       standard_names:
         eastward_sea_water_velocity: u_sur
         eastward_wind: Uwind
@@ -80,6 +81,7 @@ sources:
         T: ocean_time
         X: [xi_rho, xi_u, xi_v, xi_psi]
         Y: [eta_rho, eta_u, eta_v, eta_psi]
+        Z: [s_rho, s_w]
       standard_names:
         eastward_sea_water_velocity: u_sur
         eastward_wind: Uwind
