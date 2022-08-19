@@ -24,8 +24,8 @@ sources:
       axis:
         # time is for instantaneous variables which are most
         # time2 is the time dimension for averaged variables
-        # time3 is for precipitation accumulation variables
-        T: ['time', 'time1', 'time2', 'time3']
+        # time3 is for precipitation accumulation variables and is not sorted so can't be used
+        T: ['time', 'time1', 'time2']
         Y: lat
         X: lon
       standard_names:
