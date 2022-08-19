@@ -163,11 +163,7 @@ cython_debug/
 # vim
 *.swp
 
-model_catalogs/catalogs/source_catalog.yaml
-model_catalogs/catalogs/updated/
-model_catalogs/catalogs/complete/
 model_catalogs/_version.py
-model_catalogs/tests/catalogs/
 .DS_Store
 *.nc
 
