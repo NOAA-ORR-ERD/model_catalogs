@@ -14,6 +14,7 @@ sources:
     args:
       chunks:
         time: 1
+      drop_variables: time3
       engine: netcdf4
       urlpath: 'https://thredds.ucar.edu/thredds/dodsC/grib/NCEP/GFS/Global_0p5deg/Best'
     metadata:
