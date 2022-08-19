@@ -62,7 +62,7 @@ Alternatively, if you have an existing environment you want to add to:
 $ conda install --file conda-requirements.txt
 $ pip install -r pip-requirements.txt
 ```
-
+ 
 Install `model_catalogs` into new environment (still in `model_catalogs` directory):
 ``` bash
 $ conda activate model_catalogs
