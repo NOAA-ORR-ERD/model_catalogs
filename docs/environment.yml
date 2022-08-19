@@ -5,7 +5,14 @@ channels:
 dependencies:
    - python=3.9
    # If your docs code examples depend on other packages add them here
-   # - model_catalogs
+   - appdirs
+   - cf_xarray
+   - dask
+   - h5netcdf
+   - netcdf4
+   - numpy
+   - pandas
+   - xarray
    # These are needed for the docs themselves
    - numpydoc
    - sphinx
@@ -26,3 +33,7 @@ dependencies:
      # - sphinx_pangeo_theme
      - sphinx-copybutton
      - sphinxcontrib-srclinks
+     - datetimerange
+     - git+https://github.com/intake/intake-xarray.git
+     - git+https://github.com/intake/intake.git
+     - siphon  # can get from conda-forge but isn't recognized
