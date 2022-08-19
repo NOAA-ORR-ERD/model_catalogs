@@ -77,6 +77,7 @@ $ git clone http://github.com/NOAA-ORR-ERD/LibGOODS.git
 ```
 
 Navigate to the `LibGOODS` directory and then:
+
 ``` bash
 conda create --name libgoods_env  # create new environment, if you want
 conda activate libgoods_env  # activate whichever environment you want to use
