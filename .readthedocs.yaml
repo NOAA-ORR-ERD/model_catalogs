@@ -5,6 +5,16 @@ build:
   tools:
     python: "mambaforge-4.10"
 
+python:
+  version: "3.9"
+  install:
+    - method: pip
+      path: ./
+      # extra_requirements:
+      #   - docs
+    # - method: setuptools
+    #   path: package
+
 conda:
     environment: docs/environment.yml
 
