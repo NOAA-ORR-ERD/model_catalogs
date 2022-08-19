@@ -2,7 +2,6 @@ appdirs
 cf_xarray
 dask
 h5netcdf
-jupyter
 netcdf4
 numpy
 pandas
