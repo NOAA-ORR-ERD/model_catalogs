@@ -1,7 +1,7 @@
 alphashape
 ipython
 jupyter
-juputerlab
+jupyterlab
 matplotlib-base
 extract_model
 #openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
