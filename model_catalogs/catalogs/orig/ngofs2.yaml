@@ -1,6 +1,5 @@
----
 name: NGOFS2
-description: Northern Gulf of Mexico model in FVCOM.
+description: 3D Northern Gulf of Mexico model in FVCOM.
 metadata:
   grid_dim_(node,nele,siglay): [303714,569405,40]
   grid_res_min_(km): 0.05
@@ -11,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast.
+    description: Unaggregated 3D Northern Gulf of Mexico model in FVCOM from 30 days ago with 54 hour forecast.
     args:
       chunks:
         time: 1
@@ -62,7 +61,7 @@ sources:
         northward_wind: vwind_speed
         ocean_sigma_coordinate: [sigma_layers, sigma_levels]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
@@ -80,7 +79,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: Northern Gulf of Mexico model in FVCOM from 2021 until 4 days ago.
+    description: Unaggregated 3D Northern Gulf of Mexico model in FVCOM from 2021-03-22 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1

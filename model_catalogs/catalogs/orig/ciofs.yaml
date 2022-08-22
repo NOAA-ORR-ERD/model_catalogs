@@ -1,5 +1,5 @@
 name: CIOFS
-description: Cook Inlet model in ROMS.
+description: 3D Cook Inlet model in ROMS.
 metadata:
   grid_dim_(xyz): [724,1044,30]
   grid_res_min_(km): 0.01
@@ -11,7 +11,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D Cook Inlet model in ROMS with 48 hour forecast.
+    description: Aggregated 3D Cook Inlet model in ROMS from 7 days ago with 48 hour forecast.
     args:
       chunks:
         time: 1
@@ -34,7 +34,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: time
@@ -42,7 +42,7 @@ sources:
 
   nowcast:
     driver: opendap
-    description: 3D Cook Inlet model in ROMS from 30 days ago with 48 hour forecast.
+    description: Unaggregated 3D Cook Inlet model in ROMS from 30 days ago with 48 hour forecast.
     args:
       chunks:
         ocean_time: 1
@@ -80,7 +80,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time
@@ -88,7 +88,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: 3D Cook Inlet model in ROMS from 2015 until 4 days ago. Nowcast files are available from these dates for aggregation.
+    description: Unaggregated 3D Cook Inlet model in ROMS from 2015-08-01 until 4 days ago, nowcast files only.
     args:
       chunks:
         ocean_time: 1
@@ -124,7 +124,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time
@@ -132,7 +132,7 @@ sources:
 
   hindcast-forecast-aggregation:
     driver: opendap
-    description: 3D Cook Inlet model in ROMS from 2019 until 4 days ago. This is an aggregation of forecast files.
+    description: Aggregated 3D Cook Inlet model in ROMS from 2019-09-16 until 4 days ago.
     args:
       chunks:
         time: 1
@@ -155,7 +155,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g1: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: time

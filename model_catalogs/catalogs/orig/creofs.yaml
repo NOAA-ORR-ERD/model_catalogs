@@ -1,5 +1,5 @@
 name: CREOFS
-description: Columbia River model in SELFE.
+description: 3D Columbia River model in SELFE.
 metadata:
   grid_dim_(node,nele,nv): [74061,142684,54]
   grid_res_min_(km): 0.01
@@ -10,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: Columbia River model in SELFE from 30 days ago with 48 hour forecast.
+    description: Unaggregated 3D Columbia River model in SELFE from 30 days ago with 48 hour forecast.
     args:
       chunks:
         time: 1
@@ -46,7 +46,7 @@ sources:
         northward_sea_water_velocity: v
         northward_wind: vwind_speed
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
@@ -58,7 +58,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: Columbia River model in SELFE from 2015 until 4 days ago.
+    description: Unaggregated 3D Columbia River model in SELFE from 2015-08-19 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1
@@ -89,7 +89,7 @@ sources:
         northward_sea_water_velocity: v
         northward_wind: vwind_speed
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time

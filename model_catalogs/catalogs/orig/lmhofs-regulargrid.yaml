@@ -1,5 +1,5 @@
 name: LMHOFS-REGULARGRID
-description: Lake Michigan and Huron model in FVCOM, interpolated to regular grid.
+description: 3D Lake Michigan and Huron model in FVCOM, interpolated to regular grid.
 metadata:
   grid_dim_(xyz): [837,478,24]
   grid_res_min_(km): 1
@@ -10,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: Lake Michigan and Huron model in FVCOM, interpolated to regular grid, from 1 day ago with 120 hour forecast.
+    description: Unaggregated 3D Lake Michigan and Huron model in FVCOM, interpolated to regular grid, from 1 day ago with 120 hour forecast.
     args:
       chunks:
         ocean_time: 1
@@ -47,7 +47,7 @@ sources:
         eastward_sea_water_velocity: u_eastward
         northward_sea_water_velocity: v_northward
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time

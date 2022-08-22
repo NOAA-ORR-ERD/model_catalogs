@@ -43,7 +43,7 @@ sources:
         northward_sea_water_velocity: v_velocity
         sea_ice_area_fraction: ice_coverage
         sea_ice_thickness: ice_thickness
-        sea_surface_height_above_mean_sea_level: ssh
+        sea_surface_elevation: ssh
         sea_water_temperature: sst
         sea_water_practical_salinity: sss
         time: time
@@ -83,7 +83,7 @@ sources:
         northward_sea_water_velocity: v_velocity
         sea_ice_area_fraction: ice_coverage
         sea_ice_thickness: ice_thickness
-        sea_surface_height_above_mean_sea_level: ssh
+        sea_surface_elevation: ssh
         sea_water_temperature: sst
         sea_water_practical_salinity: sss
         time: time

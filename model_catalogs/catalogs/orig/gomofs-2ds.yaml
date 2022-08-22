@@ -1,5 +1,5 @@
 name: GOMOFS-2DS
-description: Gulf of Maine model in ROMS, 2D variables.
+description: 2D selection of 3D Gulf of Maine model in ROMS.
 metadata:
   grid_dim_(xyz): [777,1173,1]
   grid_res_min_(km): 0.7
@@ -11,7 +11,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS, 2D variables, from 30 days ago with 72 hour forecast.
+    description: Unaggregated 2D selection of 3D Gulf of Maine model in ROMS, from 30 days ago with 72 hour forecast.
     args:
       chunks:
         ocean_time: 1
@@ -49,14 +49,14 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
         time: ocean_time
 
   hindcast:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS, 2D variables, from 2018 until 4 days ago.
+    description: Unaggregated 2D selection of 3D Gulf of Maine model in ROMS, from 2018-05-10 until 4 days ago, nowcast files only.
     args:
       chunks:
         ocean_time: 1
@@ -92,7 +92,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
         time: ocean_time

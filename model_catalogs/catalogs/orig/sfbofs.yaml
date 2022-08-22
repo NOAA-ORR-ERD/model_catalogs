@@ -1,5 +1,5 @@
 name: SFBOFS
-description: San Francisco Bay model in FVCOM.
+description: 3D San Francisco Bay model in FVCOM.
 metadata:
   grid_dim_(node,nele,siglay): [54120,102264,20]
   grid_res_min_(km): 0.1
@@ -10,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: San Francisco Bay model in FVCOM from 30 days ago with 48 hour forecast.
+    description: Unaggregated 3D San Francisco Bay model in FVCOM from 30 days ago with 48 hour forecast.
     args:
       chunks:
         time: 1
@@ -60,7 +60,7 @@ sources:
         northward_wind: vwind_speed
         ocean_sigma_coordinate: [sigma_layers, sigma_levels]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
@@ -78,7 +78,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: San Francisco Bay model in FVCOM from 2015 until 4 days ago.
+    description: Unaggregated 3D San Francisco Bay model in FVCOM from 2015-08-19 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1
