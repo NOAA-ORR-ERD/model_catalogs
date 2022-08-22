@@ -11,7 +11,7 @@ on:
 
 
 jobs:
-  build:
+  tests:
     name: Build (${{ matrix.python-version }} | ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -56,8 +56,9 @@ jobs:
       #     name: codecov-umbrella
       #     fail_ci_if_error: false
 
-    # slow tests
-    name: Slow tests: Build (${{ matrix.python-version }} | ${{ matrix.os }})
+  # slow tests
+  slow_tests:
+    name: Slow tests, Build (${{ matrix.python-version }} | ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
