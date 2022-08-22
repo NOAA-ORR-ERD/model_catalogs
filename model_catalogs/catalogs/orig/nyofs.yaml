@@ -1,5 +1,5 @@
 name: NYOFS
-description: New York Harbor model in POM.
+description: 3D New York Harbor model in POM.
 metadata:
   grid_dim_(xyz): [73,134,7]
   grid_res_min_(km): 0.15
@@ -11,7 +11,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D New York Harbor model in POM with 48 hour forecast.
+    description: Aggregated 3D New York Harbor model in POM from 7 days ago with 48 hour forecast.
     args:
       chunks:
         time: 1
@@ -33,7 +33,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         time: time
         upward_sea_water_velocity: w
       coords:
@@ -44,7 +44,7 @@ sources:
 
   nowcast:
     driver: opendap
-    description: 3D New York Harbor model in POM from 30 days ago with 48 hour forecast.
+    description: Unaggregated 3D New York Harbor model in POM from 30 days ago with 48 hour forecast.
     args:
       chunks:
         time: 1
@@ -84,7 +84,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         time: time
         upward_sea_water_velocity: w
       coords:
@@ -95,7 +95,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: 3D New York Harbor model in POM from 2015 until 4 days ago.
+    description: Unaggregated 3D New York Harbor model in POM from 2015-08-19 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1
@@ -129,7 +129,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         time: time
         upward_sea_water_velocity: w
       coords:
@@ -140,7 +140,7 @@ sources:
 
   hindcast-forecast-aggregation:
     driver: opendap
-    description: 3D New York Harbor model in POM from 2017 until 2019. This is an aggregation of forecast files.
+    description: Aggregated 3D New York Harbor model in POM from 2017-05-01 until 2019-11-27.
     args:
       chunks:
         time: 1
@@ -162,7 +162,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         time: time
         upward_sea_water_velocity: w
       coords:

@@ -1,5 +1,5 @@
 name: LSOFS
-description: Lake Superior model in POM.
+description: 3D Lake Superior model in POM.
 metadata:
   grid_dim_(xyz): [61,30,20]
   grid_res_min_(km): 10
@@ -11,7 +11,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D Lake Superior model in POM with 120 hour forecast.
+    description: Aggregated 3D Lake Superior model in POM from 7 days ago with 120 hour forecast.
     args:
       chunks:
         time: 1
@@ -33,7 +33,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         time: time
         longitude: lon
@@ -46,7 +46,7 @@ sources:
 
   nowcast:
     driver: opendap
-    description: 3D Lake Superior model in POM from 30 days ago with 120 hour forecast.
+    description: Unaggregated 3D Lake Superior model in POM from 30 days ago with 120 hour forecast.
     args:
       chunks:
         time: 1
@@ -85,7 +85,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         time: time
         longitude: lon
@@ -98,7 +98,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: 3D Lake Superior model in POM from 2016 until 4 days ago. Nowcast files are available from these dates for aggregation.
+    description: Unaggregated 3D Lake Superior model in POM from 2016-03-06 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1
@@ -133,7 +133,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         time: time
         longitude: lon
@@ -146,7 +146,7 @@ sources:
 
   hindcast-forecast-aggregation:
     driver: opendap
-    description: 3D Lake Superior model in POM from 2017 until 2019. This is an aggregation of forecast files.
+    description: Aggregated 3D Lake Superior model in POM from 2017-02-25 until 2019-09-24.
     args:
       chunks:
         time: 1
@@ -168,7 +168,7 @@ sources:
         northward_wind: air_v
         ocean_sigma_coordinate: sigma
         sea_floor_depth: depth
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         time: time
         longitude: lon

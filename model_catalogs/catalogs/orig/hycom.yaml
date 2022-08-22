@@ -10,7 +10,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D Global Ocean Forecasting System (GOFS) 3.1 forecast from a week ago through 5 days from now.
+    description: Aggregated 3D Global Ocean Forecasting System (GOFS) 3.1 forecast from 7 days ago with 5 day forecast.
     args:
       # do not use chunks with this server!
       # chunks:
@@ -30,7 +30,7 @@ sources:
       standard_names:
         eastward_sea_water_velocity: water_u
         northward_sea_water_velocity: water_v
-        sea_surface_height_above_mean_sea_level: surf_el
+        sea_surface_elevation: surf_el
         sea_water_temperature: water_temp
         sea_water_practical_salinity: salinity
         time: time

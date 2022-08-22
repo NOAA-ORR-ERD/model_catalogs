@@ -1,5 +1,5 @@
 name: GOMOFS
-description: Gulf of Maine model in ROMS.
+description: 3D Gulf of Maine model in ROMS.
 metadata:
   grid_dim_(xyz): [777,1173,30]
   grid_res_min_(km): 0.7
@@ -11,7 +11,7 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS with 72 hour forecast.
+    description: Aggregated 3D Gulf of Maine model in ROMS from 7 days ago with 72 hour forecast.
     args:
       chunks:
         time: 1
@@ -34,7 +34,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: time
@@ -42,7 +42,7 @@ sources:
 
   nowcast:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS from 30 days ago with 72 hour forecast.
+    description: Unaggregated 3D Gulf of Maine model in ROMS from 30 days ago with 72 hour forecast.
     args:
       chunks:
         ocean_time: 1
@@ -80,7 +80,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time
@@ -88,7 +88,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS from 2018 until 4 days ago.
+    description: Unaggregated 3D Gulf of Maine model in ROMS from 2018-05-10 until 4 days ago, nowcast files only.
     args:
       chunks:
         ocean_time: 1
@@ -124,7 +124,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time
@@ -132,7 +132,7 @@ sources:
 
   hindcast-forecast-aggregation:
     driver: opendap
-    description: 3D Gulf of Maine model in ROMS from 2018 until 4 days ago. This is an aggregation of forecast files.
+    description: Aggregated 3D Gulf of Maine model in ROMS from 2018-01-09 until 4 days ago.
     args:
       chunks:
         time: 1
@@ -155,7 +155,7 @@ sources:
         northward_wind: Vwind
         ocean_s_coordinate_g2: [s_rho, s_w]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: time

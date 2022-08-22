@@ -1,5 +1,5 @@
 name: WCOFS-2DS
-description: West Coast model in ROMS, 2D variables.
+description: 2D selection of 3D West Coast model in ROMS.
 metadata:
   grid_dim_(xyz): [696,2032,1]
   grid_res_min_(km): 4
@@ -10,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: West Coast model in ROMS from 30 days ago with 72 hour forecast.
+    description: Unaggregated 2D selection of 3D West Coast model in ROMS, from 30 days ago with 72 hour forecast.
     args:
       chunks:
         ocean_time: 1
@@ -48,14 +48,14 @@ sources:
         northward_sea_water_velocity: v_sur
         northward_wind: Vwind
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
         time: ocean_time
 
   hindcast:
     driver: opendap
-    description: West Coast model in ROMS from 2021 until 4 days ago.
+    description: Unaggregated 2D selection of 3D West Coast model in ROMS from 2021-03-22 until 4 days ago, nowcast files only.
     args:
       chunks:
         ocean_time: 1
@@ -88,7 +88,7 @@ sources:
         northward_sea_water_velocity: v_sur
         northward_wind: Vwind
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp_sur
         sea_water_practical_salinity: salt_sur
         time: ocean_time

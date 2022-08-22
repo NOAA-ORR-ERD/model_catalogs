@@ -1,5 +1,5 @@
 name: LMHOFS
-description: Lake Michigan and Huron model in FVCOM.
+description: 3D Lake Michigan and Huron model in FVCOM.
 metadata:
   grid_dim_(node,nele,siglay): [90806,171377,20]
   grid_res_min_(km): 0.05
@@ -10,7 +10,7 @@ metadata:
 
 sources:
   forecast:
-    description: Lake Michigan and Huron model in FVCOM from 30 days ago with 120 hour forecast.
+    description: Unaggregated 3D Lake Michigan and Huron model in FVCOM from 30 days ago with 120 hour forecast.
     args:
       chunks:
         time: 1
@@ -60,7 +60,7 @@ sources:
         northward_wind: vwind_speed
         ocean_sigma_coordinate: [sigma_layers, sigma_levels]
         sea_floor_depth: h
-        sea_surface_height_above_mean_sea_level: zeta
+        sea_surface_elevation: zeta
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
@@ -78,7 +78,7 @@ sources:
 
   hindcast:
     driver: opendap
-    description: Lake Michigan and Huron model in FVCOM from 2019 until 4 days ago.
+    description: Unaggregated 3D Lake Michigan and Huron model in FVCOM from 2019-09-17 until 4 days ago, nowcast files only.
     args:
       chunks:
         time: 1
