@@ -166,4 +166,3 @@ cython_debug/
 model_catalogs/_version.py
 .DS_Store
 *.nc
-
