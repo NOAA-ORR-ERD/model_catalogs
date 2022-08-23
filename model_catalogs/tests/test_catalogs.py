@@ -247,7 +247,7 @@ def test_hindcast_forecast_aggregation():
     """Test all known models for running in hindcast aggregation mode."""
 
     main_cat = mc.setup()
-    timing = 'hindcast-forecast-aggregation'
+    timing = "hindcast-forecast-aggregation"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
