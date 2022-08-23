@@ -2,6 +2,8 @@
 Everything dealing with the catalogs.
 """
 
+import warnings
+
 from pathlib import Path
 
 import cf_xarray  # noqa
@@ -245,8 +247,9 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             )
             ds.close()
         except OSError:
-            print(
-                f"Model {source.cat.name} with timing {source.name} cannot connect to server."
+            warnings.warn(
+                f"Model {source.cat.name} with timing {source.name} cannot connect to server.",
+                RuntimeWarning,
             )
             return None, None
 
@@ -329,7 +332,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             # want last file
             if source.name == "hindcast":
                 norf = "n"
-            elif source.name == "nowcast":
+            elif source.name in ("nowcast", "forecast"):
                 norf = "f"
             end_datetime = str(mc.get_dates_from_ofs(filelocs, filetype, norf, "last"))
         else:
