@@ -87,7 +87,7 @@ def test_select_date_range():
 
     test_models = {"HYCOM": "forecast", "CIOFS": "nowcast"}
 
-    today = pd.Timestamp.today()
+    today = pd.Timestamp.today(tz="UTC")
     tom = today + pd.Timedelta("1 day")
 
     main_cat = mc.setup()
