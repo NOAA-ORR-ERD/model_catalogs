@@ -27,18 +27,17 @@ sources:
       coords: minimal
       engine: triangularmesh_netcdf
       urlpath:
-        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc"
-        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n003.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.fields.n000.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.fields.n003.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
     parameters:
-      tod:
-        description: Pandas like Timestamp for today
+      yesterday:
+        description: Pandas like Timestamp for yesterday
         type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
-        default: today
     driver: opendap
     metadata:
       sample_locs:
-        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n000.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc"
-        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{tod.year}}/{{tod.strftime('%m')}}/{{tod.strftime('%d')}}/nos.ngofs2.fields.n003.{{tod.year}}{{tod.strftime('%m')}}{{tod.strftime('%d')}}.t03z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.fields.n000.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.fields.n003.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/catalog.xml'
       # catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/{date.year}/{str(date.month).zfill(2)}/{str(date.day).zfill(2)}/catalog.xml'
       overall_start_datetime: 'Available from a month before present day.'
