@@ -147,6 +147,12 @@ def add_attributes(ds, metadata: Optional[dict] = None):
     except KeyError:
         pass
 
+    # check for a dataset having both `missing_value` and `_FillValue` attributes defined
+    # delete `missing_value` in this case (arbitrary decision of which to delete)
+    for data_var in ds.data_vars:
+        if "missing_value" in ds[data_var].attrs and "_FillValue" in ds[data_var].attrs:
+            del(ds[data_var].attrs["missing_value"])
+
     # decode times if times are floats.
     # Some datasets like GFS have multiple time coordinates for different phenomena like
     # precipitation accumulation vs winds vs surface albedo average.

@@ -136,6 +136,7 @@ sources:
     args:
       chunks:
         time: 1
+      decode_cf: False  # to avoid warning, is decoded in `process.py`
       drop_variables: ['ocean_time']
       engine: netcdf4
       urlpath: https://www.ncei.noaa.gov/thredds/dodsC/model-gomofs-agg/Aggregated_GOMOFS_Fields_Forecast_best.ncd

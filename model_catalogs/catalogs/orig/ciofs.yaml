@@ -137,6 +137,7 @@ sources:
       chunks:
         time: 1
       drop_variables: ['ocean_time']
+      decode_cf: False  # to avoid warning, is decoded in `process.py`
       engine: netcdf4
       urlpath: https://www.ncei.noaa.gov/thredds/dodsC/model-ciofs-agg/Aggregated_CIOFS_Fields_Forecast_best.ncd
     metadata:
