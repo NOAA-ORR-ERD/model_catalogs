@@ -92,12 +92,20 @@ def test_select_date_range():
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
-        source = mc.select_date_range(main_cat[model], today.date(), tom.date(), timing=timing)
+        source = mc.select_date_range(
+            main_cat[model], today.date(), tom.date(), timing=timing
+        )
 
         try:
             ds = source.to_dask()
-            assert pd.Timestamp(ds.cf["T"].cf.isel(T=0).values).tz_localize("UTC").date() == today.date()
-            assert pd.Timestamp(ds.cf["T"].cf.isel(T=-1).values).tz_localize("UTC").date() == tom.date()
+            assert (
+                pd.Timestamp(ds.cf["T"].cf.isel(T=0).values).tz_localize("UTC").date()
+                == today.date()
+            )
+            assert (
+                pd.Timestamp(ds.cf["T"].cf.isel(T=-1).values).tz_localize("UTC").date()
+                == tom.date()
+            )
 
         except OSError:
             warnings.warn(
