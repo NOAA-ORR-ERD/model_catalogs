@@ -237,7 +237,6 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 
         try:
             ds = source.to_dask()
-            # import pdb; pdb.set_trace()
             # use one T in case there are more than one
             start_datetime = (
                 str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
@@ -470,7 +469,6 @@ def transform_source(source_orig):
         ["yesterday" in d.values() for d in source_orig.describe()["user_parameters"]]
     ):
         yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
-        # import pdb; pdb.set_trace()
         source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
             "yesterday"
         ] = str(yesterday)[:10]

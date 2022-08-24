@@ -5,7 +5,7 @@ model_catalogs
 [![License:MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://img.shields.io/readthedocs/model_catalogs/latest.svg?style=for-the-badge)](https://model_catalogs.readthedocs.io/en/latest/?badge=latest)
 [![Code Style Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/linting%20with%20pre-commit?label=Code%20Style&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs)
+<!-- [![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs) -->
 [![Python Package Index](https://img.shields.io/pypi/v/model_catalogs.svg?style=for-the-badge)](https://pypi.org/project/model_catalogs)
 
 
@@ -45,6 +45,38 @@ Specific functionality includes:
 
 ## Installation
 
+### PyPI
+
+To install from PyPI:
+``` base
+pip install model_catalogs
+```
+
+<!-- To install from conda with channel conda-forge:
+``` base
+conda install -c conda-forge model_catalogs
+``` -->
+
+Subsequently install a few packages by saving the `pip-requirements.txt` file locally and:
+``` base
+pip install -r pip-requirements.txt
+```
+
+These need to be installed separately because some of the packages on GitHub have updates that have not been included in any releases that are available otherwise.
+
+
+### Install Optional Dependencies
+
+Install additional dependencies for full functionality and running the demonstration notebooks. Activate your Python environment, then:
+
+``` bash
+$ mamba install -c conda-forge --file model_catalogs/conda-requirements-opt.txt
+```
+or use `conda` in place of `mamba` if you don't have `mamba` installed.
+
+
+## Develop Package
+
 ### To use provided environment
 
 Clone the repo:
@@ -69,63 +101,13 @@ $ conda activate model_catalogs
 $ pip install -e .
 ```
 
-### To install alongside LibGOODS requirements
-
-Clone the `LibGOODS` repo:
-``` bash
-$ git clone http://github.com/NOAA-ORR-ERD/LibGOODS.git
-```
-
-Navigate to the `LibGOODS` directory and then:
-
-``` bash
-conda create --name libgoods_env  # create new environment, if you want
-conda activate libgoods_env  # activate whichever environment you want to use
-conda install -c conda-forge mamba  # mamba installs packages fast
-mamba install -c conda-forge --file libgoods/conda_requirements.txt  # install LibGOODS conda requirements
-```
-
-Clone the `model_catalogs` repo in a good location:
-``` bash
-$ git clone http://github.com/NOAA-ORR-ERD/model_catalogs.git
-```
-
-Navigate to the `model_catalogs` directory, then:
-``` bash
-mamba install -c conda-forge --file conda-requirements.txt  # install model_catalogs conda requirements
-pip install -r pip-requirements.txt  # install model_catalogs pip requirements
-```
-
-Install `model_catalogs` locally into environment:
-``` bash
-pip install -e .
-```
-
-### Install Optional Dependencies
-
-Install additional dependencies for full functionality and running the demonstration notebooks. Activate your Python environment, then:
-
-``` bash
-$ mamba install -c conda-forge --file model_catalogs/conda-requirements-opt.txt
-```
-or use `conda` in place of `mamba` if you don't have `mamba` installed.
-
-
-## Run demo
-
-You can then open Jupyter lab from a terminal window with:
-``` bash
-$ jupyter lab
-```
-
-Then double-click the "demo.ipynb" notebook and run through the cells with "shift-enter".
-
-## Develop Package
+### Install development packages
 
 To develop the code, follow instructions above for "To use provided environment". Then you can install additional dependencies for development and testing with
 ``` bash
 $ conda install --file requirements-dev.txt
 ```
+
 
 ### Run tests
 
@@ -138,13 +120,7 @@ Run all tests, including slow tests, with:
 ``` bash
 $ pytest --runslow
 ```
-Note that the slow tests are not run during CI.
 
-<!-- Also note that when running tests locally, the conda environment is apparently not used for the tests unless you prefix the command as follows, where `model_catalogs` is the default name of the conda environment:
-
-``` base
-conda run -n model_catalogs pytest --runslow
-``` -->
 
 ### Check precommits locally before pushing
 

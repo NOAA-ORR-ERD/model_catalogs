@@ -19,7 +19,7 @@ These are the ``standard_names`` used in ``model_catalogs``:
 * sea_floor_depth
 * sea_ice_area_fraction
 * sea_ice_thickness
-* sea_surface_height_above_mean_sea_level
+* sea_surface_elevation
 * sea_water_temperature
 * sea_water_practical_salinity
 * time
