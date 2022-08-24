@@ -1,7 +1,7 @@
 :mod:`What's New`
 ----------------------------
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Documentation
+v0.2.0 (August 24, 2022)
+========================
+
+* Lots of updates to docs and installation instructions

@@ -78,6 +78,9 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 # html_theme = "pangeo"
 html_theme = "furo"
 
+# furo variables
+html_title = "model_catalogs documentation"
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
