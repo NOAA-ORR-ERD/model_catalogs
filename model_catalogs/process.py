@@ -5,9 +5,13 @@ from typing import Optional
 
 import cf_xarray  # noqa
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 from intake.source.derived import GenericTransform
+
+
+yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
 
 
 class DatasetTransform(GenericTransform):
@@ -22,20 +26,55 @@ class DatasetTransform(GenericTransform):
     optional_params = {}
     _ds = None
 
+    def follow_target(self):
+        """Connect target into Transform
+
+        This way can expose some information to query."""
+
+        # all functions here call follow_target to start
+        # need to pick the source only once
+        if self._source is None:
+            self._pick()
+
+            # if "yesterday" is in user_parameters for original source
+            # run with that sent in
+            if any(
+                [
+                    "yesterday" in d.values()
+                    for d in self._source.describe()["user_parameters"]
+                ]
+            ):
+                self._source = self._source(yesterday=yesterday)
+
+            # self is of type DatasetTransform instead of OpenDapSource
+            # since the OpenDapSource is the target of the Transform
+            # but make it easy to check urlpath
+            self.urlpath = self._source.urlpath
+
+    def update_urlpath(self):
+        """Update urlpath for transform.
+
+        Run this in `select_date_range` for aggregated sources."""
+
+        self.follow_target()
+
+        kwargs = self._params["transform_kwargs"]
+
+        self._source.urlpath = kwargs["urlpath"]
+
+        # self is of type DatasetTransform instead of OpenDapSource
+        # since the OpenDapSource is the target of the Transform
+        # but make it easy to check urlpath
+        self.urlpath = kwargs["urlpath"]
+
     def to_dask(self):
         """Makes it so can read in model output."""
+
         if self._ds is None:
-            self._pick()
+
+            self.follow_target()
+
             kwargs = self._params["transform_kwargs"]
-
-            # check for "yesterday" in kwargs and use it if present
-            # this is for some RTOFS models
-            if "yesterday" in kwargs:
-                self._source = self._source(yesterday=kwargs["yesterday"])
-
-            # check for 'urlpath' update being sent in, if so use it to update
-            if "urlpath" in kwargs:
-                self._source.urlpath = kwargs["urlpath"]
 
             # Checks to catch potential user pitfalls
             # Make sure that user has filled in urlpath if needed: OFS nowcast

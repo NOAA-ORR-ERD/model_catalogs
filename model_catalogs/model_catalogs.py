@@ -185,7 +185,7 @@ def setup(override=False):
     cats = [intake.open_catalog(loc) for loc in cat_transform_locs]
 
     # make master nested catalog
-    cat = mc.make_catalog(
+    main_cat = mc.make_catalog(
         cats,
         full_cat_name="MAIN-CATALOG",
         full_cat_description="Main catalog for models; a catalog of nested catalogs.",
@@ -195,7 +195,14 @@ def setup(override=False):
         save_catalog=False,
     )
 
-    return cat
+    # expose target source and urlpath right away
+    [
+        main_cat[cat][source].follow_target()
+        for cat in list(main_cat)
+        for source in list(main_cat[cat])
+    ]
+
+    return main_cat
 
 
 def find_datetimes(source, find_start_datetime, find_end_datetime, override=False):
@@ -429,6 +436,9 @@ def find_availability(cat, timings=None, override=False):
         save_catalog=False,
     )
 
+    # expose target source and urlpath right away
+    [new_user_cat[source].follow_target() for source in list(new_user_cat)]
+
     return new_user_cat
 
 
@@ -463,15 +473,6 @@ def transform_source(source_orig):
 
     # add metadata from source_orig
     source_transform.metadata.update(source_orig.metadata)
-
-    # add yesterday if needed (some RTOFS models)
-    if any(
-        ["yesterday" in d.values() for d in source_orig.describe()["user_parameters"]]
-    ):
-        yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
-        source_transform.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-            "yesterday"
-        ] = str(yesterday)[:10]
 
     return source_transform
 
@@ -656,6 +657,9 @@ def select_date_range(
         source.__dict__["_captured_init_kwargs"]["transform_kwargs"][
             "urlpath"
         ] = filelocs_urlpath
+
+        # Then run the transform for urlpath to pass that info on
+        source.update_urlpath()
 
     # Pass start and end dates to the transform so they can be implemented
     # there for static and deterministic model files (includes RTOFS) as well
