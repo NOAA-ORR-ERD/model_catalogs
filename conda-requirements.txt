@@ -1,9 +1,13 @@
 appdirs
 cf_xarray
+chardet
 dask
+datetimerange
 h5netcdf
+mbstrdecoder
 netcdf4
 numpy
 pandas
 pip
 xarray
+typepy
