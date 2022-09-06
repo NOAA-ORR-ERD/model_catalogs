@@ -9,5 +9,5 @@ netcdf4
 numpy
 pandas
 pip
-xarray
 typepy
+xarray
