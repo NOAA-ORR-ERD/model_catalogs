@@ -268,3 +268,26 @@ def test_hindcast_forecast_aggregation():
                     f"Model {model} with timing {timing} is not working right now.",
                     RuntimeWarning,
                 )
+
+
+def test_urlpath():
+    """urlpath is exposed to transform from target now."""
+
+    main_cat = mc.setup()
+
+    # shows 2 default files
+    assert len(main_cat["NGOFS2"]["forecast"].urlpath) == 2
+
+
+@pytest.mark.slow
+def test_urlpath_after_select():
+    """urlpath is replaced after select_date_range"""
+
+    main_cat = mc.setup()
+
+    yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
+    today = pd.Timestamp.today()
+    source = mc.select_date_range(
+        main_cat["NGOFS2"], timing="forecast", start_date=yesterday, end_date=today
+    )
+    assert len(source.urlpath) > 2  # shows files for the date range selection

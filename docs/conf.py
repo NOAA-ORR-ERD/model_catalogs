@@ -48,7 +48,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    "nbsphinx",
     "recommonmark",
     "sphinx.ext.mathjax",
     "sphinx.ext.autosummary",
