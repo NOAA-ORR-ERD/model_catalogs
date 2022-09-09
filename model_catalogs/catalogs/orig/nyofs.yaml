@@ -13,8 +13,8 @@ sources:
     driver: opendap
     description: Aggregated 3D New York Harbor model in POM from 7 days ago with 48 hour forecast.
     args:
-      chunks:
-        time: 1
+      # chunks:
+      #   time: 1
       engine: netcdf4
       urlpath: https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NYOFS/fmrc/Aggregated_7_day_NYOFS_Fields_Forecast_best.ncd
     metadata:

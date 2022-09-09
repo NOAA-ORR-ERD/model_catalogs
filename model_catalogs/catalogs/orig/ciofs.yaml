@@ -13,8 +13,8 @@ sources:
     driver: opendap
     description: Aggregated 3D Cook Inlet model in ROMS from 7 days ago with 48 hour forecast.
     args:
-      chunks:
-        time: 1
+      # chunks:
+      #   time: 1
       drop_variables: ['ocean_time']
       engine: netcdf4
       urlpath: https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/CIOFS/fmrc/Aggregated_7_day_CIOFS_Fields_Forecast_best.ncd
