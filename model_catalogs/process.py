@@ -106,10 +106,7 @@ class DatasetTransform(GenericTransform):
                 )
 
             # Alert if triangularmesh engine is required (from FVCOM) but not present
-            if (
-                self._source.describe()["driver"][0] == "triangularmesh_netcdf"
-                and not EM_AVAILABLE
-            ):
+            if self._source.engine == "triangularmesh_netcdf" and not EM_AVAILABLE:
                 raise ModuleNotFoundError(  # pragma: no cover
                     "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )
