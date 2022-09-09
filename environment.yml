@@ -9,7 +9,6 @@ dependencies:
   - dask
   - datetimerange
   - extract_model
-  - h5netcdf
   - intake
   - intake-xarray
   - netcdf4
