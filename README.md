@@ -77,7 +77,9 @@ or use `conda` in place of `mamba` if you don't have `mamba` installed.
 
 ## Develop Package
 
-### To use provided environment
+### Choose environment approach
+
+#### Use provided environment
 
 Clone the repo:
 ``` bash
@@ -89,27 +91,40 @@ In the `model_catalogs` directory, install conda environment:
 $ conda env create -f environment.yml
 ```
 
-Alternatively, if you have an existing environment you want to add to:
-``` bash
-$ conda install --file conda-requirements.txt
-$ pip install -r pip-requirements.txt
-```
-
 Install `model_catalogs` into new environment (still in `model_catalogs` directory):
 ``` bash
 $ conda activate model_catalogs
 $ pip install -e .
 ```
 
+#### Use other environment
+
+Alternatively, if you have an existing environment you want to add to, clone the repo:
+``` bash
+$ git clone http://github.com/NOAA-ORR-ERD/model_catalogs.git
+$ cd model_catalogs
+```
+
+Make sure the desired environment is activated and then:
+``` bash
+$ conda install -c conda-forge --file conda-requirements.txt
+$ pip install -r pip-requirements.txt
+```
+
+Install `model_catalogs` into the environment (still in `model_catalogs` directory):
+``` bash
+$ pip install -e .
+```
+
 ### Install development packages
 
-To develop the code, follow instructions above for "To use provided environment". Then you can install additional dependencies for development and testing with
+To develop the code, follow instructions above for "Use provided environment" or "Use other environment" as appropriate. Then you can install additional dependencies for development and testing with
 ``` bash
-$ conda install --file requirements-dev.txt
+$ conda install -c conda-forge --file conda-requirements-dev.txt
 ```
 
 
-### Run tests
+#### Run tests
 
 Run tests that haven't been marked as "slow" with
 ``` bash
@@ -122,10 +137,26 @@ $ pytest --runslow
 ```
 
 
-### Check precommits locally before pushing
+#### Check precommits locally before pushing
 
 To then check code before committing and pushing it to github, locally run
 ``` bash
 $ pre-commit run --all-files
 ```
 These checks can change your files so it is best to check the changes before pushing to github.
+
+
+#### Compile docs
+
+Compile the docs locally after having installed the developer packages (see "Install development packages") or after making the docs environment with
+``` bash
+$ conda env create -f docs/environment.yml
+```
+and activating that environment.
+
+Navigate to the docs folder and build the html documentation with
+``` bash
+$ make html
+```
+
+Finally you can make sure the documentation looks right by opening "_build/html/index.html".

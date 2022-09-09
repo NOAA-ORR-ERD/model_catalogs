@@ -13,8 +13,8 @@ sources:
     driver: opendap
     description: Aggregated 3D Lake Superior model in POM from 7 days ago with 120 hour forecast.
     args:
-      chunks:
-        time: 1
+      # chunks:
+      #   time: 1
       engine: netcdf4
       urlpath: https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/LSOFS/fmrc/Aggregated_7_day_LSOFS_Fields_Forecast_best.ncd
     metadata:

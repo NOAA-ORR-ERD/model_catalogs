@@ -11,6 +11,15 @@ import xarray as xr
 from intake.source.derived import GenericTransform
 
 
+# extract_model might be necessary for reading in model output, if using FVCOM model
+try:
+    import extract_model  # noqa: F401
+
+    EM_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    EM_AVAILABLE = False  # pragma: no cover
+
+
 yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
 
 
@@ -94,6 +103,12 @@ class DatasetTransform(GenericTransform):
             elif self._source.urlpath is None:
                 raise KeyError(
                     "The input source `urlpath` does not have a value. You probably want to run `mc.select_date_range()` before running `to_dask()`."  # noqa: E501
+                )
+
+            # Alert if triangularmesh engine is required (from FVCOM) but not present
+            if self._source.engine == "triangularmesh_netcdf" and not EM_AVAILABLE:
+                raise ModuleNotFoundError(  # pragma: no cover
+                    "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )
 
             # This sends the metadata to `add_attributes()`

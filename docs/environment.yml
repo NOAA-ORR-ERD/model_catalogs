@@ -8,10 +8,14 @@ dependencies:
    - appdirs
    - cf_xarray
    - dask
+   - datetimerange
    - h5netcdf
+   - intake
+   - intake-xarray
    - netcdf4
    - numpy
    - pandas
+   - siphon
    - xarray
    # These are needed for the docs themselves
    - numpydoc
@@ -33,7 +37,3 @@ dependencies:
      # - sphinx_pangeo_theme
      - sphinx-copybutton
      - sphinxcontrib-srclinks
-     - datetimerange
-     - git+https://github.com/intake/intake-xarray.git
-     - git+https://github.com/intake/intake.git
-     - siphon  # can get from conda-forge but isn't recognized
