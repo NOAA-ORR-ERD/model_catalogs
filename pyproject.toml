@@ -21,7 +21,7 @@ color = true
 
 [tool.isort]
 known_third_party = ["appdirs", "cf_xarray", "dask", "datetimerange",
-                     "intake", "intake-xarray", "netcdf4", 
+                     "intake", "intake-xarray", "netcdf4",
                      "numpy", "pandas", "pip",
                      "setuptools", "siphon", "xarray"]
 
