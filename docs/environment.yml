@@ -9,7 +9,6 @@ dependencies:
    - cf_xarray
    - dask
    - datetimerange
-   - h5netcdf
    - intake
    - intake-xarray
    - netcdf4
