@@ -196,8 +196,9 @@ def setup(override=False):
     )
 
     # expose target source and urlpath right away
+    # cat.source code is in process.py
     [
-        main_cat[cat][source].follow_target()
+        main_cat[cat][source].source
         for cat in list(main_cat)
         for source in list(main_cat[cat])
     ]
@@ -437,7 +438,8 @@ def find_availability(cat, timings=None, override=False):
     )
 
     # expose target source and urlpath right away
-    [new_user_cat[source].follow_target() for source in list(new_user_cat)]
+    # cat.source code is in process.py
+    [new_user_cat[source].source for source in list(new_user_cat)]
 
     return new_user_cat
 

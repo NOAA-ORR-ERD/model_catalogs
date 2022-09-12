@@ -35,7 +35,21 @@ class DatasetTransform(GenericTransform):
     optional_params = {}
     _ds = None
 
-    def follow_target(self):
+    @property
+    def urlpath(self):
+        if not hasattr(self, '_urlpath'):
+            self.source
+        return self._urlpath
+
+    # @property
+    # def source(self):
+    #     if self._source is None:
+    #         self._pick()
+    #     return self._source
+
+    # def follow_target(self):
+    @property
+    def source(self):
         """Connect target into Transform
 
         This way can expose some information to query."""
@@ -44,6 +58,7 @@ class DatasetTransform(GenericTransform):
         # need to pick the source only once
         if self._source is None:
             self._pick()
+            # self.source
 
             # if "yesterday" is in user_parameters for original source
             # run with that sent in
@@ -58,30 +73,38 @@ class DatasetTransform(GenericTransform):
             # self is of type DatasetTransform instead of OpenDapSource
             # since the OpenDapSource is the target of the Transform
             # but make it easy to check urlpath
-            self.urlpath = self._source.urlpath
+            self._urlpath = self._source.urlpath
+
+        return self._source
 
     def update_urlpath(self):
         """Update urlpath for transform.
 
         Run this in `select_date_range` for aggregated sources."""
 
-        self.follow_target()
+        if not hasattr(self, 'source'):
+            self.source
 
         kwargs = self._params["transform_kwargs"]
 
+        # this is the one that is used when .to_dask() is run
         self._source.urlpath = kwargs["urlpath"]
+
+        # but this one is printed when looking at the source, so better change it too
+        self._source._captured_init_kwargs['urlpath'] = kwargs["urlpath"]
 
         # self is of type DatasetTransform instead of OpenDapSource
         # since the OpenDapSource is the target of the Transform
         # but make it easy to check urlpath
-        self.urlpath = kwargs["urlpath"]
+        self._urlpath = kwargs["urlpath"]
 
     def to_dask(self):
         """Makes it so can read in model output."""
 
         if self._ds is None:
 
-            self.follow_target()
+            if not hasattr(self, 'source'):
+                self.source
 
             kwargs = self._params["transform_kwargs"]
 
