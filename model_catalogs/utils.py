@@ -6,6 +6,8 @@ import fnmatch
 import pathlib
 import re
 
+from operator import itemgetter
+
 import cf_xarray  # noqa
 import intake
 import numpy as np
@@ -182,7 +184,7 @@ def find_bbox(ds, dd=None, alpha=None):
 
 
 def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
-    """Aggregate NOAA OFS-style nowcast/forecast files.
+    """Select ordered NOAA OFS-style nowcast/forecast files for aggregation.
 
     Parameters
     ----------
@@ -206,47 +208,49 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     Returns
     -------
     List of URLs for where to find all of the model output files that match the keyword arguments.
+    List is sorted correctly for times.
     """
 
     date = astype(date, pd.Timestamp)
 
-    # # brings in nowcast and forecast for any date in the catalog
-    # pattern0 = f'*{filetype}*.t??z.*'
-    # # brings in nowcast and forecast for only the day specified
-    # pattern0 = date.strftime(f'*{filetype}*.%Y%m%d.t??z.*')
-
     if pattern is None:
         pattern = date.strftime(f"*{filetype}*.n*.%Y%m%d.t??z.*")
-        # pattern = date.strftime(f'*{filetype}*.n???.%Y%m%d.t??z.*')
     else:
         pattern = eval(f"f'{pattern}'")
-    # pattern = date.strftime(f'*{filetype}*.n*.%Y%m%d.t??z.*')
 
-    # '*{filetype}.n???.{date.year}{str(date.month).zfill(2)}{str(date.day).zfill(2)}.t??z.*'
-
-    # pattern = eval(f"f'{pattern}'")
-    # import pdb; pdb.set_trace()
-    fnames = fnmatch.filter(strings, pattern)
-
+    # if using forecast, find nowcast and forecast files for the latest full timing cycle
     if is_forecast:
 
         import re
 
         regex = re.compile(".t[0-9]{2}z.")
-        # substrings
+        # substrings: list of repeated strings of hours, e.g. ['12', '06', '00', '12', ...]
         subs = [substr[2:4] for substr in regex.findall("".join(strings))]
-        cycle = sorted(list(set(subs)))[-1]  # noqa: F841
+        # unique str times, in increasing order, e.g. ['00', '06', '12']
+        times = sorted(list(set(subs)))
+        # choose the timing cycle that is latest but also has the most times available
+        # sometimes the forecast files aren't available yet so don't want to use that time
+        cycle = sorted(times, key=subs.count)[-1]  # noqa: F841
 
-        # cycle = sorted(list(set([fname[ fname.find(start:='.t') + len(start):fname.find('z.')] for fname in fnames])))[-1]  # noqa: E501
-        # import pdb; pdb.set_trace()
-        # pattern1 = f'*{filetype}*.t{cycle}z.*'
-
-        # replace '.t??z.' in pattern with '.t{cycle}z.' and replace '.n*.' with '.*.'
-        pattern1 = pattern.replace(".t??z.", ".t{cycle}z.").replace(".n*.", ".*.")
+        # find all nowcast files with only timing "cycle"
+        # replace '.t??z.' in pattern with '.t{cycle}z.'
+        pattern1 = pattern.replace(".t??z.", ".t{cycle}z.")
         pattern1 = eval(f"f'{pattern1}'")
-        fnames = fnmatch.filter(strings, pattern1)
+        fnames = sorted(fnmatch.filter(strings, pattern1))
 
-    # filelocs = [cat.datasets.get(fname).access_urls["OPENDAP"] for fname in fnames]
+        # find all forecast files with only timing "cycle"
+        # replace '.n*.' with '.*.'
+        pattern2 = pattern1.replace(".n*.", ".f*.")
+        pattern2 = eval(f"f'{pattern2}'")
+        fnames.extend(sorted(fnmatch.filter(strings, pattern2)))
+
+    # if not using forecast, find all nowcast files matching pattern
+    else:
+        fnames = sorted(fnmatch.filter(strings, pattern))
+        # sort fnames by the timing cycle
+        ordered = sorted([fname.split(".") for fname in fnames], key=itemgetter(9))
+        # piece filenames back together, now in order
+        fnames = [".".join(order) for order in ordered]
 
     return fnames
 
