@@ -285,9 +285,36 @@ def test_urlpath_after_select():
 
     main_cat = mc.setup()
 
-    yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
-    today = pd.Timestamp.today()
+    day = "2022-1-1"
     source = mc.select_date_range(
-        main_cat["NGOFS2"], timing="forecast", start_date=yesterday, end_date=today
+        main_cat["CREOFS"], timing="hindcast", start_date=day, end_date=day
     )
-    assert len(source.urlpath) > 2  # shows files for the date range selection
+
+    known_filenames = [
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t09z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t15z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t21z.nc",
+    ]
+
+    assert source.urlpath == known_filenames
