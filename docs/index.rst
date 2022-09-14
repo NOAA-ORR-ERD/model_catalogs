@@ -12,7 +12,7 @@ Installation
 To install from PyPI:
   >>> pip install model_catalogs
 
-To install from PyPI:
+To install from conda-forge:
   >>> conda install -c conda-forge model_catalogs
 
 .. toctree::
