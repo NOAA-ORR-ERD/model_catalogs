@@ -7,6 +7,7 @@ v0.4.0 (unreleased)
 * Files found for unaggregated NOAA OFS models are now sorted by correct time order.
 * Repeated files (between nowcast and forecast files, and different nowcast timing cycles) are not included anymore.
 * Improved behavior in aggregated NOAA OFS file selection for seamless time series between days with no forecast included and the final day of the selection that includes a forecast.
+* Updated many details in `Model Aggregations <https://model-catalogs.readthedocs.io/en/latest/aggregations.html#>`_ page of docs.
 
 
 v0.3.0 (September 9, 2022)
