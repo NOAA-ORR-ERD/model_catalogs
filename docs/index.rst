@@ -12,11 +12,8 @@ Installation
 To install from PyPI:
   >>> pip install model_catalogs
 
-Subsequently install a few packages by saving the `pip-requirements.txt` file locally and:
-  >>> pip install -r pip-requirements.txt
-
-These need to be installed separately because some of the packages on GitHub have updates that have not been included in any releases that are available otherwise.
-
+To install from PyPI:
+  >>> conda install -c conda-forge model_catalogs
 
 .. toctree::
    :maxdepth: 2
