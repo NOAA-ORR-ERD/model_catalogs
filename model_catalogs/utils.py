@@ -6,6 +6,8 @@ import fnmatch
 import pathlib
 import re
 
+from operator import itemgetter
+
 import cf_xarray  # noqa
 import intake
 import numpy as np
@@ -181,8 +183,73 @@ def find_bbox(ds, dd=None, alpha=None):
     # return lonkey, latkey, list(p0.bounds), p0.wkt, p1.wkt
 
 
+def remove_duplicates(filenames, pattern):
+    """Remove filenames that fit pattern.
+
+    Uses fnmatch to compare filenames to pattern.
+
+    Parameters
+    ----------
+    filenames : list of str
+        Filenames to compare with pattern to check for duplicates.
+    pattern: str
+        glob-style pattern to compare with filenames. If a filename matches pattern, it is removed.
+
+    Returns
+    -------
+    List of filenames that may have had some removed, if they matched pattern.
+    """
+
+    files_to_remove = fnmatch.filter(filenames, pattern)
+
+    if len(files_to_remove) > 0:
+        [
+            filenames.pop(filenames.index(file_to_remove))
+            for file_to_remove in files_to_remove
+        ]
+
+    return filenames
+
+
+def find_nowcast_cycles(strings, pattern):
+    """Find the NOAA OFS nowcast files in cycles from strings that follow pattern.
+
+    This is to be used when forecast files aren't being used (following a single timing cycle)
+    and instead creating a time series of NOAA OFS nowcast files over timing cycles.
+
+    Parameters
+    ----------
+    strings: list
+        List of strings to be filtered. Expected to be file locations from a thredds catalog.
+    pattern: str
+        glob-style pattern to compare with filenames. If a filename matches pattern, it is kept.
+
+    Returns
+    -------
+    List of strings of filenames, sorted by timing cycle.
+    For example, if there were only 2 nowcast files in CBOFS (n001 and n002):
+    ['https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/2022/09/12/nos.cbofs.fields.n001.20220912.t00z.nc',
+     'https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/2022/09/12/nos.cbofs.fields.n002.20220912.t00z.nc',
+     'https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/2022/09/12/nos.cbofs.fields.n001.20220912.t06z.nc',
+     'https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/CBOFS/MODELS/2022/09/12/nos.cbofs.fields.n002.20220912.t06z.nc']
+    """
+
+    filenames = sorted(fnmatch.filter(strings, pattern))
+
+    # sort filenames by the timing cycle
+    ordered = sorted([fname.split(".") for fname in filenames], key=itemgetter(9))
+
+    # reconstitute filenames by joining with "."
+    filenames = [".".join(order) for order in ordered]
+
+    return filenames
+
+
 def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
-    """Aggregate NOAA OFS-style nowcast/forecast files.
+    """Select ordered NOAA OFS-style nowcast/forecast files for aggregation.
+
+    This function finds the files whose path includes the given date, regardless of times
+    which might change the date forward or backward. Removes all duplicate files (n000 and f000).
 
     Parameters
     ----------
@@ -206,47 +273,61 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     Returns
     -------
     List of URLs for where to find all of the model output files that match the keyword arguments.
+    List is sorted correctly for times.
     """
 
     date = astype(date, pd.Timestamp)
 
-    # # brings in nowcast and forecast for any date in the catalog
-    # pattern0 = f'*{filetype}*.t??z.*'
-    # # brings in nowcast and forecast for only the day specified
-    # pattern0 = date.strftime(f'*{filetype}*.%Y%m%d.t??z.*')
-
     if pattern is None:
         pattern = date.strftime(f"*{filetype}*.n*.%Y%m%d.t??z.*")
-        # pattern = date.strftime(f'*{filetype}*.n???.%Y%m%d.t??z.*')
     else:
         pattern = eval(f"f'{pattern}'")
-    # pattern = date.strftime(f'*{filetype}*.n*.%Y%m%d.t??z.*')
 
-    # '*{filetype}.n???.{date.year}{str(date.month).zfill(2)}{str(date.day).zfill(2)}.t??z.*'
-
-    # pattern = eval(f"f'{pattern}'")
-    # import pdb; pdb.set_trace()
-    fnames = fnmatch.filter(strings, pattern)
-
+    # if using forecast, find nowcast and forecast files for the latest full timing cycle
     if is_forecast:
 
         import re
 
+        # Find the most recent, complete timing cycle for the forecast day
         regex = re.compile(".t[0-9]{2}z.")
-        # substrings
+        # substrings: list of repeated strings of hours, e.g. ['12', '06', '00', '12', ...]
         subs = [substr[2:4] for substr in regex.findall("".join(strings))]
-        cycle = sorted(list(set(subs)))[-1]  # noqa: F841
+        # unique str times, in increasing order, e.g. ['00', '06', '12']
+        times = sorted(list(set(subs)))
+        # choose the timing cycle that is latest but also has the most times available
+        # sometimes the forecast files aren't available yet so don't want to use that time
+        cycle = sorted(times, key=subs.count)[-1]  # noqa: F841
 
-        # cycle = sorted(list(set([fname[ fname.find(start:='.t') + len(start):fname.find('z.')] for fname in fnames])))[-1]  # noqa: E501
-        # import pdb; pdb.set_trace()
-        # pattern1 = f'*{filetype}*.t{cycle}z.*'
+        # find all nowcast files with only timing "cycle"
+        # replace '.t??z.' in pattern with '.t{cycle}z.' to get the latest timing cycle only
+        pattern1 = pattern.replace(".t??z.", ".t{cycle}z.")
+        pattern1 = eval(f"f'{pattern1}'")  # use `eval` to sub in value of `cycle`
+        # sort nowcast files alone to get correct time order
+        fnames = sorted(fnmatch.filter(strings, pattern1))
 
-        # replace '.t??z.' in pattern with '.t{cycle}z.' and replace '.n*.' with '.*.'
-        pattern1 = pattern.replace(".t??z.", ".t{cycle}z.").replace(".n*.", ".*.")
-        pattern1 = eval(f"f'{pattern1}'")
-        fnames = fnmatch.filter(strings, pattern1)
+        # find all forecast files with only timing "cycle"
+        pattern2 = pattern1.replace(".n*.", ".f*.")
+        fnames_fore = sorted(fnmatch.filter(strings, pattern2))
+        # check forecast filenames for "*.f000.*" file. If present, remove as duplicate.
+        fnames_fore = remove_duplicates(fnames_fore, "*.f000.*")
 
-    # filelocs = [cat.datasets.get(fname).access_urls["OPENDAP"] for fname in fnames]
+        # combine nowcast and forecast files found
+        fnames.extend(fnames_fore)
+
+        # Include the nowcast files between the start of the day and when the time series
+        # represented in fnames begins
+        fnames_now = find_nowcast_cycles(strings, pattern)
+
+        # prepend fnames with the nowcast files for the day until the first already-selected fnames file
+        fnames = fnames_now[: fnames_now.index(fnames[0])] + fnames
+
+        # If any n000 files present, remove them since they are repeats
+        fnames = remove_duplicates(fnames, "*.n000.*")
+
+    # if not using forecast, find all nowcast files matching pattern
+    else:
+        fnames = find_nowcast_cycles(strings, pattern)
+        fnames = remove_duplicates(fnames, "*.n000.*")
 
     return fnames
 

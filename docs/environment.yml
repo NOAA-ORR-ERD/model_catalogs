@@ -19,6 +19,7 @@ dependencies:
    # These are needed for the docs themselves
    - numpydoc
    - sphinx
+   - sphinx-markdown-tables
    # - sphinx_rtd_theme
    - ipython
    - jinja2 #<3.1
