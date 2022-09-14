@@ -237,7 +237,7 @@ def find_nowcast_cycles(strings, pattern):
     filenames = sorted(fnmatch.filter(strings, pattern))
 
     # sort filenames by the timing cycle
-    ordered = sorted([fname.split(".") for fname in filenames], key=itemgetter(9))
+    ordered = sorted([fname.split(".") for fname in filenames], key=itemgetter(-2))
 
     # reconstitute filenames by joining with "."
     filenames = [".".join(order) for order in ordered]
