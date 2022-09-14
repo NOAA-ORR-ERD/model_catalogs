@@ -1,6 +1,13 @@
 :mod:`What's New`
 ----------------------------
 
+v0.4.0 (unreleased)
+===================
+
+* Files found for unaggregated NOAA OFS models are now sorted by correct time order.
+* Repeated files (between nowcast and forecast files, and different nowcast timing cycles) are not included anymore.
+
+
 v0.3.0 (September 9, 2022)
 ==========================
 

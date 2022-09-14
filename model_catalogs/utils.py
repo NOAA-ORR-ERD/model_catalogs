@@ -186,6 +186,9 @@ def find_bbox(ds, dd=None, alpha=None):
 def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     """Select ordered NOAA OFS-style nowcast/forecast files for aggregation.
 
+    This function finds the files whose path includes the given date, regardless of times
+    which might change the date forward or backward.
+
     Parameters
     ----------
     date: str of datetime, pd.Timestamp
@@ -238,11 +241,49 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
         pattern1 = eval(f"f'{pattern1}'")
         fnames = sorted(fnmatch.filter(strings, pattern1))
 
+        # check filenames for an "*.n000.*" file. If present, remove
+        # since overlaps with other files.
+        pattern1b = pattern1.replace(".n*.", ".n000.")
+        file_to_remove = fnmatch.filter(fnames, pattern1b)
+        if len(file_to_remove) > 0:
+            fnames.pop(fnames.index(file_to_remove[0]))
+
         # find all forecast files with only timing "cycle"
         # replace '.n*.' with '.*.'
         pattern2 = pattern1.replace(".n*.", ".f*.")
         pattern2 = eval(f"f'{pattern2}'")
-        fnames.extend(sorted(fnmatch.filter(strings, pattern2)))
+        fnames_fore = sorted(fnmatch.filter(strings, pattern2))
+
+        # check forecast filenames for an "*.f000.*" file. If present, remove
+        # since always overlaps with the last nowcast file.
+        pattern3 = pattern2.replace(".f*.", ".f000.")
+        file_to_remove = fnmatch.filter(fnames_fore, pattern3)
+        if len(file_to_remove) > 0:
+            fnames_fore.pop(fnames_fore.index(file_to_remove[0]))
+
+        fnames.extend(fnames_fore)
+
+        # Include the nowcast files between the start of the day and when the time series
+        # represented in fnames begins
+        # uses the logic from the nowcast condition
+        fnames_now = sorted(fnmatch.filter(strings, pattern))
+        # sort fnames by the timing cycle
+        ordered = sorted([fname.split(".") for fname in fnames_now], key=itemgetter(9))
+        fnames_now = [".".join(order) for order in ordered]
+
+        # If any n000 files present, remove them since they are repeats
+        patternB = pattern.replace(".n*.", ".n000.")
+        files_to_remove = fnmatch.filter(fnames_now, patternB)
+
+        if len(files_to_remove) > 0:
+            [
+                fnames_now.pop(fnames_now.index(file_to_remove))
+                for file_to_remove in files_to_remove
+            ]
+
+        # prepend fnames with the nowcast files for the day until the first
+        # already-selected fnames file
+        fnames = fnames_now[: fnames_now.index(fnames[0])] + fnames
 
     # if not using forecast, find all nowcast files matching pattern
     else:
@@ -251,6 +292,16 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
         ordered = sorted([fname.split(".") for fname in fnames], key=itemgetter(9))
         # piece filenames back together, now in order
         fnames = [".".join(order) for order in ordered]
+
+        # If any n000 files present, remove them since they are repeats
+        patternB = pattern.replace(".n*.", ".n000.")
+        files_to_remove = fnmatch.filter(fnames, patternB)
+        if len(files_to_remove) > 0:
+            [
+                fnames.pop(fnames.index(file_to_remove))
+                for file_to_remove in files_to_remove
+            ]
+        # import pdb; pdb.set_trace()
 
     return fnames
 
