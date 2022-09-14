@@ -249,7 +249,7 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     """Select ordered NOAA OFS-style nowcast/forecast files for aggregation.
 
     This function finds the files whose path includes the given date, regardless of times
-    which might change the date forward or backward.
+    which might change the date forward or backward. Removes all duplicate files (n000 and f000).
 
     Parameters
     ----------
