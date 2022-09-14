@@ -5,7 +5,7 @@ model_catalogs
 [![License:MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://img.shields.io/readthedocs/model_catalogs/latest.svg?style=for-the-badge)](https://model_catalogs.readthedocs.io/en/latest/?badge=latest)
 [![Code Style Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/linting%20with%20pre-commit?label=Code%20Style&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
-<!-- [![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs) -->
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs)
 [![Python Package Index](https://img.shields.io/pypi/v/model_catalogs.svg?style=for-the-badge)](https://pypi.org/project/model_catalogs)
 
 
@@ -52,17 +52,12 @@ To install from PyPI:
 pip install model_catalogs
 ```
 
-<!-- To install from conda with channel conda-forge:
+### conda-forge
+
+To install from conda with channel conda-forge:
 ``` base
 conda install -c conda-forge model_catalogs
-``` -->
-
-Subsequently install a few packages by saving the `pip-requirements.txt` file locally and:
-``` base
-pip install -r pip-requirements.txt
 ```
-
-These need to be installed separately because some of the packages on GitHub have updates that have not been included in any releases that are available otherwise.
 
 
 ### Install Optional Dependencies
@@ -70,7 +65,7 @@ These need to be installed separately because some of the packages on GitHub hav
 Install additional dependencies for full functionality and running the demonstration notebooks. Activate your Python environment, then:
 
 ``` bash
-$ mamba install -c conda-forge --file model_catalogs/conda-requirements-opt.txt
+$ mamba install -c conda-forge --file conda-requirements-opt.txt
 ```
 or use `conda` in place of `mamba` if you don't have `mamba` installed.
 
