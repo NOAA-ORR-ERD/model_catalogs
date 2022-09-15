@@ -469,7 +469,7 @@ def transform_source(source_orig):
     )
 
     # make path to source_orig the target
-    source_transform.__dict__["_captured_init_kwargs"]["targets"] = [
+    source_transform._captured_init_kwargs["targets"] = [
         f"{source_orig.cat.path}:{source_orig.name}"
     ]
 
@@ -656,9 +656,7 @@ def select_date_range(
 
         # This is how we input the newly found urlpaths in so they will be used
         # in the processing of the dataset, and overwrite the old urlpath
-        source.__dict__["_captured_init_kwargs"]["transform_kwargs"][
-            "urlpath"
-        ] = filelocs_urlpath
+        source._captured_init_kwargs["transform_kwargs"]["urlpath"] = filelocs_urlpath
 
         # Then run the transform for urlpath to pass that info on
         source.update_urlpath()
@@ -666,12 +664,8 @@ def select_date_range(
     # Pass start and end dates to the transform so they can be implemented
     # there for static and deterministic model files (includes RTOFS) as well
     # as the OFS aggregated models.
-    source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["start_date"] = str(
-        start_date
-    )
-    source.__dict__["_captured_init_kwargs"]["transform_kwargs"]["end_date"] = str(
-        end_date
-    )
+    source._captured_init_kwargs["transform_kwargs"]["start_date"] = str(start_date)
+    source._captured_init_kwargs["transform_kwargs"]["end_date"] = str(end_date)
 
     # store info in source_orig
     metadata = {
