@@ -22,6 +22,7 @@ from .utils import (  # noqa
     agg_for_date,
     astype,
     calculate_boundaries,
+    file2dt,
     find_bbox,
     find_catrefs,
     find_filelocs,

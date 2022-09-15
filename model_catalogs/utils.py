@@ -28,6 +28,74 @@ def astype(value, type_):
     return value
 
 
+def file2dt(filename):
+    """Return Timestamp of NOAA OFS filename
+
+    ...without reading in the filename to xarray. See [docs](https://model-catalogs.readthedocs.io/en/latest/aggregations.html)
+    for details on the formula. Most NOAA OFS models have 1 timestep per file, but LSOFS, LOOFS, and NYOFS have 6.
+
+    Parameters
+    ----------
+    filename : str
+        Filename for which to decipher datetime. Can be full path or not.
+
+    Returns
+    -------
+    pandas Timestamp of the time(s) in the file.
+
+    Examples
+    --------
+    >>> url = 'https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2022/07/nos.cbofs.fields.n001.20220701.t00z.nc'
+    >>> mc.filename2datetime(url)
+    Timestamp('2022-06-30 19:00:00')
+    """
+
+    # strip off path if present since can mess up the matching
+    filename = filename.split('/')[-1]
+
+    # read in date from filename
+    date = pd.to_datetime(filename, format="%Y%m%d", exact=False)  # has time 00:00
+
+    # pull timing cycle from filename
+    regex = re.compile(".t[0-9]{2}z.")
+    cycle = int(regex.findall(filename)[0][2:4])
+
+    # LSOFS, LOOFS, NYOFS: multiple times per file
+    if fnmatch.fnmatch(filename, '*.nowcast.*'):
+
+        date = [date + pd.Timedelta(f"{cycle - dt} hours") for dt in range(6)[::-1]]
+
+    # LSOFS, LOOFS, NYOFS: multiple times per file
+    elif fnmatch.fnmatch(filename, '*.forecast.*'):
+
+        # models all have different forecast lengths!
+        if 'lsofs' in filename or 'loofs' in filename:
+            nfiles = 60
+        elif 'nyofs' in filename:
+            nfiles = 54
+
+        date = [date + pd.Timedelta(f"{cycle + 1 + dt} hours") for dt in range(nfiles)]
+
+    # Main style of NOAA OFS files, 1 file per time step
+    elif fnmatch.fnmatch(filename, '*.n???.*') or fnmatch.fnmatch(filename, '*.f???.*'):
+
+        # pull hours from filename
+        regex = re.compile(".[n,f][0-9]{3}.")
+        hour = int(regex.findall(filename)[0][2:-1])
+
+        # calculate hours
+        dt = cycle + hour
+
+        # if nowcast file, subtract 6 hours
+        if fnmatch.fnmatch(filename, '*.n???.*'):
+            dt -= 6
+
+        # construct datetime. dt might be negative.
+        date += pd.Timedelta(f"{dt} hours")
+
+    return date
+
+
 def get_fresh_parameter(filename):
     """Get freshness parameter, based on the filename.
 

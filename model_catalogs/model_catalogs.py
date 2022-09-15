@@ -524,6 +524,8 @@ def select_date_range(
 
     """
 
+    # make sure they are both Timestamps
+    start_date = mc.astype(start_date, pd.Timestamp)
     end_date = mc.astype(end_date, pd.Timestamp)
 
     # if there is only one timing, use it
@@ -592,12 +594,20 @@ def select_date_range(
         if end_date > today:
             end_date_use = today
             forecast_forward = True
+        # if not using forecast files, bring in subsequent days files to be able to get all times of day
+        # but, don't do this for today since not all files available as nowcast.
+        elif not forecast_forward and (end_date.date() != today.date()):
+            end_date_use = end_date.normalize() + pd.Timedelta('1 day')
         else:
             end_date_use = end_date
 
+        # Include filenames from the day before start_date in order to get a complete day since model
+        # files are shifted in time.
+        start_date_use = start_date.normalize() - pd.Timedelta('1 day')
+
         # loop over dates
         filelocs_urlpath = []
-        for date in pd.date_range(start=start_date, end=end_date_use, freq="1D"):
+        for date in pd.date_range(start=start_date_use, end=end_date_use, freq="1D"):
             is_forecast = (
                 True
                 if date.date() == end_date_use.date() and forecast_forward
@@ -642,9 +652,16 @@ def select_date_range(
 
             filelocs_urlpath.extend(agg_filelocs)
 
+        # set up dataframe of datetimes to filenames
+        filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
+        df = pd.DataFrame(index=filedts, data={'filenames': filelocs_urlpath})
+
+        # Narrow the files used to the actual requested datetime range
+        files_to_use = df[start_date:end_date]
+
         # This is how we input the newly found urlpaths in so they will be used
         # in the processing of the dataset, and overwrite the old urlpath
-        source._captured_init_kwargs["transform_kwargs"]["urlpath"] = filelocs_urlpath
+        source._captured_init_kwargs["transform_kwargs"]["urlpath"] = list(files_to_use['filenames'])
 
         # Then run the transform for urlpath to pass that info on
         source.update_urlpath()
