@@ -37,7 +37,7 @@ class DatasetTransform(GenericTransform):
 
     @property
     def urlpath(self):
-        if not hasattr(self, '_urlpath'):
+        if not hasattr(self, "_urlpath"):
             self.source
         return self._urlpath
 
@@ -82,7 +82,7 @@ class DatasetTransform(GenericTransform):
 
         Run this in `select_date_range` for aggregated sources."""
 
-        if not hasattr(self, 'source'):
+        if not hasattr(self, "source"):
             self.source
 
         kwargs = self._params["transform_kwargs"]
@@ -91,7 +91,7 @@ class DatasetTransform(GenericTransform):
         self._source.urlpath = kwargs["urlpath"]
 
         # but this one is printed when looking at the source, so better change it too
-        self._source._captured_init_kwargs['urlpath'] = kwargs["urlpath"]
+        self._source._captured_init_kwargs["urlpath"] = kwargs["urlpath"]
 
         # self is of type DatasetTransform instead of OpenDapSource
         # since the OpenDapSource is the target of the Transform
@@ -103,7 +103,7 @@ class DatasetTransform(GenericTransform):
 
         if self._ds is None:
 
-            if not hasattr(self, 'source'):
+            if not hasattr(self, "source"):
                 self.source
 
             kwargs = self._params["transform_kwargs"]
