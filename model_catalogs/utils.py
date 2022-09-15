@@ -386,6 +386,10 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
         # represented in fnames begins
         fnames_now = find_nowcast_cycles(strings, pattern)
 
+        if len(fnames) == 0:
+            raise ValueError(f"Error finding filenames. Filenames found so far: {fnames}. "
+                             "Maybe you have the wrong source for the days requested.")
+
         # prepend fnames with the nowcast files for the day until the first already-selected fnames file
         fnames = fnames_now[: fnames_now.index(fnames[0])] + fnames
 
