@@ -38,27 +38,20 @@ class DatasetTransform(GenericTransform):
     @property
     def urlpath(self):
         if not hasattr(self, "_urlpath"):
-            self.source
+            self.target
         return self._urlpath
 
-    # @property
-    # def source(self):
-    #     if self._source is None:
-    #         self._pick()
-    #     return self._source
-
-    # def follow_target(self):
     @property
-    def source(self):
+    def target(self):
         """Connect target into Transform
 
-        This way can expose some information to query."""
+        This way can expose some information to query. This will only run once per object.
+        """
 
         # all functions here call follow_target to start
         # need to pick the source only once
         if self._source is None:
             self._pick()
-            # self.source
 
             # if "yesterday" is in user_parameters for original source
             # run with that sent in
@@ -80,10 +73,11 @@ class DatasetTransform(GenericTransform):
     def update_urlpath(self):
         """Update urlpath for transform.
 
-        Run this in `select_date_range` for aggregated sources."""
+        Run this in `select_date_range` for aggregated sources. This can be run more than once.
+        """
 
-        if not hasattr(self, "source"):
-            self.source
+        if not hasattr(self, "target"):
+            self.target
 
         kwargs = self._params["transform_kwargs"]
 
@@ -103,8 +97,8 @@ class DatasetTransform(GenericTransform):
 
         if self._ds is None:
 
-            if not hasattr(self, "source"):
-                self.source
+            if not hasattr(self, "target"):
+                self.target
 
             kwargs = self._params["transform_kwargs"]
 

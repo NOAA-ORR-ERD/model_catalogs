@@ -195,14 +195,6 @@ def setup(override=False):
         save_catalog=False,
     )
 
-    # expose target source and urlpath right away
-    # cat.source code is in process.py
-    [
-        main_cat[cat][source].source
-        for cat in list(main_cat)
-        for source in list(main_cat[cat])
-    ]
-
     return main_cat
 
 
@@ -436,10 +428,6 @@ def find_availability(cat, timings=None, override=False):
         cat_path=None,
         save_catalog=False,
     )
-
-    # expose target source and urlpath right away
-    # cat.source code is in process.py
-    [new_user_cat[source].source for source in list(new_user_cat)]
 
     return new_user_cat
 
