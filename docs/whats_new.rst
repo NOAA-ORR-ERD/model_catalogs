@@ -9,6 +9,7 @@ v0.4.0 (unreleased)
 * Improved behavior in aggregated NOAA OFS file selection for seamless time series between days with no forecast included and the final day of the selection that includes a forecast.
 * Updated many details in `Model Aggregations <https://model-catalogs.readthedocs.io/en/latest/aggregations.html#>`_ page of docs.
 * Package now available on conda-forge!
+* `source.follow_target()` was renamed `source.target`. It exposes the original catalog information, which is the target of the source transform. It is a property now instead of a method.
 
 
 v0.3.0 (September 9, 2022)

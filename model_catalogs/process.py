@@ -35,10 +35,18 @@ class DatasetTransform(GenericTransform):
     optional_params = {}
     _ds = None
 
-    def follow_target(self):
+    @property
+    def urlpath(self):
+        if not hasattr(self, "_urlpath"):
+            self.target
+        return self._urlpath
+
+    @property
+    def target(self):
         """Connect target into Transform
 
-        This way can expose some information to query."""
+        This way can expose some information to query. This will only run once per object.
+        """
 
         # all functions here call follow_target to start
         # need to pick the source only once
@@ -58,30 +66,39 @@ class DatasetTransform(GenericTransform):
             # self is of type DatasetTransform instead of OpenDapSource
             # since the OpenDapSource is the target of the Transform
             # but make it easy to check urlpath
-            self.urlpath = self._source.urlpath
+            self._urlpath = self._source.urlpath
+
+        return self._source
 
     def update_urlpath(self):
         """Update urlpath for transform.
 
-        Run this in `select_date_range` for aggregated sources."""
+        Run this in `select_date_range` for aggregated sources. This can be run more than once.
+        """
 
-        self.follow_target()
+        if not hasattr(self, "target"):
+            self.target
 
         kwargs = self._params["transform_kwargs"]
 
+        # this is the one that is used when .to_dask() is run
         self._source.urlpath = kwargs["urlpath"]
+
+        # but this one is printed when looking at the source, so better change it too
+        self._source._captured_init_kwargs["urlpath"] = kwargs["urlpath"]
 
         # self is of type DatasetTransform instead of OpenDapSource
         # since the OpenDapSource is the target of the Transform
         # but make it easy to check urlpath
-        self.urlpath = kwargs["urlpath"]
+        self._urlpath = kwargs["urlpath"]
 
     def to_dask(self):
         """Makes it so can read in model output."""
 
         if self._ds is None:
 
-            self.follow_target()
+            if not hasattr(self, "target"):
+                self.target
 
             kwargs = self._params["transform_kwargs"]
 
