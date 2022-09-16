@@ -51,7 +51,7 @@ def file2dt(filename):
     """
 
     # strip off path if present since can mess up the matching
-    filename = filename.split('/')[-1]
+    filename = filename.split("/")[-1]
 
     # read in date from filename
     date = pd.to_datetime(filename, format="%Y%m%d", exact=False)  # has time 00:00
@@ -61,23 +61,23 @@ def file2dt(filename):
     cycle = int(regex.findall(filename)[0][2:4])
 
     # LSOFS, LOOFS, NYOFS: multiple times per file
-    if fnmatch.fnmatch(filename, '*.nowcast.*'):
+    if fnmatch.fnmatch(filename, "*.nowcast.*"):
 
         date = [date + pd.Timedelta(f"{cycle - dt} hours") for dt in range(6)[::-1]]
 
     # LSOFS, LOOFS, NYOFS: multiple times per file
-    elif fnmatch.fnmatch(filename, '*.forecast.*'):
+    elif fnmatch.fnmatch(filename, "*.forecast.*"):
 
         # models all have different forecast lengths!
-        if 'lsofs' in filename or 'loofs' in filename:
+        if "lsofs" in filename or "loofs" in filename:
             nfiles = 60
-        elif 'nyofs' in filename:
+        elif "nyofs" in filename:
             nfiles = 54
 
         date = [date + pd.Timedelta(f"{cycle + 1 + dt} hours") for dt in range(nfiles)]
 
     # Main style of NOAA OFS files, 1 file per time step
-    elif fnmatch.fnmatch(filename, '*.n???.*') or fnmatch.fnmatch(filename, '*.f???.*'):
+    elif fnmatch.fnmatch(filename, "*.n???.*") or fnmatch.fnmatch(filename, "*.f???.*"):
 
         # pull hours from filename
         regex = re.compile(".[n,f][0-9]{3}.")
@@ -87,7 +87,7 @@ def file2dt(filename):
         dt = cycle + hour
 
         # if nowcast file, subtract 6 hours
-        if fnmatch.fnmatch(filename, '*.n???.*'):
+        if fnmatch.fnmatch(filename, "*.n???.*"):
             dt -= 6
 
         # construct datetime. dt might be negative.
@@ -387,8 +387,10 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
         fnames_now = find_nowcast_cycles(strings, pattern)
 
         if len(fnames) == 0:
-            raise ValueError(f"Error finding filenames. Filenames found so far: {fnames}. "
-                             "Maybe you have the wrong source for the days requested.")
+            raise ValueError(
+                f"Error finding filenames. Filenames found so far: {fnames}. "
+                "Maybe you have the wrong source for the days requested."
+            )
 
         # prepend fnames with the nowcast files for the day until the first already-selected fnames file
         fnames = fnames_now[: fnames_now.index(fnames[0])] + fnames

@@ -10,6 +10,8 @@ import xarray as xr
 
 from intake.source.derived import GenericTransform
 
+import model_catalogs as mc
+
 
 # extract_model might be necessary for reading in model output, if using FVCOM model
 try:
@@ -40,6 +42,24 @@ class DatasetTransform(GenericTransform):
         if not hasattr(self, "_urlpath"):
             self.target
         return self._urlpath
+
+    @property
+    def dates(self):
+        """Dates associated with urlpath files
+
+        ...if there is more than one. Doesn't work for static links).
+
+        Currently not implemented for RTOFS models. So, this is really for NOAA OFS models.
+        """
+
+        if "rtofs" in self.urlpath[0]:
+            raise NotImplementedError("Dates is not implemented for RTOFS models yet.")
+        elif len(self.urlpath) > 1:
+            self._dates = [mc.file2dt(url) for url in self.urlpath]
+        else:
+            self._dates = None
+
+        return self._dates
 
     @property
     def target(self):

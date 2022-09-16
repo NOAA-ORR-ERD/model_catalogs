@@ -4,6 +4,7 @@ Everything dealing with the catalogs.
 
 import warnings
 
+from datetime import datetime
 from pathlib import Path
 
 import cf_xarray  # noqa
@@ -13,10 +14,9 @@ import pandas as pd
 import yaml
 
 from datetimerange import DateTimeRange
+from dateutil.parser import parse
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
-from dateutil.parser import parse
-from datetime import datetime
 
 import model_catalogs as mc
 
@@ -555,8 +555,8 @@ def select_date_range(
 
     # If end_date contains the default input time options from dateutil, assume a time wasn't input
     # in which case change end_date to the very end of the day
-    if parse(mc.astype(end_date, str), default=DEFAULT).strftime('%H%M%S') == '222222':
-        end_date = pd.Timestamp(end_date).normalize() + pd.Timedelta('23:59:59')
+    if parse(mc.astype(end_date, str), default=DEFAULT).strftime("%H%M%S") == "222222":
+        end_date = pd.Timestamp(end_date).normalize() + pd.Timedelta("23:59:59")
 
     # make sure they are both Timestamps
     start_date = mc.astype(start_date, pd.Timestamp)
@@ -566,7 +566,7 @@ def select_date_range(
     # in this case, rewrite the metadata start/end dates since won't make sense otherwise
     if start_date == end_date:
         start_date = pd.Timestamp(start_date).normalize()
-        end_date = start_date + pd.Timedelta('23:59:59')
+        end_date = start_date + pd.Timedelta("23:59:59")
         # start_date_meta = end_date_meta = str(start_date.date())
 
     # if there is only one timing, use it
@@ -637,13 +637,13 @@ def select_date_range(
             forecast_forward = True
         # if not using forecast files, bring in subsequent days files to be able to get all times of day
         elif not forecast_forward:
-            end_date_use = end_date.normalize() + pd.Timedelta('1 day')
+            end_date_use = end_date.normalize() + pd.Timedelta("1 day")
         else:
             end_date_use = end_date
 
         # Include filenames from the day before start_date in order to get a complete day since model
         # files are shifted in time.
-        start_date_use = start_date.normalize() - pd.Timedelta('1 day')
+        start_date_use = start_date.normalize() - pd.Timedelta("1 day")
 
         # loop over dates
         filelocs_urlpath = []
@@ -700,7 +700,7 @@ def select_date_range(
             filenames.extend([fname] * len(filedate))
             filedates.extend(filedate)
         # filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
-        df = pd.DataFrame(index=filedates, data={'filenames': filenames})
+        df = pd.DataFrame(index=filedates, data={"filenames": filenames})
 
         # in this case, change end_date to the end of the forecast range
         if all_forecast:
@@ -710,10 +710,7 @@ def select_date_range(
         files_to_use = df[start_date:end_date]
 
         # get only unique files and change to list
-        files_to_use = list(pd.unique(files_to_use['filenames']))
-
-        # save dates to source in case want to check
-        source.dts = df[start_date:end_date].index
+        files_to_use = list(pd.unique(files_to_use["filenames"]))
 
         # This is how we input the newly found urlpaths in so they will be used
         # in the processing of the dataset, and overwrite the old urlpath

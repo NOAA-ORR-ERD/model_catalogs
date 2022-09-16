@@ -175,6 +175,20 @@ which would return
 
 There is a function in `model_catalogs` that interprets the known NOAA OFS model file names and returns the datetime(s) in the file. Here is how to use that:
 
+```
+import model_catalogs as mc
+main_cat = mc.setup()
+[mc.file2dt(url) for url in main_cat['NGOFS2']['forecast'].urlpath]
+```
+
+returns, for example:
+
+```
+[Timestamp('2022-09-14 21:00:00'), Timestamp('2022-09-15 00:00:00')]
+```
+
+Once `mc.select_date_range()` has been run, which overwrites the example files in `source.urlpath` with the file locations for the date range entered, there would be more/different urlpath file locations and dates, accordingly. The dates associated with the `urlpath` can also be checked with `source.dates`.
+
 ### How to Extend
 
 #### Aggregation of full files
@@ -186,8 +200,9 @@ Add another conditional statement in ``mc.select_date_range()`` for the new mode
 
 Aggregating part of a set of files requires an additional step. You would need to first find the set of files to aggregate as in the previous listing. However, to select which times from the files you want to keep you would need to run preprocessing code on each file as it is being read in with ``xarray``'s ``open_mfdataset()``. A good approach to set this up would be:
 
-- in the new catalog file, have an argument that will go to the xarray read in step called `preprocess` that indicates preprocessing is necessary, for example part of the catalog file would look like::
+- in the new catalog file, have an argument that will go to the xarray read in step called `preprocess` that indicates preprocessing is necessary, for example part of the catalog file would look like:
 
+```
     name: CBOFS
     sources:
       nowcast:
@@ -199,5 +214,6 @@ Aggregating part of a set of files requires an additional step. You would need t
       parallel: True
       engine: netcdf4
       preprocess: True
+```
 
 - in ``model_catalogs`` ``process.py``, a conditional statement can look for the ``preprocess: True`` flag and if present, run preprocessing code for this case that will pull out the first N timesteps of each model output file.

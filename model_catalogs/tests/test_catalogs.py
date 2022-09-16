@@ -295,8 +295,6 @@ def test_urlpath_after_select():
     )
 
     known_filenames = [
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t03z.nc",
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t03z.nc",
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t03z.nc",
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t03z.nc",
@@ -319,6 +317,8 @@ def test_urlpath_after_select():
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t21z.nc",
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t21z.nc",
         "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t21z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220102.t03z.nc",
+        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220102.t03z.nc",
     ]
 
     assert source.urlpath == known_filenames
