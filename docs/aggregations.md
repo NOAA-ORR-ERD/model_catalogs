@@ -6,12 +6,20 @@
 
 All of the NOAA OFS models available through ``model_catalogs`` have model output available that is unaggregated. They are unaggregated in that there are nowcast and forecast model output files available, but which files to use and the order of the files is not apparent from the thredds server. A subset of the files need to be aggregated in a particular way to get a coherent time series from the files.
 
-Building an aggregation requires understanding their naming conventions:
+Building an aggregation requires understanding their naming conventions. Most NOAA OFS models follow this convention:
 
-- 2-D surface field output: nos.wcofs.2ds.[n|f]HHH.YYYYMMDD.tCCz.nc
-- 3-D field output: nos.wcofs.fields.[n|f]HHH.YYYYMMDD.tCCz.nc
+- 2-D surface field output: `nos.MODELNAME.2ds.[n|f]HHH.YYYYMMDD.tCCz.nc`
+- 3-D field output: `nos.MODELNAME.fields.[n|f]HHH.YYYYMMDD.tCCz.nc`
 
-Where [nowcast/forecast] or [n/f] denotes either the nowcast or forecast results; YYYYMMDD is the date of the model run, tCCz is the cycle of the day; HHH is the nowcast or forecast hour.
+where `MODELNAME` is the short model name (e.g. `WCOFS`), `[n|f]` denotes either the nowcast or forecast results, `YYYYMMDD` is the date of the model run, `tCCz` is the cycle of the day, `HHH` is the nowcast or forecast hour, and there is one model output per file.
+
+However, LSOFS, LOOFS, and NYOFS follow a different convention. For 3-D field outputs:
+
+- LSOFS: `glofs.lsofs.fields.[nowcast|forecast].YYYYMMDD.tCCz.nc`
+- LOOFS: `glofs.loofs.fields.[nowcast|forecast].YYYYMMDD.tCCz.nc`
+- NYOFS: `nos.nyofs.fields.[nowcast|forecast].YYYYMMDD.tCCz.nc`
+
+where `[nowcast|forecast]` denotes either the nowcast or forecast results, `tCCz` is the cycle of the day and there are 6 model outputs per file.
 
 ### File selection and order
 
@@ -19,48 +27,60 @@ Where [nowcast/forecast] or [n/f] denotes either the nowcast or forecast results
 
 Usually, nowcast and forecast files are created four times a day, and output is hourly in individual files. So, each update generates 6 nowcast files and 48 forecast files (though the forecast time varies by model). The update cycle time will be the last model output timestep in the nowcast files and the first timestep in the forecast files.
 
-Example filenames from one update cycle (20141027.t15z):
+Example filenames from one update cycle (`20141027.t15z`):
 
 Nowcast:
 
-- nos.ngofs.fields.n000.20141027.t15z.nc
-- nos.ngofs.fields.n001.20141027.t15z.nc
+- `nos.ngofs.fields.n000.20141027.t15z.nc`
+- `nos.ngofs.fields.n001.20141027.t15z.nc`
 - ...
-- nos.ngofs.fields.n006.20141027.t15z.nc
+- `nos.ngofs.fields.n006.20141027.t15z.nc`
 
 Forecast:
 
-- nos.ngofs.fields.f000.20141027.t15z.nc
-- nos.ngofs.fields.f002.20141027.t15z.nc
+- `nos.ngofs.fields.f000.20141027.t15z.nc`
+- `nos.ngofs.fields.f002.20141027.t15z.nc`
 - ...
-- nos.ngofs.fields.f048.20141027.t15z.nc
+- `nos.ngofs.fields.f048.20141027.t15z.nc`
 
 So to make a time series, use subsequent nowcasts updates strung together sequentially
 by update date/time then by ``n0001``-``n006``. If a file with ``n000`` is present, leave it off because it is a duplicate of the previous nowcast cycle.
 
 Similarly append the forecast that is the same update cycle as the most recent nowcast. If a file with ``f000`` is present, leave off as it overlaps with the nowcast ``n006`` file.
 
+LSOFS, LOOFS, and NYOFS are different. A sequence of files to make a sequence forward in time with a forecast looks like:
+
+ - `glofs.lsofs.fields.nowcast.20220916.t00z.nc`
+ - `glofs.lsofs.fields.nowcast.20220916.t06z.nc`
+ - `glofs.lsofs.fields.nowcast.20220916.t12z.nc`
+ - `glofs.lsofs.fields.forecast.20220916.t12z.nc`
 
 #### Nowcast cycles
 
 To create a time series for a day if you don't want the forecast, you use only nowcast files. The pattern you should use is:
 
- - nos.creofs.fields.n001.20220912.t03z.nc
- - nos.creofs.fields.n002.20220912.t03z.nc
+ - `nos.creofs.fields.n001.20220912.t03z.nc`
+ - `nos.creofs.fields.n002.20220912.t03z.nc`
  - ...
- - nos.creofs.fields.n006.20220912.t03z.nc
- - nos.creofs.fields.n001.20220912.t09z.nc
+ - `nos.creofs.fields.n006.20220912.t03z.nc`
+ - `nos.creofs.fields.n001.20220912.t09z.nc`
  - ...
- - nos.creofs.fields.n006.20220912.t09z.nc
- - nos.creofs.fields.n001.20220912.t15z.nc
+ - `nos.creofs.fields.n006.20220912.t09z.nc`
+ - `nos.creofs.fields.n001.20220912.t15z.nc`
  - ...
- - nos.creofs.fields.n006.20220912.t15z.nc
- - nos.creofs.fields.n001.20220912.t21z.nc
+ - `nos.creofs.fields.n006.20220912.t15z.nc`
+ - `nos.creofs.fields.n001.20220912.t21z.nc`
  - ...
- - nos.creofs.fields.n006.20220912.t21z.nc
+ - `nos.creofs.fields.n006.20220912.t21z.nc`
 
 where ``n000`` files have been left off the list since they are duplicates.
 
+For LSOFS, LOOFS, and NYOFS, a day of model output with no forecast looks like:
+
+ - `glofs.lsofs.fields.nowcast.20220915.t00z.nc`
+ - `glofs.lsofs.fields.nowcast.20220915.t06z.nc`
+ - `glofs.lsofs.fields.nowcast.20220915.t12z.nc`
+ - `glofs.lsofs.fields.nowcast.20220915.t18z.nc`
 
 ### Datetimes associated with files by filename
 
@@ -150,6 +170,10 @@ which would return
 ```
 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/CBOFS/MODELS/catalog.xml'
 ```
+
+### Translate NOAA OFS filenames to datetimes
+
+There is a function in `model_catalogs` that interprets the known NOAA OFS model file names and returns the datetime(s) in the file. Here is how to use that:
 
 ### How to Extend
 

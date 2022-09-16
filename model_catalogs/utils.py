@@ -22,7 +22,7 @@ import model_catalogs as mc
 def astype(value, type_):
     """Return string or list as list"""
     if not isinstance(value, type_):
-        if type_ == list and isinstance(value, (str, pathlib.PosixPath)):
+        if type_ == list and isinstance(value, (str, pathlib.PosixPath, pd.Timestamp)):
             return [value]
         return type_(value)
     return value

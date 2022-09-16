@@ -533,19 +533,25 @@ def select_date_range(
 
     """
 
-    if not forecast_forward and end_date is None:
-        raise ValueError("If `forecast_forward` is False, `end_date` is required.")
+    # end_date is optional. if None and forecast_forward, return all available days and forecast at end
+    # if None and not forecast_forward, return one day, start_date
+    all_forecast = False
+    if end_date is None:
+        if forecast_forward:
+            end_date = pd.Timestamp.today()
+            all_forecast = True
+        else:
+            end_date = start_date
+    #
+    # if forecast_forward and end_date is None:
+    #     end_date = pd.Timestamp.today()
+    #     all_forecast = True
+    # else:
+    #     all_forecast = False
 
-    # end_date not required with forecast_forward — will return all available days and forecast at end
-    if forecast_forward and end_date is None:
-        end_date = pd.Timestamp.today()
-        all_forecast = True
-    else:
-        all_forecast = False
-
-    # these are stored in metadata
-    start_date_meta = start_date
-    end_date_meta = end_date
+    # # these are stored in metadata
+    # start_date_meta = start_date
+    # end_date_meta = end_date
 
     # If end_date contains the default input time options from dateutil, assume a time wasn't input
     # in which case change end_date to the very end of the day
@@ -561,7 +567,7 @@ def select_date_range(
     if start_date == end_date:
         start_date = pd.Timestamp(start_date).normalize()
         end_date = start_date + pd.Timedelta('23:59:59')
-        start_date_meta = end_date_meta = str(start_date.date())
+        # start_date_meta = end_date_meta = str(start_date.date())
 
     # if there is only one timing, use it
     if timing is None and len(list(cat)) == 1:
@@ -687,8 +693,14 @@ def select_date_range(
             filelocs_urlpath.extend(agg_filelocs)
 
         # set up dataframe of datetimes to filenames
-        filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
-        df = pd.DataFrame(index=filedts, data={'filenames': filelocs_urlpath})
+        # 1+ number of times possible from mc.file2dt, need the number of filenames to match
+        filedates, filenames = [], []
+        for fname in filelocs_urlpath:
+            filedate = mc.astype(mc.file2dt(fname), list)
+            filenames.extend([fname] * len(filedate))
+            filedates.extend(filedate)
+        # filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
+        df = pd.DataFrame(index=filedates, data={'filenames': filenames})
 
         # in this case, change end_date to the end of the forecast range
         if all_forecast:
@@ -697,9 +709,15 @@ def select_date_range(
         # Narrow the files used to the actual requested datetime range
         files_to_use = df[start_date:end_date]
 
+        # get only unique files and change to list
+        files_to_use = list(pd.unique(files_to_use['filenames']))
+
+        # save dates to source in case want to check
+        source.dts = df[start_date:end_date].index
+
         # This is how we input the newly found urlpaths in so they will be used
         # in the processing of the dataset, and overwrite the old urlpath
-        source._captured_init_kwargs["transform_kwargs"]["urlpath"] = list(files_to_use['filenames'])
+        source._captured_init_kwargs["transform_kwargs"]["urlpath"] = files_to_use
 
         # Then run the transform for urlpath to pass that info on
         source.update_urlpath()
@@ -707,9 +725,9 @@ def select_date_range(
     # Pass start and end dates to the transform so they can be implemented
     # there for static and deterministic model files (includes RTOFS) as well
     # as the OFS aggregated models.
-    source._captured_init_kwargs["transform_kwargs"]["start_date"] = str(start_date_meta)
-    source._captured_init_kwargs["transform_kwargs"]["end_date"] = str(end_date_meta)
-
+    source._captured_init_kwargs["transform_kwargs"]["start_date"] = str(start_date)
+    source._captured_init_kwargs["transform_kwargs"]["end_date"] = str(end_date)
+    print(start_date, end_date)
     # store info in source_orig
     metadata = {
         "timing": timing,
