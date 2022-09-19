@@ -9,11 +9,15 @@ them instead.
 
 import warnings
 
+import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 import yaml
 
 import model_catalogs as mc
+
+from model_catalogs import process
 
 
 def test_setup():
@@ -318,3 +322,28 @@ def test_urlpath_after_select():
     ]
 
     assert source.urlpath == known_filenames
+
+
+def test_setting_std_name():
+    """Test updating standard name metadata attributes."""
+    lon = xr.DataArray(
+        data=np.arange(360), dims=("lon",), attrs={"units": "degrees_east"}
+    )
+    lat = xr.DataArray(
+        data=np.arange(-90, 90), dims=("lat",), attrs={"units": "degrees_north"}
+    )
+    temp = xr.DataArray(
+        data=np.arange(360 * 180).reshape(180, 360),
+        dims=("lat", "lon"),
+        attrs={"units": "degrees_C"},
+    )
+    ds = xr.Dataset({"lon": lon, "lat": lat, "temp": temp})
+    metadata = {
+        "standard_names": {
+            "longitude": ["lon"],
+            "latitude": ["lat"],
+        }
+    }
+    ds = process.add_attributes(ds, metadata=metadata)
+    assert ds["lon"].attrs["standard_name"] == "longitude"
+    assert ds["lat"].attrs["standard_name"] == "latitude"
