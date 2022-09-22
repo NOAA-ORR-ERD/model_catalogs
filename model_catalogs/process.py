@@ -1,6 +1,8 @@
 """
 This file contains all information for transforming the Datasets.
 """
+import warnings
+
 from typing import Optional
 
 import cf_xarray  # noqa
@@ -9,6 +11,8 @@ import pandas as pd
 import xarray as xr
 
 from intake.source.derived import GenericTransform
+
+import model_catalogs as mc
 
 
 # extract_model might be necessary for reading in model output, if using FVCOM model
@@ -37,15 +41,54 @@ class DatasetTransform(GenericTransform):
 
     @property
     def urlpath(self):
+        """Data location for target
+
+        Returns
+        -------
+        list
+            Location(s) for where data can be found
+        """
+
         if not hasattr(self, "_urlpath"):
             self.target
         return self._urlpath
+
+    @property
+    def dates(self):
+        """Dates associated with urlpath files
+
+        ...if there is more than one. Doesn't work for static links).
+
+        Currently not implemented for RTOFS models. So, this is really for NOAA OFS models.
+
+        Returns
+        -------
+        list
+            Ordered dates to match `urlpath` locations.
+        """
+
+        if "rtofs" in self.urlpath[0]:
+            raise NotImplementedError("Dates is not implemented for RTOFS models yet.")
+        elif isinstance(self.urlpath, list):
+            dates = []
+            for url in self.urlpath:
+                dates.extend(mc.astype(mc.file2dt(url), list))
+            self._dates = dates
+        else:
+            self._dates = None
+
+        return self._dates
 
     @property
     def target(self):
         """Connect target into Transform
 
         This way can expose some information to query. This will only run once per object.
+
+        Returns
+        -------
+        Intake Source
+            Source that is the target of the object Transform
         """
 
         # all functions here call follow_target to start
@@ -93,7 +136,13 @@ class DatasetTransform(GenericTransform):
         self._urlpath = kwargs["urlpath"]
 
     def to_dask(self):
-        """Makes it so can read in model output."""
+        """Makes it so can read in model output.
+
+        Returns
+        -------
+        Dataset
+            xarray Dataset that has been read in
+        """
 
         if self._ds is None:
 
@@ -109,9 +158,9 @@ class DatasetTransform(GenericTransform):
             # replaced since it might be a mistake
             if "sample_locs" in self._source.metadata:
                 if self._source.urlpath == self._source.metadata["sample_locs"]:
-                    # CHANGE TO LOGGER WARNING and also print warning
-                    print(
-                        "Note that you are using the original example files in your input source. You may want to instead first run `mc.select_date_range()` to search for and add the correct model output files for your desired date range, then run `to_dask()`."  # noqa: E501
+                    warnings.warn(
+                        "Note that you are using the original example files in your input source. You may want to instead first run `mc.select_date_range()` to search for and add the correct model output files for your desired date range, then run `to_dask()`.",  # noqa: E501
+                        UserWarning,
                     )
 
             # Make sure that user has filled in urlpath if needed: OFS hindcast
@@ -133,6 +182,9 @@ class DatasetTransform(GenericTransform):
                 self._source.to_dask(),
                 metadata=self.metadata,
             )
+
+            # drop any time duplicates that may be present (RTOFS can have)
+            self._ds = self._ds.drop_duplicates(dim=self._ds.cf.axes["T"])
 
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time
@@ -162,7 +214,8 @@ def add_attributes(ds, metadata: Optional[dict] = None):
 
     Returns
     -------
-    Improved Dataset.
+    Dataset
+        Improved Dataset.
     """
     # set standard_names for all variables
     if metadata is not None and "standard_names" in metadata:

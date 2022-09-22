@@ -9,7 +9,7 @@ model_catalogs
 [![Python Package Index](https://img.shields.io/pypi/v/model_catalogs.svg?style=for-the-badge)](https://pypi.org/project/model_catalogs)
 
 
-Provides access through Intake catalogs to a set of ocean models, especially the NOAA OFS models.
+Provides access through Intake catalogs to a set of ocean models, especially the NOAA OFS models. In particular, this package is good for working with unaggregated NOAA OFS models.
 
 Specific functionality includes:
 * Sets up an `Intake` catalog for known models to provide direct access to model output.
@@ -32,6 +32,7 @@ Specific functionality includes:
     * Full 3D fields, or regularly gridded or 2D versions when available
   * GFS models
   * Global GOFS HYCOM
+  * RTOFS models
 * Multiple time ranges and sources of model output are provided when known. For example for the NOAA OFS models there are both forecast and historical sources for all models, and some have others as well.
 * `model_catalogs` knows how to aggregate NOAA OFS model output between nowcast and forecast files.
 * Known models have cleaned up and filled-in metadata so they are easy to work with in `xarray` and with `cf-xarray`.

@@ -22,10 +22,11 @@ from .utils import (  # noqa
     agg_for_date,
     astype,
     calculate_boundaries,
+    file2dt,
+    filedates2df,
     find_bbox,
     find_catrefs,
     find_filelocs,
-    get_dates_from_ofs,
     get_fresh_parameter,
     is_fresh,
 )
