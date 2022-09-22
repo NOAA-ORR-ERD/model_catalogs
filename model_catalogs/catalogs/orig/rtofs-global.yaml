@@ -10,6 +10,42 @@ metadata:
 sources:
   forecast:
     driver: opendap
+    description: Daily 3D Real-Time Ocean Forecast System model in HYCOM yesterday through 8 day forecast from yesterday.
+    parameters:
+      yesterday:
+        description: Pandas like Timestamp for yesterday
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+    args:
+      chunks:
+        time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
+    metadata:
+      overall_start_datetime: 'Daily starting 1 day before present day.'
+      overall_end_datetime: '7 days after present day'
+      output_period_(hr): 24
+      axis:
+        T: time
+        X: lon
+        Y: lat
+        Z: lev
+      standard_names:
+        eastward_sea_water_velocity: u
+        northward_sea_water_velocity: v
+        sea_water_temperature: temperature
+        sea_water_practical_salinity: salinity
+        time: time
+  nowcast:
+    driver: opendap
     description: Daily 3D Real-Time Ocean Forecast System model in HYCOM for present day through 8 day forecast.
     parameters:
       tod:
@@ -30,42 +66,6 @@ sources:
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
-    metadata:
-      overall_start_datetime: 'Daily starting present day.'
-      overall_end_datetime: '8 days after present day'
-      output_period_(hr): 24
-      axis:
-        T: time
-        X: lon
-        Y: lat
-        Z: lev
-      standard_names:
-        eastward_sea_water_velocity: u
-        northward_sea_water_velocity: v
-        sea_water_temperature: temperature
-        sea_water_practical_salinity: salinity
-        time: time
-  nowcast:
-    driver: opendap
-    description: Daily 3D Real-Time Ocean Forecast System model in HYCOM yesterday through 8 day forecast.
-    parameters:
-      yesterday:
-        description: Pandas like Timestamp for yesterday
-        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
-    args:
-      chunks:
-        time: 1
-      compat: override
-      combine: by_coords
-      parallel: True
-      data_vars: minimal
-      coords: minimal
-      engine: netcdf4
-      urlpath:
-        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_salt"
-        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_temp"
-        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
-        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
     metadata:
       overall_start_datetime: 'Daily starting present day.'
       overall_end_datetime: '8 days after present day'
