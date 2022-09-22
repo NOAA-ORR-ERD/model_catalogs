@@ -10,7 +10,46 @@ metadata:
 sources:
   forecast:
     driver: opendap
-    description: 3-hourly 2D Real-Time Ocean Forecast System model in HYCOM from yesterday through 7 day forecast.
+    description: 3-hourly 2D Real-Time Ocean Forecast System model in HYCOM from yesterday through 7 day forecast from yesterday.
+    parameters:
+      yesterday:
+        description: Pandas like Timestamp for yesterday
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+    args:
+      chunks:
+        time: 1
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      engine: netcdf4
+      urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_forecast_3hrly_diag"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_forecast_3hrly_ice"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_forecast_3hrly_prog"
+    metadata:
+      overall_start_datetime: '1 day before present day.'
+      overall_end_datetime: '6 days after present day'
+      output_period_(hr): 3
+      axis:
+        T: time
+        X: lon
+        Y: lat
+        Z: lev
+      standard_names:
+        eastward_sea_water_velocity: u_velocity
+        northward_sea_water_velocity: v_velocity
+        sea_ice_area_fraction: ice_coverage
+        sea_ice_thickness: ice_thickness
+        sea_surface_elevation: ssh
+        sea_water_temperature: sst
+        sea_water_practical_salinity: sss
+        time: time
+
+  forecast2:
+    driver: opendap
+    description: 3-hourly 2D Real-Time Ocean Forecast System model in HYCOM from today through 7 day forecast.
     parameters:
       tod:
         description: Pandas like Timestamp for today
@@ -30,7 +69,7 @@ sources:
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_2ds_forecast_3hrly_ice"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_2ds_forecast_3hrly_prog"
     metadata:
-      overall_start_datetime: '1 day before present day.'
+      overall_start_datetime: 'Present day.'
       overall_end_datetime: '7 days after present day'
       output_period_(hr): 3
       axis:
@@ -50,12 +89,15 @@ sources:
 
   nowcast:
     driver: opendap
-    description: Hourly 2D Real-Time Ocean Forecast System model in HYCOM for yesterday.
+    description: Hourly 2D Real-Time Ocean Forecast System model in HYCOM from 2 days ago through yesterday.
     parameters:
       tod:
         description: Pandas like Timestamp for today
         type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
         default: today
+      yesterday:
+        description: Pandas like Timestamp for yesterday
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
     args:
       chunks:
         time: 1
@@ -66,11 +108,14 @@ sources:
       coords: minimal
       engine: netcdf4
       urlpath:
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_diag"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_ice"
+        - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_prog"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_diag"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_ice"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_2ds_nowcast_hrly_prog"
     metadata:
-      overall_start_datetime: 'Hourly starting yesterday.'
+      overall_start_datetime: 'Hourly starting 2 days before present day.'
       overall_end_datetime: '1 day before present time'
       output_period_(hr): 1
       axis:
