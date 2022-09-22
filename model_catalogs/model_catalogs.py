@@ -287,63 +287,15 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             # second make sure we only count when dates are consecutive, since servers tend to have some
             # spotty model output at the earliest dates get dates from file names
             df = mc.filedates2df(filelocs)
-            # # set up dataframe of datetimes to filenames
-            # # 1+ number of times possible from mc.file2dt, need the number of filenames to match
-            # filedates, filenames = [], []
-            # for fname in filelocs:
-            #     filedate = mc.astype(mc.file2dt(fname), list)
-            #     filenames.extend([fname] * len(filedate))
-            #     filedates.extend(filedate)
-            # # filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
-            # df = pd.DataFrame(index=filedates, data={"filenames": filenames})
-            # import pdb; pdb.set_trace()
-            # # Narrow the files used to the actual requested datetime range
-            # files_to_use = df[start_date:end_date]
-            # # get only unique files and change to list
-            # files_to_use = list(pd.unique(files_to_use["filenames"]))
-
-            # import pdb; pdb.set_trace()
 
             # which differences in consecutive dates are over 1 day
             ddf = pd.Series(df.index).diff() > pd.Timedelta("1 day")
-
-            # import pdb; pdb.set_trace()
-            # all_dates = [
-            #     pd.to_datetime(fileloc, format="%Y%m%d", exact=False)
-            #     for fileloc in filelocs
-            # ]
-            # unique_dates = list(set(all_dates))
-            #
-            # # if any dates are not consecutive, need to start after that date
-            # df = pd.Series(unique_dates)
-            # ddf = df.diff() > pd.Timedelta(
-            #     "1d"
-            # )
             if ddf.any():
                 # first date after last jump in dates is desired start day
                 start_datetime = str(df.index.where(ddf).dropna()[-1])
-                # # start_day = df.where(ddf).dropna().iloc[-1]
-                # # subset filelocs to match discovered consecutive dates
-                # df = df[start_day:]
-                # # df_filelocs = pd.Series(index=all_dates, data=filelocs)
-                # # filelocs_ss = list(
-                # #     df_filelocs.where(df_filelocs.index >= start_day).dropna().values
-                # # )
-                #
-                # # want first nowcast file (no forecast files available)
-                # start_datetime = df[start_day:]['filenames'][0]
-                # start_datetime = str(
-                #     mc.get_dates_from_ofs(filelocs_ss, filetype, "n", "first")
-                # )
 
             # all dates were fine, so just use earliest fileloc
             else:
-                # running the following gives the actual first time. This might not be necessary in which
-                # case want first nowcast file (no forecast files available)
-                # start_datetime = str(
-                #     mc.get_dates_from_ofs(filelocs, filetype, "n", "first")
-                # )
-                # just use earliest day date
                 start_datetime = str(df.index[0])
         else:
             start_datetime = None
@@ -355,13 +307,6 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             )
             df = mc.filedates2df(filelocs)
             end_datetime = str(df.index[-1])
-
-            # # want last file
-            # if source.name == "hindcast":
-            #     norf = "n"
-            # elif source.name in ("nowcast", "forecast"):
-            #     norf = "f"
-            # end_datetime = str(mc.get_dates_from_ofs(filelocs, filetype, norf, "last"))
         else:
             end_datetime = None
 
@@ -581,28 +526,13 @@ def select_date_range(
             UserWarning,
         )
 
-    # special behavior if these equal
-    # UPDATEif use_forecast_files, set end_date to None to accept all model output that is found
-    #    end_date_loop is set to end_date since that is the day from which to use the forecast output.
-    # if not use_forecast_files, set end_date time to end of the day, end_date_loop to end_date
-    # end_date_loop is only used in the aggregation part of this function, for looping
-    # if start_date == end_date is not None:
-    #     # start_date = pd.Timestamp(start_date).normalize()
-    #     if use_forecast_files:
-    #         end_date_loop = end_date
-    #         end_date = None
-    #     else:
-    #         # end_date = start_date + pd.Timedelta("23:59:59")
-    #         # need this to be an extra day to get all time steps from end_date
-    #         end_date_loop = end_date + pd.Timedelta("1 day")
-
     # set start/end_date_sel, but end_date_sel is overwritten in one unusual case subsequently
     if start_date == end_date is not None:
         start_date_sel = str(start_date.date())
         end_date_sel = str(end_date.date())
 
     else:
-        # If end_date_input contains the default input time options from dateutil, assume a time wasn't input
+        # If end_date_input contains the default input time options from dateutil, assume time not input
         # in which case use date only to retrieve the whole day of output when selecting
         # or end_date_input exactly matches start_date_input
         if (
@@ -645,93 +575,6 @@ def select_date_range(
     elif end_date.date() == today.date():
         end_date_loop = end_date
         use_forecast_files = True
-    # # if end_date is after today, code set use_forecast_files to True and end_date_loop to today
-    # elif end_date.date() > today.date():
-    #     use_forecast_files = True
-
-    # print(start_date_input, start_date_sel, end_date_input, end_date_sel, end_date_loop, use_forecast_files)
-
-    # # end_date is None always means user wants all available output starting with start_date.
-    # elif end_date is None:
-    #     use_forecast_files = True
-    #     end_date_loop = today
-    #
-    # # if end_date is in the future, set use_forecast_files True
-    # elif end_date.date() > today.date():
-    #     use_forecast_files = True
-    #     end_date_loop = today
-    #
-    # # if we are forecasting forward, need end_date to be able to catch all available dates
-    # elif use_forecast_files:
-    #     end_date_loop = end_date
-    #     end_date = None
-    #
-    # # interpret all variables as input
-    # else:
-    #     # need this to be an extra day to get all time steps from end_date
-    #     end_date_loop = end_date + pd.Timedelta("1 day")
-    #
-    # # If end_date_input contains the default input time options from dateutil, assume a time wasn't input
-    # # in which case use date only to retrieve the whole day of output when selecting
-    # # or end_date_input exactly matches start_date_input
-    # if (end_date_input is not None and parse(mc.astype(end_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):# or (start_date_input == end_date_input is not None):
-    #     # user didn't specify time or end_date is None
-    #     # end_date = pd.Timestamp(end_date).normalize() + pd.Timedelta("23:59:59")
-    #     end_date_sel = str(end_date.date()) if end_date is not None else None
-    # else:  # user specified time
-    #     end_date_sel = str(end_date) if end_date is not None else None
-    #     # end_date_sel = str(end_date.date())
-    #
-    # # same but for start_date at the beginning of the day
-    # if (parse(mc.astype(start_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):# or (start_date == end_date is not None):
-    #     # start_date = pd.Timestamp(start_date).normalize()
-    #     start_date_sel = str(start_date.date())
-    # else:
-    #     start_date_sel = str(start_date)
-
-    # import pdb; pdb.set_trace()
-    # # if start_date exactly equals end_date (with times), assume user wants that full day
-    # NEED TO BE ABLE TO ASK FOR TWO DAYS AGO TO YESTERDAY WITH use_forecast_files TO GET FROM TWO DAYS AGO THROUGH
-    # YESTERDAY'S FORECAST
-    # # if start_date and end_date are
-    # if start_date == end_date:
-    #     start_date = pd.Timestamp(start_date).normalize()
-    #     if use_forecast_files:  # None to get all of forecast
-    #         end_date = None
-    #     else:
-    #         end_date = start_date + pd.Timedelta("23:59:59")
-    #
-    #
-    #
-    #
-    #     # For forecast OFS aggregations, the latest date available by catalog day
-    #     # is today, and the forecast files within today extend forward in time.
-    #     # in that case, use today as end date in loop below, and use
-    #     # `use_forecast_files=True`.
-    #     if end_date is None:
-    #         use_forecast_files = True
-    #     if (end_date.date() >= today.date()) and use_forecast_files:
-    #         end_date_loop = today
-    #     if use_forecast_files:
-    #         end_date_loop = start_date
-    #
-    #
-    #     if end_date is None or (end_date.date() >= today.date()):
-    #         end_date_loop = today
-    #         use_forecast_files = True
-    #
-    #
-    #     if end_date is None:
-    #         use_forecast_files = True
-    #         if end_date.date() >= today.date():
-    #             end_date_loop = today
-    #         else:
-    #             end_date_loop = start_date
-    #     # if not using forecast files, bring in subsequent days files to be able to get all times of day
-    #     elif not use_forecast_files:
-    #         end_date_loop = end_date.normalize() + pd.Timedelta("1 day")
-    #     else:
-    #         end_date_loop = end_date
 
     # if there is only one timing, use it
     if timing is None and len(list(cat)) == 1:

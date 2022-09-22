@@ -27,7 +27,6 @@ from .utils import (  # noqa
     find_bbox,
     find_catrefs,
     find_filelocs,
-    # get_dates_from_ofs,
     get_fresh_parameter,
     is_fresh,
 )
