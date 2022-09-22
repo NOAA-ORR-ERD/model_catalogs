@@ -6,12 +6,16 @@
 
 All of the NOAA OFS models available through ``model_catalogs`` have model output available that is unaggregated. They are unaggregated in that there are nowcast and forecast model output files available, but which files to use and the order of the files is not apparent from the thredds server. A subset of the files need to be aggregated in a particular way to get a coherent time series from the files.
 
+#### General
+
 Building an aggregation requires understanding their naming conventions. Most NOAA OFS models follow this convention:
 
 - 2-D surface field output: `nos.MODELNAME.2ds.[n|f]HHH.YYYYMMDD.tCCz.nc`
 - 3-D field output: `nos.MODELNAME.fields.[n|f]HHH.YYYYMMDD.tCCz.nc`
 
 where `MODELNAME` is the short model name (e.g. `WCOFS`), `[n|f]` denotes either the nowcast or forecast results, `YYYYMMDD` is the date of the model run, `tCCz` is the cycle of the day, `HHH` is the nowcast or forecast hour, and there is one model output per file.
+
+#### LSOFS, LOOFS, NYOFS
 
 However, LSOFS, LOOFS, and NYOFS follow a different convention. For 3-D field outputs:
 
@@ -25,7 +29,9 @@ where `[nowcast|forecast]` denotes either the nowcast or forecast results, `tCCz
 
 #### Forecast
 
-Usually, nowcast and forecast files are created four times a day, and output is hourly in individual files. So, each update generates 6 nowcast files and 48 forecast files (though the forecast time varies by model). The update cycle time will be the last model output timestep in the nowcast files and the first timestep in the forecast files.
+##### General
+
+Usually, nowcast and forecast files are created four times a day, and output is hourly in individual files. So, each update generates 6 nowcast files and 48 forecast files (for a 48 hour forecast; the forecast length varies by model). The update cycle time will be the last model output timestep in the nowcast files and the first timestep in the forecast files.
 
 Example filenames from one update cycle (`20141027.t15z`):
 
@@ -48,7 +54,9 @@ by update date/time then by ``n0001``-``n006``. If a file with ``n000`` is prese
 
 Similarly append the forecast that is the same update cycle as the most recent nowcast. If a file with ``f000`` is present, leave off as it overlaps with the nowcast ``n006`` file.
 
-LSOFS, LOOFS, and NYOFS are different. A sequence of files to make a sequence forward in time with a forecast looks like:
+##### LSOFS, LOOFS, NYOFS
+
+LSOFS, LOOFS, and NYOFS are different. They have 6 model outputs per file, and a sequence of files to make a time series forward in time with a forecast looks like:
 
  - `glofs.lsofs.fields.nowcast.20220916.t00z.nc`
  - `glofs.lsofs.fields.nowcast.20220916.t06z.nc`
@@ -56,6 +64,8 @@ LSOFS, LOOFS, and NYOFS are different. A sequence of files to make a sequence fo
  - `glofs.lsofs.fields.forecast.20220916.t12z.nc`
 
 #### Nowcast cycles
+
+##### General
 
 To create a time series for a day if you don't want the forecast, you use only nowcast files. The pattern you should use is:
 
@@ -75,6 +85,8 @@ To create a time series for a day if you don't want the forecast, you use only n
 
 where ``n000`` files have been left off the list since they are duplicates.
 
+##### LSOFS, LOOFS, NYOFS
+
 For LSOFS, LOOFS, and NYOFS, a day of model output with no forecast looks like:
 
  - `glofs.lsofs.fields.nowcast.20220915.t00z.nc`
@@ -84,7 +96,9 @@ For LSOFS, LOOFS, and NYOFS, a day of model output with no forecast looks like:
 
 ### Datetimes associated with files by filename
 
-The datetimes associated with a given NOAA OFS file is not obvious from the file name itself. Here we try to translate. Note that the times are assumed to be in UTC.
+The datetimes associated with a given NOAA OFS file is not obvious from the file name itself. Here we provide some translations. There is also a function in `model_catalogs` that will return the datetime for a NOAA OFS file: `mc.file2dt()`. Note that the times are assumed to be in UTC.
+
+#### General
 
 The ``n006`` file for timing cycle ``t00z`` is at midnight of the day listed in the filename. Files ``n000`` to ``n005`` for timing cycle ``t00z`` count backward in time from there. Forecast files do not have the 6 hour shift backward. The hour in the timing cycle should be added to this convention. Datetime translations are given in the following table for sample files.
 
@@ -95,7 +109,7 @@ The formula are:
 
 <details>
 
-<summary>Datetime Translations</summary>
+<summary>Datetime Translation Examples</summary>
 
 | File Name                              | Time Formula | Resulting Datetime |
 | -------------------------------------- | -- | -- |
@@ -147,6 +161,28 @@ The formula are:
 
  </details>
 
+
+#### LSOFS, LOOFS, NYOFS
+
+Each nowcast model output file for these three models contains 6 model time steps. The last model time step in a given file corresponds to the datetime information in the file name, and the other file times are each an hour previous.
+
+A forecast file contains all time steps for the forecast, the first time of which is an hour after the datetime represented in the file name.
+
+The formula are:
+- Nowcast files: time shifts from midnight on date listed in file = [CC - 5, CC - 4, CC - 3, CC - 2, CC - 1, CC]
+- Forecast files: time shifts from midnight on date listed in file = [CC + 1, CC + 2, ..., CC + N], where N is 60 for LSOFS and LOOFS and N is 54 for NYOFS.
+
+<details>
+
+<summary>Datetime Translation Examples</summary>
+
+| File Name                              | Time Formula | Resulting Datetime |
+| -------------------------------------- | -- | -- |
+| glofs.lsofs.fields.nowcast.20220915.t00z.nc | -5, -4, -3, -2, -1, 0 | [2022-09-14 19:00:00, 2022-09-14 20:00:00, 2022-09-14 21:00:00,2022-09-14 22:00:00,2022-09-14 23:00:00,2022-09-15 00:00:00] |
+| glofs.lsofs.fields.nowcast.20220915.t06z.nc | 1, 2, 3, 4, 5, 6 | [2022-09-15 01:00:00, 2022-09-15 02:00:00, 2022-09-15 03:00:00, 2022-09-15 04:00:00, 2022-09-15 05:00:00, 2022-09-15 06:00:00] |
+| glofs.lsofs.fields.forecast.20220916.t12z.nc | 13, 14, ..., 13+60 | [2022-09-16 13:00:00, 2022-09-16 14:00:00, ..., 2022-09-19 00:00:00] |
+
+</details>
 
 ## Aggregation in ``model_catalogs``
 
