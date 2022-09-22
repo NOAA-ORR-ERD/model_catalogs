@@ -47,8 +47,10 @@ def make_catalog(
        Dictionary of metadata for overall catalog.
     cat_driver: str or Intake object or list
        Driver to apply to all catalog entries. For example:
-       * intake.catalog.local.YAMLFileCatalog
-       * 'opendap'
+
+       * `intake.catalog.local.YAMLFileCatalog`
+       * `'opendap'`
+
        If list, must be same length as cats and contains drivers that
        correspond to cats.
     cat_path: Path object, optional
@@ -59,16 +61,16 @@ def make_catalog(
 
     Returns
     -------
-
-    Intake catalog.
+    Intake Catalog
+        A single catalog made from multiple catalogs or sources.
 
     Examples
     --------
 
     Make catalog:
 
-    >>> make_catalog([list of Intake sources or catalogs], 'catalog name', 'catalog desc', {}, 'opendap',
-    save_catalog=False)
+    >>> make_catalog([list of Intake sources or catalogs], 'catalog name', 'catalog desc',
+                     {}, 'opendap', save_catalog=False)
     """
 
     if cat_path is None and save_catalog:
@@ -117,12 +119,7 @@ def make_catalog(
 def setup(override=False):
     """Setup reference catalogs for models.
 
-    Loops over hard-wired "orig" catalogs available in mc.CAT_PATH_ORIG, reads in previously-saved model
-    boundary information, saves temporary catalog files for each model, and links those together into the
-    returned master catalog. For some models, reading in the original catalogs applies a "today" and/or
-    "yesterday" date Intake user parameter that supplies two example model files that can be used for
-    examining the model output for the example times. Those are rerun each time this function is rerun,
-    filling the parameters using the proper dates.
+    Loops over hard-wired "orig" catalogs available in ``mc.CAT_PATH_ORIG``, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
 
     Parameters
     ----------
@@ -131,18 +128,22 @@ def setup(override=False):
 
     Returns
     -------
-    Nested Intake catalog with a source for each model in mc.CAT_PATH_ORIG. Each source/model in turn has
-    a source for each timing available (e.g., "forecast", "hindcast").
+    Intake catalog
+        Nested Intake catalog with a source for each model in ``mc.CAT_PATH_ORIG``. Each source/model in turn has a source for each timing available (e.g., "forecast", "hindcast").
 
     Examples
     --------
+
     Set up master catalog:
+
     >>> cat = mc.setup()
 
     Examine list of sources/models available in catalog:
+
     >>> list(cat)
 
     Examine the sources for a specific model in the catalog:
+
     >>> list(cat['CBOFS'])
     """
 
@@ -206,16 +207,9 @@ def setup(override=False):
 def find_datetimes(source, find_start_datetime, find_end_datetime, override=False):
     """Find the start and/or end datetimes for source.
 
-    For sources with static urlpaths, this opens the Dataset and checks the first time for start_datetime
-    and the last time for end_datetime. Some NOAA OFS models require aggregation: some forecasts, all
-    nowcasts, and all hindcasts. For these, the available year and months of the thredd server
-    subcatalogs are found with `find_catrefs()`. `start_datetime` is found by further evaluating to make
-    sure that files in the subcatalogs are both available on the page and that the days represented by
-    model output files are consecutive (there are missing dates). `end_datetime` is found from the most
-    recent subcatalog files since there aren't missing files and dates on the recent end of the time
-    ranges.
+    For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`. Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
 
-    Uses `cf-xarray` to determine the time axis.
+    Uses ``cf-xarray`` to determine the time axis.
 
     Parameters
     ----------
@@ -223,15 +217,16 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
         Model source for which to find start and/or end datetimes
     find_start_datetime : bool
         True to calculate start_datetime, otherwise returns None
-    find_start_datetime : bool
-        True to calculate start_datetime, otherwise returns None
+    find_end_datetime : bool
+        True to calculate end_datetime, otherwise returns None
     override : boolean, optional
         Use `override=True` to find catrefs regardless of freshness. This is passed in from
-        `find_availability()` so has the same value as input there.
+        ``find_availability()`` so has the same value as input there.
 
     Returns
     -------
-    (start_datetime, end_datetime) where each are strings or can be None if they didn't need to be found.
+    tuple
+        (start_datetime, end_datetime) where each are strings or can be None if they didn't need to be found.
     """
 
     filetype = source.cat.metadata["filetype"]
@@ -291,40 +286,65 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 
             # second make sure we only count when dates are consecutive, since servers tend to have some
             # spotty model output at the earliest dates get dates from file names
-            all_dates = [
-                pd.to_datetime(fileloc, format="%Y%m%d", exact=False)
-                for fileloc in filelocs
-            ]
-            unique_dates = list(set(all_dates))
+            df = mc.filedates2df(filelocs)
+            # # set up dataframe of datetimes to filenames
+            # # 1+ number of times possible from mc.file2dt, need the number of filenames to match
+            # filedates, filenames = [], []
+            # for fname in filelocs:
+            #     filedate = mc.astype(mc.file2dt(fname), list)
+            #     filenames.extend([fname] * len(filedate))
+            #     filedates.extend(filedate)
+            # # filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
+            # df = pd.DataFrame(index=filedates, data={"filenames": filenames})
+            # import pdb; pdb.set_trace()
+            # # Narrow the files used to the actual requested datetime range
+            # files_to_use = df[start_date:end_date]
+            # # get only unique files and change to list
+            # files_to_use = list(pd.unique(files_to_use["filenames"]))
 
-            # if any dates are not consecutive, need to start after that date
-            df = pd.Series(unique_dates)
-            ddf = df.diff() > pd.Timedelta(
-                "1d"
-            )  # which differences in consecutive dates are over 1 day
+            # import pdb; pdb.set_trace()
+
+            # which differences in consecutive dates are over 1 day
+            ddf = pd.Series(df.index).diff() > pd.Timedelta("1 day")
+
+            # import pdb; pdb.set_trace()
+            # all_dates = [
+            #     pd.to_datetime(fileloc, format="%Y%m%d", exact=False)
+            #     for fileloc in filelocs
+            # ]
+            # unique_dates = list(set(all_dates))
+            #
+            # # if any dates are not consecutive, need to start after that date
+            # df = pd.Series(unique_dates)
+            # ddf = df.diff() > pd.Timedelta(
+            #     "1d"
+            # )
             if ddf.any():
                 # first date after last jump in dates is desired start day
-                start_day = df.where(ddf).dropna().iloc[-1]
-                # subset filelocs to match discovered consecutive dates
-                df_filelocs = pd.Series(index=all_dates, data=filelocs)
-                filelocs_ss = list(
-                    df_filelocs.where(df_filelocs.index >= start_day).dropna().values
-                )
-
-                # want first nowcast file (no forecast files available)
-                start_datetime = str(
-                    mc.get_dates_from_ofs(filelocs_ss, filetype, "n", "first")
-                )
+                start_datetime = str(df.index.where(ddf).dropna()[-1])
+                # # start_day = df.where(ddf).dropna().iloc[-1]
+                # # subset filelocs to match discovered consecutive dates
+                # df = df[start_day:]
+                # # df_filelocs = pd.Series(index=all_dates, data=filelocs)
+                # # filelocs_ss = list(
+                # #     df_filelocs.where(df_filelocs.index >= start_day).dropna().values
+                # # )
+                #
+                # # want first nowcast file (no forecast files available)
+                # start_datetime = df[start_day:]['filenames'][0]
+                # start_datetime = str(
+                #     mc.get_dates_from_ofs(filelocs_ss, filetype, "n", "first")
+                # )
 
             # all dates were fine, so just use earliest fileloc
             else:
                 # running the following gives the actual first time. This might not be necessary in which
                 # case want first nowcast file (no forecast files available)
-                start_datetime = str(
-                    mc.get_dates_from_ofs(filelocs, filetype, "n", "first")
-                )
-                # # just use earliest day date
-                # start_datetime = df.iloc[0]
+                # start_datetime = str(
+                #     mc.get_dates_from_ofs(filelocs, filetype, "n", "first")
+                # )
+                # just use earliest day date
+                start_datetime = str(df.index[0])
         else:
             start_datetime = None
 
@@ -333,12 +353,15 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             filelocs = mc.find_filelocs(
                 catrefs[-1], source.metadata["catloc"], filetype=filetype
             )
-            # want last file
-            if source.name == "hindcast":
-                norf = "n"
-            elif source.name in ("nowcast", "forecast"):
-                norf = "f"
-            end_datetime = str(mc.get_dates_from_ofs(filelocs, filetype, norf, "last"))
+            df = mc.filedates2df(filelocs)
+            end_datetime = str(df.index[-1])
+
+            # # want last file
+            # if source.name == "hindcast":
+            #     norf = "n"
+            # elif source.name in ("nowcast", "forecast"):
+            #     norf = "f"
+            # end_datetime = str(mc.get_dates_from_ofs(filelocs, filetype, norf, "last"))
         else:
             end_datetime = None
 
@@ -358,10 +381,11 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 def find_availability(cat, timings=None, override=False):
     """Find availability for model timings.
 
-    The code will check for previously-calculated availability. If found, the "freshness" of the
-    information is checked as compared with mc.FRESH parameters specified in `__init__`.
+    The code will check for previously-calculated availability. If found, the "freshness" of the information is checked as compared with ``mc.FRESH`` parameters specified in ``__init__``.
 
     Start and end datetimes are allowed to be calculated separately to save time.
+
+    Note that for unaggregated models with forecasts, this checks availability for the latest forecast, which goes forward in time from today. It is not possible to use this function to check for the case of a forecast forward in time from a past day.
 
     Parameters
     ----------
@@ -375,16 +399,19 @@ def find_availability(cat, timings=None, override=False):
 
     Returns
     -------
-    The input Intake catalog but with `start_datetime` and `end_datetime` added to metadata for the
-    timings that were evaluated.
+    Intake catalog
+        The input Intake catalog but with `start_datetime` and `end_datetime` added to metadata for the timings that were evaluated.
 
     Examples
     --------
+
     Setup source catalog, then find availability for all timings of CIOFS model:
+
     >>> source_cat = mc.setup()
     >>> cat = mc.find_availability(source_cat['CIOFS']))
 
     Find availability for only nowcast of CBOFS model:
+
     >>> cat = mc.find_availability(source_cat['CBOFS'], 'nowcast')
     """
 
@@ -447,8 +474,8 @@ def transform_source(source_orig):
 
     Returns
     -------
-    source_transform, the transformed version of source_orig. This source will point at the source of
-    source_orig as the target.
+    Intake source
+        `source_transform`, the transformed version of source_orig. This source will point at the source of `source_orig` as the target.
     """
 
     # open the skeleton transform cat entry and then alter
@@ -473,101 +500,240 @@ def transform_source(source_orig):
 
 
 def select_date_range(
-    cat, start_date, end_date=None, timing=None, forecast_forward=False, override=False
+    cat, start_date, end_date=None, timing=None, use_forecast_files=None, override=False
 ):
-    """Add urlpath locations to existing catalog/source.
+    """For NOAA OFS unaggregated models: Update `urlpath` locations in `Source`.
 
-    NOAA OFS model-timings that require aggregation need to have the specific file paths found for each
-    file that will be read in. This function does that, based on the desired date range, and returns a
-    Source with them in the `urlpath`. This function can be also used with any model that does not
-    require this (because the model paths are either static or deterministic) but in those cases it does
-    not need to be used; they will have the start and end dates applied to filter the resulting model
-    output after `to_dask()` is called.
+    For other models, set up so that `start_date` and `end_date` are used to filter resulting Dataset in time. For all models, save `start_date` and `end_date` in the `Source` metadata.
+
+    NOAA OFS model sources that require aggregation need to have the specific file paths found for each file that will be read in. This function does that, based on the desired date range, and returns a `Source` with file locations in the `urlpath`. This function can also be used with any model that does not require this (because the model paths are either static or deterministic) but in those cases it does not need to be used; they will have the start and end dates applied to filter the resulting model output after ``to_dask()`` is called.
 
     Parameters
     ----------
     cat: Intake catalog
         An intake catalog for a specific model entry.
+    start_date: datetime-interpretable str or pd.Timestamp
+        Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results.
+    end_date: datetime-interpretable str, pd.Timestamp, or None; optional
+        Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results. end_date can be None which indicates the user wants all available model output after start_date; this optional is not available for unaggregated historical NOAA OFS models which do not contain forecast files.
+
+        There are several use cases to specify:
+
+        * if `start_date == end_date`, the full day of model output from the date is selected. If the date specified is today and all times for today are not yet available, output from forecast files will be used to fill out the day after the nowcast files end.
+        * If `end_date is None`, all available model output will be retrieved starting at start_date. This option doesn't work for archival unaggregated NOAA OFS models currently.
+        * If `end_date` is in the future, `use_forecast_files` is set to True and the forecast is read in, but stopped at `end_date`.
+        * User can set `use_forecast_files=True` with an end_date in the past to get old forecast model results for end_date for unaggregated NOAA OFS models. This case is probably not well-used and is not regularly tested. The results from using this combination of inputs does not align with the results of ``mc.find_availability()`` since the forecast is not the latest.
     timing: str, optional
-        Which timing to use. If `find_availability` has been run, the code will determine whether
-        `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing must be provided for a
-        single timing. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes
-        "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat,
-        that one will be used without specifying it.
-    start_date, end_date: datetime-interpretable str or pd.Timestamp
-        For models that require aggregation, the end_date is inclusive. For all models, the start and end
-        date are used with `xarray` directly with `ds.cf.sel(T=slice(start_date, end_date))` in
-        `to_dask()`.
-        if start_date has no time input, will default to 00:00 time, which will bring in model output
-        starting at the beginning of the day.
-        if end_date has no time output or has time 00:00, function will assume the user wants the full
-        UPDATE to explain new behaviors
-    forecast_forward : bool, optional
-        Nowcast files are aggregated for the dates in the user-defined date range. However, if
-        `forecast_forward==True`, the final date can have forecast files aggregated after the nowcast
-        files to create a forecast going forward in time from the end date. The default is to not include
-        the forecast on the end (`forecast_forward=False`).
+        Which timing to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing must be provided for a single timing. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
+    use_forecast_files : bool or None, optional
+        This parameter is typically set by the code and is not used by the user. However, in one use case the user can input `use_forecast_files=True`: when they want to read in a forecast from the past for a NOAA OFS model. Otherwise do not use this parameter directly.
     override : boolean, optional
         Use `override=True` to find catrefs regardless of freshness.
 
     Returns
     -------
-    Source associated with the catalog entry.
+    Intake Source
+        Intake `Source` associated with the catalog entry which now contains `source.metadata['start_date']` and `source.metadata['end_date']`. The values of `source.metadata['start/end_date']` will not necessarily be the same as the input `start_date` and `end_date`, but may be changed to return the desired output time range. For unaggregated NOAA OFS models, the returned Source will have updated `source.urlpath` to reflect the newly-found file paths of the selected date range.
 
     Examples
     --------
 
-    Find model 'LMHOFS' urlpaths directly from source catalog without first
-    search for availability with `find_availability()`:
-    >>> source_cat = mc.setup_source_catalog()
+    Find model `'LMHOFS'` urlpaths for all of today through all available forecast, directly from source catalog without first searching for availability with ``mc.find_availability()``:
+
+    >>> main_cat = mc.setup()
     >>> today = pd.Timestamp.today()
-    >>> cat = source_cat["LMHOFS"]
-    >>> source = mc.add_url_path(cat, timing="forecast",
-                                 start_date=today, end_date=today)
+    >>> cat = main_cat["LMHOFS"]
+    >>> source = mc.select_date_range(cat, start_date=today, end_date=None, timing="forecast")
 
     Find availability for model (for forecast and hindcast timings), then find
     urlpaths:
-    >>> cat = mc.find_availability(model='LMHOFS')
+
+    >>> cat = mc.find_availability(main_cat['LMHOFS'])
     >>> today = pd.Timestamp.today()
-    >>> source = mc.add_url_path(cat, start_date=today, end_date=today)
+    >>> source = mc.select_date_range(cat, start_date=today, end_date=today)
 
     """
 
-    # end_date is optional. if None and forecast_forward, return all available days and forecast at end
-    # if None and not forecast_forward, return one day, start_date
-    all_forecast = False
-    if end_date is None:
-        if forecast_forward:
-            end_date = pd.Timestamp.today()
-            all_forecast = True
-        else:
-            end_date = start_date
-    #
-    # if forecast_forward and end_date is None:
-    #     end_date = pd.Timestamp.today()
-    #     all_forecast = True
-    # else:
-    #     all_forecast = False
+    # save these to determine if user input dates with times or not
+    start_date_input, end_date_input = start_date, end_date
 
-    # # these are stored in metadata
-    # start_date_meta = start_date
-    # end_date_meta = end_date
-
-    # If end_date contains the default input time options from dateutil, assume a time wasn't input
-    # in which case change end_date to the very end of the day
-    if parse(mc.astype(end_date, str), default=DEFAULT).strftime("%H%M%S") == "222222":
-        end_date = pd.Timestamp(end_date).normalize() + pd.Timedelta("23:59:59")
-
-    # make sure they are both Timestamps
+    # make sure start_date and end_date are both Timestamps
     start_date = mc.astype(start_date, pd.Timestamp)
-    end_date = mc.astype(end_date, pd.Timestamp)
+    end_date = None if end_date is None else mc.astype(end_date, pd.Timestamp)
 
-    # if start_date exactly equals end_date (with times), assume user wants that full day
-    # in this case, rewrite the metadata start/end dates since won't make sense otherwise
-    if start_date == end_date:
-        start_date = pd.Timestamp(start_date).normalize()
-        end_date = start_date + pd.Timedelta("23:59:59")
-        # start_date_meta = end_date_meta = str(start_date.date())
+    today = pd.Timestamp.today()
+
+    if end_date is None and timing == "hindcast":
+        raise KeyError(
+            "timing 'hindcast' does not have forecast files, so `end_date` should be a datetime representation."
+        )
+
+    if end_date is not None and end_date < start_date:
+        raise KeyError(
+            f"`start_date` is {start_date} but needs to be earlier than `end_date` ({end_date})."
+        )
+
+    # upon input, use_forecast_files should only be True if end_date is not None and end_date < today
+    # later, however, it will be set to True in several circumstances
+    if use_forecast_files and (end_date is None or end_date.date() >= today.date()):
+        warnings.warn(
+            f"User should only input `use_forecast_files=True` to access a forecast from the past, however `end_date={end_date}`.",
+            UserWarning,
+        )
+
+    # special behavior if these equal
+    # UPDATEif use_forecast_files, set end_date to None to accept all model output that is found
+    #    end_date_loop is set to end_date since that is the day from which to use the forecast output.
+    # if not use_forecast_files, set end_date time to end of the day, end_date_loop to end_date
+    # end_date_loop is only used in the aggregation part of this function, for looping
+    # if start_date == end_date is not None:
+    #     # start_date = pd.Timestamp(start_date).normalize()
+    #     if use_forecast_files:
+    #         end_date_loop = end_date
+    #         end_date = None
+    #     else:
+    #         # end_date = start_date + pd.Timedelta("23:59:59")
+    #         # need this to be an extra day to get all time steps from end_date
+    #         end_date_loop = end_date + pd.Timedelta("1 day")
+
+    # set start/end_date_sel, but end_date_sel is overwritten in one unusual case subsequently
+    if start_date == end_date is not None:
+        start_date_sel = str(start_date.date())
+        end_date_sel = str(end_date.date())
+
+    else:
+        # If end_date_input contains the default input time options from dateutil, assume a time wasn't input
+        # in which case use date only to retrieve the whole day of output when selecting
+        # or end_date_input exactly matches start_date_input
+        if (end_date_input is not None and parse(mc.astype(end_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):
+            # user didn't specify time or end_date is None
+            end_date_sel = str(end_date.date())
+        else:  # user specified time
+            end_date_sel = str(end_date) if end_date is not None else None
+
+        # same but for start_date at the beginning of the day
+        if (parse(mc.astype(start_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):
+            start_date_sel = str(start_date.date())
+        else:
+            start_date_sel = str(start_date) if start_date is not None else None
+
+    # set end_date_loop
+    # if end_date is None, set use_forecast_files to True and end_date_loop to today
+    # if end_date is after today, code set use_forecast_files to True and end_date_loop to today
+    if (end_date is None) or (end_date.date() > today.date()):
+        end_date_loop = today
+        use_forecast_files = True
+    # is end_date before today, set end_date_loop forward 1 day to get last few time steps of the day
+    elif end_date.date() < today.date():
+        # In only this case, since user inputs use_forecast_files as True,  end_date_loop should be end_date and should retrieve forecast from yesterday
+        if use_forecast_files:
+            end_date_loop = end_date
+            # This is out of place! Overwrite end_date_sel with None
+            end_date_sel = None
+        else:
+            end_date_loop = end_date + pd.Timedelta('1 day')
+    # if end_date is today, set end_date_loop to end_date and use_forecast_files True to get the last few time steps of today
+    elif end_date.date() == today.date():
+        end_date_loop = end_date
+        use_forecast_files = True
+    # # if end_date is after today, code set use_forecast_files to True and end_date_loop to today
+    # elif end_date.date() > today.date():
+    #     use_forecast_files = True
+
+    # print(start_date_input, start_date_sel, end_date_input, end_date_sel, end_date_loop, use_forecast_files)
+
+
+
+
+
+
+    # # end_date is None always means user wants all available output starting with start_date.
+    # elif end_date is None:
+    #     use_forecast_files = True
+    #     end_date_loop = today
+    #
+    # # if end_date is in the future, set use_forecast_files True
+    # elif end_date.date() > today.date():
+    #     use_forecast_files = True
+    #     end_date_loop = today
+    #
+    # # if we are forecasting forward, need end_date to be able to catch all available dates
+    # elif use_forecast_files:
+    #     end_date_loop = end_date
+    #     end_date = None
+    #
+    # # interpret all variables as input
+    # else:
+    #     # need this to be an extra day to get all time steps from end_date
+    #     end_date_loop = end_date + pd.Timedelta("1 day")
+    #
+    # # If end_date_input contains the default input time options from dateutil, assume a time wasn't input
+    # # in which case use date only to retrieve the whole day of output when selecting
+    # # or end_date_input exactly matches start_date_input
+    # if (end_date_input is not None and parse(mc.astype(end_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):# or (start_date_input == end_date_input is not None):
+    #     # user didn't specify time or end_date is None
+    #     # end_date = pd.Timestamp(end_date).normalize() + pd.Timedelta("23:59:59")
+    #     end_date_sel = str(end_date.date()) if end_date is not None else None
+    # else:  # user specified time
+    #     end_date_sel = str(end_date) if end_date is not None else None
+    #     # end_date_sel = str(end_date.date())
+    #
+    # # same but for start_date at the beginning of the day
+    # if (parse(mc.astype(start_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):# or (start_date == end_date is not None):
+    #     # start_date = pd.Timestamp(start_date).normalize()
+    #     start_date_sel = str(start_date.date())
+    # else:
+    #     start_date_sel = str(start_date)
+
+
+
+    # import pdb; pdb.set_trace()
+    # # if start_date exactly equals end_date (with times), assume user wants that full day
+    # NEED TO BE ABLE TO ASK FOR TWO DAYS AGO TO YESTERDAY WITH use_forecast_files TO GET FROM TWO DAYS AGO THROUGH
+    # YESTERDAY'S FORECAST
+    # # if start_date and end_date are
+    # if start_date == end_date:
+    #     start_date = pd.Timestamp(start_date).normalize()
+    #     if use_forecast_files:  # None to get all of forecast
+    #         end_date = None
+    #     else:
+    #         end_date = start_date + pd.Timedelta("23:59:59")
+    #
+    #
+    #
+    #
+    #     # For forecast OFS aggregations, the latest date available by catalog day
+    #     # is today, and the forecast files within today extend forward in time.
+    #     # in that case, use today as end date in loop below, and use
+    #     # `use_forecast_files=True`.
+    #     if end_date is None:
+    #         use_forecast_files = True
+    #     if (end_date.date() >= today.date()) and use_forecast_files:
+    #         end_date_loop = today
+    #     if use_forecast_files:
+    #         end_date_loop = start_date
+    #
+    #
+    #     if end_date is None or (end_date.date() >= today.date()):
+    #         end_date_loop = today
+    #         use_forecast_files = True
+    #
+    #
+    #     if end_date is None:
+    #         use_forecast_files = True
+    #         if end_date.date() >= today.date():
+    #             end_date_loop = today
+    #         else:
+    #             end_date_loop = start_date
+    #     # if not using forecast files, bring in subsequent days files to be able to get all times of day
+    #     elif not use_forecast_files:
+    #         end_date_loop = end_date.normalize() + pd.Timedelta("1 day")
+    #     else:
+    #         end_date_loop = end_date
+
+
+
+
 
     # if there is only one timing, use it
     if timing is None and len(list(cat)) == 1:
@@ -601,9 +767,9 @@ def select_date_range(
         else:
             raise ValueError("date range does not fully fit into any model timings")
 
-    if forecast_forward and timing == "hindcast":
+    if use_forecast_files and timing == "hindcast":
         raise KeyError(
-            "timing 'hindcast' does not have forecast files, so `forecast_forward` should be False."
+            "timing 'hindcast' does not have forecast files, so `use_forecast_files` should be False."
         )
 
     source = cat[timing]
@@ -627,33 +793,15 @@ def select_date_range(
             ) as outfile:
                 yaml.dump({"catrefs": catrefs}, outfile, default_flow_style=False)
 
-        # For forecast OFS aggregations, the latest date available by catalog day
-        # is today, and the forecast files within today extend forward in time.
-        # in that case, use today as end date in loop below, and use
-        # `forecast_forward=True`.
-        today = pd.Timestamp.today()
-        if end_date.date() >= today.date():
-            end_date_use = today
-            forecast_forward = True
-        # if not using forecast files, bring in subsequent days files to be able to get all times of day
-        elif not forecast_forward:
-            end_date_use = end_date.normalize() + pd.Timedelta("1 day")
-        else:
-            end_date_use = end_date
-
-        # Include filenames from the day before start_date in order to get a complete day since model
-        # files are shifted in time.
-        start_date_use = start_date.normalize() - pd.Timedelta("1 day")
-
         # loop over dates
         filelocs_urlpath = []
-        for date in pd.date_range(start=start_date_use, end=end_date_use, freq="1D"):
+        for date in pd.date_range(start=start_date.normalize(), end=end_date_loop, freq="1D"):
             is_forecast = (
                 True
-                if date.date() == end_date_use.date() and forecast_forward
+                if date.date() == end_date_loop.date() and use_forecast_files
                 else False
             )
-
+            # import pdb; pdb.set_trace()
             fname = mc.FILE_PATH_AGG_FILE_LOCS(
                 source.cat.name, timing, date, is_forecast
             )
@@ -692,22 +840,11 @@ def select_date_range(
 
             filelocs_urlpath.extend(agg_filelocs)
 
-        # set up dataframe of datetimes to filenames
-        # 1+ number of times possible from mc.file2dt, need the number of filenames to match
-        filedates, filenames = [], []
-        for fname in filelocs_urlpath:
-            filedate = mc.astype(mc.file2dt(fname), list)
-            filenames.extend([fname] * len(filedate))
-            filedates.extend(filedate)
-        # filedts = [mc.file2dt(fname) for fname in filelocs_urlpath]
-        df = pd.DataFrame(index=filedates, data={"filenames": filenames})
-
-        # in this case, change end_date to the end of the forecast range
-        if all_forecast:
-            end_date = df.index[-1]
+        # df is sorted and deduplicated
+        df = mc.filedates2df(filelocs_urlpath)
 
         # Narrow the files used to the actual requested datetime range
-        files_to_use = df[start_date:end_date]
+        files_to_use = df[start_date_sel:end_date_sel]
 
         # get only unique files and change to list
         files_to_use = list(pd.unique(files_to_use["filenames"]))
@@ -722,14 +859,14 @@ def select_date_range(
     # Pass start and end dates to the transform so they can be implemented
     # there for static and deterministic model files (includes RTOFS) as well
     # as the OFS aggregated models.
-    source._captured_init_kwargs["transform_kwargs"]["start_date"] = str(start_date)
-    source._captured_init_kwargs["transform_kwargs"]["end_date"] = str(end_date)
-    print(start_date, end_date)
+    source._captured_init_kwargs["transform_kwargs"]["start_date"] = start_date_sel
+    source._captured_init_kwargs["transform_kwargs"]["end_date"] = end_date_sel
+
     # store info in source_orig
     metadata = {
         "timing": timing,
-        "start_date": start_date,
-        "end_date": end_date,
+        "start_date": start_date_sel,
+        "end_date": end_date_sel,
     }
     source.metadata.update(metadata)
     # Add original overall model catalog metadata to this next version

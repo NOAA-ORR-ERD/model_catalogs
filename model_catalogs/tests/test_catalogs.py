@@ -11,6 +11,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from pandas import Timestamp
 import pytest
 import xarray as xr
 import yaml
@@ -52,7 +53,7 @@ def test_find_availability():
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
-        cat = mc.find_availability(main_cat[model], timings=timing)
+        cat = mc.find_availability(main_cat[model], timings=timing, override=True)
         if "start_datetime" not in cat[timing].metadata:
             warnings.warn(
                 f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
@@ -86,36 +87,118 @@ def test_boundaries():
 def test_select_date_range():
     """Test functionality in `select_date_range()`.
 
-    Should filter date range for static and nonstatic links.
+    Should filter date range for static and nonstatic links. Should return all model output for today
+    and tomorrow.
     """
 
     test_models = {"HYCOM": "forecast", "CIOFS": "nowcast"}
 
-    today = pd.Timestamp.today(tz="UTC") - pd.Timedelta("1 day")
+    today = pd.Timestamp.today() - pd.Timedelta("1 day")
+    # today = pd.Timestamp.today(tz="UTC") - pd.Timedelta("1 day")
     tom = today + pd.Timedelta("1 day")
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
         source = mc.select_date_range(
-            main_cat[model], today.date(), tom.date(), timing=timing
+            main_cat[model], today.date(), tom.date(), timing=timing, override=True
         )
 
         try:
             ds = source.to_dask()
-            assert (
-                pd.Timestamp(ds.cf["T"].cf.isel(T=0).values).tz_localize("UTC").date()
-                == today.date()
-            )
-            assert (
-                pd.Timestamp(ds.cf["T"].cf.isel(T=-1).values).tz_localize("UTC").date()
-                == tom.date()
-            )
+
+            assert ds.cf['T'][0] == today.normalize()
+
+            # calculate delta times
+            dts = ds.cf['T'].diff(dim=ds.cf.axes['T'][0])
+
+            # make sure all dts are the same (some are 42 seconds off for some reason but that is ok)
+            assert all([pd.Timedelta(f"{dt}") < pd.Timedelta('1 minute') for dt in dts - dts[0]])
+
+            end_of_day = tom.normalize() + pd.Timedelta('1 day')
+            assert bool(end_of_day - pd.Timedelta(f"{dts[0]}") <= ds.cf['T'][-1] < end_of_day)
 
         except OSError:
             warnings.warn(
                 f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
                 RuntimeWarning,
             )
+
+
+def test_select_date_range_dates():
+    """Detailed tests for resulting start/end datetimes.
+
+    Doesn't run `to_dask()`, and only checks unaggregated models.
+    All the tested models have hourly output.
+    """
+
+    yes = pd.Timestamp.today().normalize() - pd.Timedelta("1 day") + pd.Timedelta("6:00:00")
+    yes_date = str(yes.date())
+    yes_st = yes.normalize()
+    yes_end = yes_st + pd.Timedelta('23:00:00')
+    tod = pd.Timestamp.today().normalize() + pd.Timedelta("6:00:00")
+
+    test_models = {"CBOFS": "nowcast", "NYOFS": "nowcast"}
+    test_conditions = [
+    {"sday": yes, "eday": yes, "tst_known": yes_st, "tend_known": yes_end},
+    {"sday": yes_date, "eday": yes_date, "tst_known": yes_st, "tend_known": yes_end},
+    {"sday": yes, "eday": None, "tst_known": yes, "tend_known": None},
+    {"sday": tod, "eday": None, "tst_known": tod, "tend_known": None},
+    ]
+
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        for tc in test_conditions:
+            if tc["tend_known"] is None:
+                cat = mc.find_availability(main_cat[model], timings=timing, override=True)
+            else:
+                cat = main_cat[model]
+            source = mc.select_date_range(cat, start_date=tc["sday"], end_date=tc["eday"],
+                                          timing=timing, override=True)
+
+            assert source.dates[0] == tc["tst_known"]
+            if tc["tend_known"] is None:
+                assert source.dates[-1] == pd.Timestamp(source.metadata['end_datetime'])
+            else:
+                assert source.dates[-1] == tc["tend_known"]
+
+            # check that dates are all consistent
+            ddf = pd.Series(source.dates).diff()
+            assert (ddf[1:] - ddf.median() < pd.Timedelta('1 min')).all()
+
+    # check hindcast, which stops 4 days ago and does not have forecast files
+    fivedays = pd.Timestamp.today().normalize() - pd.Timedelta("5 days") + pd.Timedelta("6:00:00")
+    fivedays_date = str(fivedays.date())
+    fivedays_st = fivedays.normalize()
+    fivedays_end = fivedays_st + pd.Timedelta('23:00:00')
+
+    test_models = {"SFBOFS": "hindcast"}
+    # check t-1_known of None with find_availability output
+    test_conditions = [
+    {"sday": fivedays, "eday": fivedays, "tst_known": fivedays_st, "tend_known": fivedays_end},
+    {"sday": fivedays_date, "eday": fivedays_date, "tst_known": fivedays_st, "tend_known": fivedays_end},
+    ]
+
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        for tc in test_conditions:
+            if tc["tend_known"] is None:
+                cat = mc.find_availability(main_cat[model], timings=timing, override=True)
+            else:
+                cat = main_cat[model]
+            source = mc.select_date_range(cat, start_date=tc["sday"], end_date=tc["eday"],
+                                          timing=timing, override=True)
+
+            assert source.dates[0] == tc["tst_known"]
+            if tc["tend_known"] is None:
+                assert source.dates[-1] == pd.Timestamp(source.metadata['end_datetime'])
+            else:
+                assert source.dates[-1] == tc["tend_known"]
+
+            # check that dates are all consistent
+            ddf = pd.Series(source.dates).diff()
+            assert (ddf[1:] - ddf.median() < pd.Timedelta('1 min')).all()
+
+
 
 
 @pytest.mark.slow
@@ -283,6 +366,116 @@ def test_urlpath():
     assert len(main_cat["NGOFS2"]["forecast"].urlpath) == 2
 
 
+def test_file2dt():
+    """Test a few sample files."""
+
+    fname = "nos.cbofs.fields.n001.20220913.t00z.nc"
+    date = Timestamp("20220912T19:00")
+    assert mc.file2dt(fname) == date
+
+    fname = "nos.cbofs.fields.f001.20220914.t12z.nc"
+    date = Timestamp("20220914T13:00")
+    assert mc.file2dt(fname) == date
+
+    fname = 'glofs.loofs.fields.nowcast.20220919.t00z.nc'
+    date = [Timestamp('2022-09-18 19:00:00'),
+ Timestamp('2022-09-18 20:00:00'),
+ Timestamp('2022-09-18 21:00:00'),
+ Timestamp('2022-09-18 22:00:00'),
+ Timestamp('2022-09-18 23:00:00'),
+ Timestamp('2022-09-19 00:00:00')]
+    assert mc.file2dt(fname) == date
+
+    fname = 'nos.nyofs.fields.forecast.20220920.t17z.nc'
+    date = [Timestamp('2022-09-20 18:00:00'),
+ Timestamp('2022-09-20 19:00:00'),
+ Timestamp('2022-09-20 20:00:00'),
+ Timestamp('2022-09-20 21:00:00'),
+ Timestamp('2022-09-20 22:00:00'),
+ Timestamp('2022-09-20 23:00:00'),
+ Timestamp('2022-09-21 00:00:00'),
+ Timestamp('2022-09-21 01:00:00'),
+ Timestamp('2022-09-21 02:00:00'),
+ Timestamp('2022-09-21 03:00:00'),
+ Timestamp('2022-09-21 04:00:00'),
+ Timestamp('2022-09-21 05:00:00'),
+ Timestamp('2022-09-21 06:00:00'),
+ Timestamp('2022-09-21 07:00:00'),
+ Timestamp('2022-09-21 08:00:00'),
+ Timestamp('2022-09-21 09:00:00'),
+ Timestamp('2022-09-21 10:00:00'),
+ Timestamp('2022-09-21 11:00:00'),
+ Timestamp('2022-09-21 12:00:00'),
+ Timestamp('2022-09-21 13:00:00'),
+ Timestamp('2022-09-21 14:00:00'),
+ Timestamp('2022-09-21 15:00:00'),
+ Timestamp('2022-09-21 16:00:00'),
+ Timestamp('2022-09-21 17:00:00'),
+ Timestamp('2022-09-21 18:00:00'),
+ Timestamp('2022-09-21 19:00:00'),
+ Timestamp('2022-09-21 20:00:00'),
+ Timestamp('2022-09-21 21:00:00'),
+ Timestamp('2022-09-21 22:00:00'),
+ Timestamp('2022-09-21 23:00:00'),
+ Timestamp('2022-09-22 00:00:00'),
+ Timestamp('2022-09-22 01:00:00'),
+ Timestamp('2022-09-22 02:00:00'),
+ Timestamp('2022-09-22 03:00:00'),
+ Timestamp('2022-09-22 04:00:00'),
+ Timestamp('2022-09-22 05:00:00'),
+ Timestamp('2022-09-22 06:00:00'),
+ Timestamp('2022-09-22 07:00:00'),
+ Timestamp('2022-09-22 08:00:00'),
+ Timestamp('2022-09-22 09:00:00'),
+ Timestamp('2022-09-22 10:00:00'),
+ Timestamp('2022-09-22 11:00:00'),
+ Timestamp('2022-09-22 12:00:00'),
+ Timestamp('2022-09-22 13:00:00'),
+ Timestamp('2022-09-22 14:00:00'),
+ Timestamp('2022-09-22 15:00:00'),
+ Timestamp('2022-09-22 16:00:00'),
+ Timestamp('2022-09-22 17:00:00'),
+ Timestamp('2022-09-22 18:00:00'),
+ Timestamp('2022-09-22 19:00:00'),
+ Timestamp('2022-09-22 20:00:00'),
+ Timestamp('2022-09-22 21:00:00'),
+ Timestamp('2022-09-22 22:00:00'),
+ Timestamp('2022-09-22 23:00:00')]
+    assert mc.file2dt(fname) == date
+
+
+def test_filedates2df():
+    """Checking sorting and deduplicating indices."""
+
+    fnames = ['nos.creofs.fields.f000.20220920.t15z.nc',
+     'nos.creofs.fields.f001.20220920.t15z.nc',
+     'nos.creofs.fields.f002.20220920.t15z.nc',
+     'nos.creofs.fields.f003.20220920.t15z.nc',
+     'nos.creofs.fields.n000.20220920.t15z.nc',
+     'nos.creofs.fields.n001.20220920.t15z.nc',
+     'nos.creofs.fields.n002.20220920.t15z.nc',
+     'nos.creofs.fields.n003.20220920.t15z.nc',
+     'nos.creofs.fields.n004.20220920.t15z.nc',
+     'nos.creofs.fields.n005.20220920.t15z.nc',
+     'nos.creofs.fields.n006.20220920.t15z.nc']
+
+    df = mc.filedates2df(fnames)
+
+    # also no duplicate in ordered_fnames
+    ordered_fnames = ['nos.creofs.fields.n000.20220920.t15z.nc',
+       'nos.creofs.fields.n001.20220920.t15z.nc',
+       'nos.creofs.fields.n002.20220920.t15z.nc',
+       'nos.creofs.fields.n003.20220920.t15z.nc',
+       'nos.creofs.fields.n004.20220920.t15z.nc',
+       'nos.creofs.fields.n005.20220920.t15z.nc',
+       'nos.creofs.fields.n006.20220920.t15z.nc',
+       'nos.creofs.fields.f001.20220920.t15z.nc',
+       'nos.creofs.fields.f002.20220920.t15z.nc',
+       'nos.creofs.fields.f003.20220920.t15z.nc']
+
+    assert ordered_fnames == list(df['filenames'].values)
+
+
 @pytest.mark.slow
 def test_urlpath_after_select():
     """urlpath is replaced after select_date_range"""
@@ -291,37 +484,37 @@ def test_urlpath_after_select():
 
     day = "2022-1-1"
     source = mc.select_date_range(
-        main_cat["CREOFS"], timing="hindcast", start_date=day, end_date=day
+        main_cat["CREOFS"], timing="hindcast", start_date=day, end_date=day, override=True
     )
 
-    known_filenames = [
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t09z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t15z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n003.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n004.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n005.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n006.20220101.t21z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n001.20220102.t03z.nc",
-        "https://www.ncei.noaa.gov/thredds/dodsC/model-creofs-files/2022/01/nos.creofs.fields.n002.20220102.t03z.nc",
-    ]
+    # compare datetimes instead of filenames since filenames are not unique
+    known_dates = [pd.Timestamp('2022-01-01 00:00:00'),
+ pd.Timestamp('2022-01-01 01:00:00'),
+ pd.Timestamp('2022-01-01 02:00:00'),
+ pd.Timestamp('2022-01-01 03:00:00'),
+ pd.Timestamp('2022-01-01 04:00:00'),
+ pd.Timestamp('2022-01-01 05:00:00'),
+ pd.Timestamp('2022-01-01 06:00:00'),
+ pd.Timestamp('2022-01-01 07:00:00'),
+ pd.Timestamp('2022-01-01 08:00:00'),
+ pd.Timestamp('2022-01-01 09:00:00'),
+ pd.Timestamp('2022-01-01 10:00:00'),
+ pd.Timestamp('2022-01-01 11:00:00'),
+ pd.Timestamp('2022-01-01 12:00:00'),
+ pd.Timestamp('2022-01-01 13:00:00'),
+ pd.Timestamp('2022-01-01 14:00:00'),
+ pd.Timestamp('2022-01-01 15:00:00'),
+ pd.Timestamp('2022-01-01 16:00:00'),
+ pd.Timestamp('2022-01-01 17:00:00'),
+ pd.Timestamp('2022-01-01 18:00:00'),
+ pd.Timestamp('2022-01-01 19:00:00'),
+ pd.Timestamp('2022-01-01 20:00:00'),
+ pd.Timestamp('2022-01-01 21:00:00'),
+ pd.Timestamp('2022-01-01 22:00:00'),
+ pd.Timestamp('2022-01-01 23:00:00'),
+ ]
 
-    assert source.urlpath == known_filenames
+    assert source.dates == known_dates
 
 
 def test_setting_std_name():
