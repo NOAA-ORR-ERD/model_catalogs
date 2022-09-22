@@ -170,7 +170,7 @@ def add_attributes(ds, metadata: Optional[dict] = None):
             if not isinstance(var_names, list):
                 var_names = [var_names]
             for var_name in var_names:
-                if var_name in ds.data_vars:
+                if var_name in ds.variables:
                     ds[var_name].attrs["standard_name"] = stan_name
 
     # # Run code to find vertical coordinates
@@ -228,7 +228,9 @@ def add_attributes(ds, metadata: Optional[dict] = None):
     # Some datasets like GFS have multiple time coordinates for different phenomena like
     # precipitation accumulation vs winds vs surface albedo average.
     if (
-        "T" in metadata["axis"]
+        metadata is not None
+        and "axis" in metadata
+        and "T" in metadata["axis"]
         and isinstance(metadata["axis"]["T"], list)
         and len(metadata["axis"]["T"]) > 1
     ):
@@ -236,7 +238,7 @@ def add_attributes(ds, metadata: Optional[dict] = None):
             if ds[time_var].dtype == "float64":
                 ds = xr.decode_cf(ds, decode_times=True)
                 break
-    elif ds.cf["T"].dtype == "float64":
+    elif "T" in ds.cf and ds.cf["T"].dtype == "float64":
         ds = xr.decode_cf(ds, decode_times=True)
 
     if metadata is not None and "formula_terms" in metadata:

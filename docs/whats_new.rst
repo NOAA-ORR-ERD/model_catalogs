@@ -10,6 +10,7 @@ v0.4.0 (unreleased)
 * Updated many details in `Model Aggregations <https://model-catalogs.readthedocs.io/en/latest/aggregations.html#>`_ page of docs.
 * Package now available on conda-forge!
 * `source.follow_target()` was renamed `source.target`. It exposes the original catalog information, which is the target of the source transform. It is a property now instead of a method.
+* Fixed bug when applying `standard_name` attributes to coordinate variables.
 
 
 v0.3.0 (September 9, 2022)
