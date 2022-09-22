@@ -1,13 +1,14 @@
 """
 This file contains all information for transforming the Datasets.
 """
+import warnings
+
 from typing import Optional
 
 import cf_xarray  # noqa
 import numpy as np
 import pandas as pd
 import xarray as xr
-import warnings
 
 from intake.source.derived import GenericTransform
 
@@ -183,7 +184,7 @@ class DatasetTransform(GenericTransform):
             )
 
             # drop any time duplicates that may be present (RTOFS can have)
-            self._ds = self._ds.drop_duplicates(dim=self._ds.cf.axes['T'])
+            self._ds = self._ds.drop_duplicates(dim=self._ds.cf.axes["T"])
 
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time

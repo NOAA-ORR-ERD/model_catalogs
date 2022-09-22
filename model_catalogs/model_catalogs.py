@@ -605,14 +605,23 @@ def select_date_range(
         # If end_date_input contains the default input time options from dateutil, assume a time wasn't input
         # in which case use date only to retrieve the whole day of output when selecting
         # or end_date_input exactly matches start_date_input
-        if (end_date_input is not None and parse(mc.astype(end_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):
+        if (
+            end_date_input is not None
+            and parse(mc.astype(end_date_input, str), default=DEFAULT).strftime(
+                "%H%M%S"
+            )
+            == "222222"
+        ):
             # user didn't specify time or end_date is None
             end_date_sel = str(end_date.date())
         else:  # user specified time
             end_date_sel = str(end_date) if end_date is not None else None
 
         # same but for start_date at the beginning of the day
-        if (parse(mc.astype(start_date_input, str), default=DEFAULT).strftime("%H%M%S") == "222222"):
+        if (
+            parse(mc.astype(start_date_input, str), default=DEFAULT).strftime("%H%M%S")
+            == "222222"
+        ):
             start_date_sel = str(start_date.date())
         else:
             start_date_sel = str(start_date) if start_date is not None else None
@@ -631,7 +640,7 @@ def select_date_range(
             # This is out of place! Overwrite end_date_sel with None
             end_date_sel = None
         else:
-            end_date_loop = end_date + pd.Timedelta('1 day')
+            end_date_loop = end_date + pd.Timedelta("1 day")
     # if end_date is today, set end_date_loop to end_date and use_forecast_files True to get the last few time steps of today
     elif end_date.date() == today.date():
         end_date_loop = end_date
@@ -641,11 +650,6 @@ def select_date_range(
     #     use_forecast_files = True
 
     # print(start_date_input, start_date_sel, end_date_input, end_date_sel, end_date_loop, use_forecast_files)
-
-
-
-
-
 
     # # end_date is None always means user wants all available output starting with start_date.
     # elif end_date is None:
@@ -684,8 +688,6 @@ def select_date_range(
     #     start_date_sel = str(start_date.date())
     # else:
     #     start_date_sel = str(start_date)
-
-
 
     # import pdb; pdb.set_trace()
     # # if start_date exactly equals end_date (with times), assume user wants that full day
@@ -730,10 +732,6 @@ def select_date_range(
     #         end_date_loop = end_date.normalize() + pd.Timedelta("1 day")
     #     else:
     #         end_date_loop = end_date
-
-
-
-
 
     # if there is only one timing, use it
     if timing is None and len(list(cat)) == 1:
@@ -795,7 +793,9 @@ def select_date_range(
 
         # loop over dates
         filelocs_urlpath = []
-        for date in pd.date_range(start=start_date.normalize(), end=end_date_loop, freq="1D"):
+        for date in pd.date_range(
+            start=start_date.normalize(), end=end_date_loop, freq="1D"
+        ):
             is_forecast = (
                 True
                 if date.date() == end_date_loop.date() and use_forecast_files

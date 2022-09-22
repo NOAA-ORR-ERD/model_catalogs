@@ -6,8 +6,6 @@ import fnmatch
 import pathlib
 import re
 
-from operator import itemgetter
-
 import cf_xarray  # noqa
 import intake
 import numpy as np
@@ -340,7 +338,7 @@ def filedates2df(filelocs):
     df = pd.DataFrame(index=filedates, data={"filenames": filenames}).sort_index()
 
     # remove rows if index is duplicated
-    df = df[~df.index.duplicated(keep='last')]
+    df = df[~df.index.duplicated(keep="last")]
 
     return df
 
