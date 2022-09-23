@@ -18,6 +18,9 @@ import yaml
 from pandas import Timestamp
 
 import model_catalogs as mc
+from intake.catalog import Catalog
+from intake_xarray.opendap import OpenDapSource
+from model_catalogs.process import DatasetTransform
 
 from model_catalogs import process
 
@@ -54,7 +57,7 @@ def test_find_availability():
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
-        cat = mc.find_availability(main_cat[model], timings=timing, override=True)
+        cat = mc.find_availability(main_cat[model], timing=timing, override=True)
         if "start_datetime" not in cat[timing].metadata:
             warnings.warn(
                 f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
@@ -63,6 +66,18 @@ def test_find_availability():
         fname = mc.FILE_PATH_START(model, timing)
         if not mc.is_fresh(fname):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
+
+        # make sure catalog output since catalog was input
+        assert isinstance(cat, Catalog)
+
+        # also compare with requesting source directly
+        source = mc.find_availability(main_cat[model][timing])
+
+        # make sure source output since source was input
+        assert isinstance(source, (OpenDapSource, DatasetTransform))
+
+        assert cat[timing].metadata['start_datetime'] == source.metadata['start_datetime']
+        assert cat[timing].metadata['end_datetime'] == source.metadata['end_datetime']
 
 
 @pytest.mark.slow
@@ -167,7 +182,7 @@ def test_select_date_range_dates():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timings=timing, override=True
+                    main_cat[model], timing=timing, override=True
                 )
             else:
                 cat = main_cat[model]
@@ -221,7 +236,7 @@ def test_select_date_range_dates():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timings=timing, override=True
+                    main_cat[model], timing=timing, override=True
                 )
             else:
                 cat = main_cat[model]
