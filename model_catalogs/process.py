@@ -177,6 +177,37 @@ class DatasetTransform(GenericTransform):
                     "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )
 
+            # if "yesterday" is in user_parameters for original source, check that yesterday is still
+            # yesterday. Otherwise, info in source is old.
+            if any(
+                [
+                    "yesterday" in d.values()
+                    for d in self._source.describe()["user_parameters"]
+                ]
+            ):
+                check_yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
+                if yesterday.date() != check_yesterday.date():
+                    warnings.warn(
+                        f"You may be running with an out of date source, and you may consider restarting the kernel to update. Yesterday from code: {yesterday.date()}, yesterday right now: {check_yesterday.date()}.",  # noqa: E501
+                        UserWarning,
+                    )
+
+            # if "today" is in user_parameters for original source, check that today is still
+            # today. Otherwise, info in source is old.
+            if any(
+                [
+                    "tod" in d.values()
+                    for d in self._source.describe()["user_parameters"]
+                ]
+            ):
+                check_today = pd.Timestamp.today()
+                today = [d['default'] for d in self._source.describe()["user_parameters"] if "tod" in d.values()][0]
+                if today.date() != check_today.date():
+                    warnings.warn(
+                        f"You may be running with an out of date source, and you may consider restarting the kernel to update. Today from code: {today.date()}, today right now: {check_today.date()}.",  # noqa: E501
+                        UserWarning,
+                    )
+
             # This sends the metadata to `add_attributes()`
             self._ds = self._transform(
                 self._source.to_dask(),
