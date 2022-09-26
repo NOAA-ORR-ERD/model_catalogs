@@ -42,6 +42,7 @@ sources:
         Y: [eta_rho, eta_u, eta_v, eta_psi]
         Z: [s_rho, s_w]
       standard_names:
+        angle: angle_of_rotation_from_east_to_x
         eastward_sea_water_velocity: u
         northward_sea_water_velocity: v
         ocean_s_coordinate_g2: [s_rho, s_w]
@@ -82,6 +83,7 @@ sources:
         Y: [eta_rho, eta_u, eta_v, eta_psi]
         Z: [s_rho, s_w]
       standard_names:
+        angle: angle_of_rotation_from_east_to_x
         eastward_sea_water_velocity: u
         northward_sea_water_velocity: v
         ocean_s_coordinate_g2: [s_rho, s_w]
