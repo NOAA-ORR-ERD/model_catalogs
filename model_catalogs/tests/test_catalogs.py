@@ -15,14 +15,14 @@ import pytest
 import xarray as xr
 import yaml
 
+from intake.catalog import Catalog
+from intake_xarray.opendap import OpenDapSource
 from pandas import Timestamp
 
 import model_catalogs as mc
-from intake.catalog import Catalog
-from intake_xarray.opendap import OpenDapSource
-from model_catalogs.process import DatasetTransform
 
 from model_catalogs import process
+from model_catalogs.process import DatasetTransform
 
 
 def test_setup():
@@ -76,8 +76,10 @@ def test_find_availability():
         # make sure source output since source was input
         assert isinstance(source, (OpenDapSource, DatasetTransform))
 
-        assert cat[timing].metadata['start_datetime'] == source.metadata['start_datetime']
-        assert cat[timing].metadata['end_datetime'] == source.metadata['end_datetime']
+        assert (
+            cat[timing].metadata["start_datetime"] == source.metadata["start_datetime"]
+        )
+        assert cat[timing].metadata["end_datetime"] == source.metadata["end_datetime"]
 
         # test that if server status is False, start_datetime, end_datetime are None
         in_source = main_cat[model][timing]
@@ -167,7 +169,7 @@ def test_select_date_range():
     main_cat = mc.setup()
     for model, timing in test_models.items():
         source = mc.select_date_range(
-            main_cat[model], '1980-1-1', '1980-1-2', timing=timing
+            main_cat[model], "1980-1-1", "1980-1-2", timing=timing
         )
 
         with pytest.warns(RuntimeWarning):
@@ -309,7 +311,9 @@ def check_source(source):
             )
             return
     except Exception as e:
-        warnings.warn(f"Source {source.cat.name}, {source.name} could not be read in by `xarray`, with uncaught exception: {e}.")
+        warnings.warn(
+            f"Source {source.cat.name}, {source.name} could not be read in by `xarray`, with uncaught exception: {e}."
+        )
         return
     # except OSError:
     #     warnings.warn(

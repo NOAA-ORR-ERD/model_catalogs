@@ -213,7 +213,11 @@ class DatasetTransform(GenericTransform):
                 ]
             ):
                 check_today = pd.Timestamp.today()
-                today = [d['default'] for d in self._source.describe()["user_parameters"] if "tod" in d.values()][0]
+                today = [
+                    d["default"]
+                    for d in self._source.describe()["user_parameters"]
+                    if "tod" in d.values()
+                ][0]
                 if today.date() != check_today.date():
                     warnings.warn(
                         f"You may be running with an out of date source, and you may consider restarting the kernel to update. Today from code: {today.date()}, today right now: {check_today.date()}.",  # noqa: E501
@@ -238,15 +242,21 @@ class DatasetTransform(GenericTransform):
                         T=slice(kwargs["start_date"], kwargs["end_date"])
                     )
 
-                    if len(ds_temp.cf['T']) == 0:
-                        warnings.warn(f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset, and so was not used.", RuntimeWarning)
+                    if len(ds_temp.cf["T"]) == 0:
+                        warnings.warn(
+                            f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset, and so was not used.",
+                            RuntimeWarning,
+                        )
 
                     else:
                         self._ds = ds_temp
 
                 except KeyError:
                     # self._ds = self._ds
-                    warnings.warn(f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset, and so was not used.", RuntimeWarning)
+                    warnings.warn(
+                        f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset, and so was not used.",
+                        RuntimeWarning,
+                    )
 
         return self._ds
 

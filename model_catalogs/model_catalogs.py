@@ -18,10 +18,10 @@ from dateutil.parser import parse
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from intake_xarray.opendap import OpenDapSource
-from model_catalogs.process import DatasetTransform
-
 
 import model_catalogs as mc
+
+from model_catalogs.process import DatasetTransform
 
 
 DEFAULT = datetime(1970, 1, 1, 22, 22, 22)
@@ -243,12 +243,8 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
         ds = source.to_dask()
         # use one T in case there are more than one
         tkey = ds.cf.axes["T"][0]
-        start_datetime = (
-            str(ds[tkey].values[0]) if find_start_datetime else None
-        )
-        end_datetime = (
-            str(ds[tkey].values[-1]) if find_end_datetime else None
-        )
+        start_datetime = str(ds[tkey].values[0]) if find_start_datetime else None
+        end_datetime = str(ds[tkey].values[-1]) if find_end_datetime else None
         ds.close()
 
     # for when we need to aggregate which is OFS models nowcast and hindcast
@@ -341,7 +337,10 @@ def find_availability_source(source, override=False):
 
     # if server is not working, return input source with None for new metadata
     if not source.status:
-        warnings.warn(f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.", RuntimeWarning)
+        warnings.warn(
+            f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.",
+            RuntimeWarning,
+        )
         start_datetime, end_datetime = None, None
 
     else:
@@ -350,7 +349,9 @@ def find_availability_source(source, override=False):
         # check if already know the time and not stale
         # file times are given in UTC
         # If files are not stale, read in info from there
-        if not override and mc.is_fresh(mc.FILE_PATH_START(source.cat.name, source.name)):
+        if not override and mc.is_fresh(
+            mc.FILE_PATH_START(source.cat.name, source.name)
+        ):
             with open(mc.FILE_PATH_START(source.cat.name, source.name), "r") as stream:
                 start_datetime = yaml.safe_load(stream)["start_datetime"]
             find_start_datetime = False
@@ -422,7 +423,9 @@ def find_availability(cat_or_source, timing=None, override=False, verbose=False)
     # Check in case user input main_catalog which is not correct
     # if both the input obj and the items one layer down, contained in obj, are both catalogs, then
     # a nested catalog was input which is not correct
-    if isinstance(cat_or_source, Catalog) and isinstance(cat_or_source[list(cat_or_source)[0]], Catalog):
+    if isinstance(cat_or_source, Catalog) and isinstance(
+        cat_or_source[list(cat_or_source)[0]], Catalog
+    ):
         raise ValueError(
             "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['forecast']`."
         )
@@ -433,10 +436,14 @@ def find_availability(cat_or_source, timing=None, override=False, verbose=False)
         timing = list(cat_or_source) if timing is None else mc.astype(timing, list)
         sources = []
         for timing in timing:
-            source = find_availability_source(source=cat_or_source[timing], override=override)
+            source = find_availability_source(
+                source=cat_or_source[timing], override=override
+            )
             sources.append(source)
             if verbose:
-                print(f"{source.name}: {source.metadata['start_datetime']} to {source.metadata['end_datetime']}")
+                print(
+                    f"{source.name}: {source.metadata['start_datetime']} to {source.metadata['end_datetime']}"
+                )
 
         # Make new catalog to remember the new metadata
         new_user_cat = mc.make_catalog(
@@ -456,14 +463,14 @@ def find_availability(cat_or_source, timing=None, override=False, verbose=False)
 
         # doesn't make sense to input a timing and source
         if timing is not None:
-            raise ValueError(
-                "A source was input, so `timing` should be None."
-            )
+            raise ValueError("A source was input, so `timing` should be None.")
 
         source = find_availability_source(source=cat_or_source, override=override)
 
         if verbose:
-            print(f"{source.name}: {source.metadata['start_datetime']} to  {source.metadata['end_datetime']}")
+            print(
+                f"{source.name}: {source.metadata['start_datetime']} to  {source.metadata['end_datetime']}"
+            )
 
         # Make new catalog to remember the new metadata, then extract source immediately
         out_source = mc.make_catalog(
@@ -479,7 +486,9 @@ def find_availability(cat_or_source, timing=None, override=False, verbose=False)
         return out_source
 
     else:
-        raise ValueError(f"Either an Intake catalog or Intake source should be input, but found object of type {type(cat_or_source)}.")
+        raise ValueError(
+            f"Either an Intake catalog or Intake source should be input, but found object of type {type(cat_or_source)}."
+        )
 
 
 def transform_source(source_orig):
