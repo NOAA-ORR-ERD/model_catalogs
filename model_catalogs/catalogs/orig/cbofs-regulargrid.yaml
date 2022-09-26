@@ -51,3 +51,5 @@ sources:
         sea_water_temperature: temp
         sea_water_practical_salinity: salt
         time: ocean_time
+        longitude: Longitude
+        latitude: Latitude

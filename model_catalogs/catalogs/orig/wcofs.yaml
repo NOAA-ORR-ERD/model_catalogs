@@ -12,8 +12,6 @@ sources:
   forecast:
     description: Unaggregated 3D West Coast model in ROMS from 30 days ago with 72 hour forecast.
     args:
-      chunks:
-        ocean_time: 1
       compat: override
       combine: by_coords
       parallel: True
