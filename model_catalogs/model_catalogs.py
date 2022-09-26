@@ -240,7 +240,6 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # which is all non-OFS models and OFS models that are already aggregated
     if "catloc" not in source.metadata:
 
-        # try:
         ds = source.to_dask()
         # use one T in case there are more than one
         tkey = ds.cf.axes["T"][0]
@@ -251,12 +250,6 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
             str(ds[tkey].values[-1]) if find_end_datetime else None
         )
         ds.close()
-        # except OSError:
-        #     warnings.warn(
-        #         f"Model {source.cat.name} with timing {source.name} cannot connect to server.",
-        #         RuntimeWarning,
-        #     )
-        #     return None, None
 
     # for when we need to aggregate which is OFS models nowcast and hindcast
     # and forecast if there is no pre-made aggregation

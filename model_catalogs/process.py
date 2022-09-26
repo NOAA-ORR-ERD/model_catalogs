@@ -221,17 +221,6 @@ class DatasetTransform(GenericTransform):
                     )
 
             # This sends the metadata to `add_attributes()`
-            # try:
-            #     self._ds = self._source.to_dask()
-            # except ValueError:
-            #     import pdb; pdb.set_trace()
-            #     # self._ds = self._ds
-            #     warnings.warn(f"The dataset for source {self.name}, {self.cat.name} is not valid and could not be read in.", RuntimeWarning)
-            #
-            # self._ds = self._transform(
-            #     self._ds,
-            #     metadata=self.metadata,
-            # )
             self._ds = self._transform(
                 self._source.to_dask(),
                 metadata=self.metadata,
