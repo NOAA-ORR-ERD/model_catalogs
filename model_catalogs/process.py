@@ -54,6 +54,20 @@ class DatasetTransform(GenericTransform):
         return self._urlpath
 
     @property
+    def status(self):
+        """Status of server for source.
+
+        Returns
+        -------
+        bool
+            If True, server was reachable.
+        """
+
+        if not hasattr(self, "_status"):
+            self._status = mc.status(mc.astype(self.urlpath, list)[0])
+        return self._status
+
+    @property
     def dates(self):
         """Dates associated with urlpath files
 
