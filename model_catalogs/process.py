@@ -234,9 +234,15 @@ class DatasetTransform(GenericTransform):
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time
             if "start_date" in kwargs and "end_date" in kwargs:
-                self._ds = self._ds.cf.sel(
-                    T=slice(kwargs["start_date"], kwargs["end_date"])
-                )
+
+                try:
+                    self._ds = self._ds.cf.sel(
+                        T=slice(kwargs["start_date"], kwargs["end_date"])
+                    )
+
+                except KeyError:
+                    self._ds = self._ds
+                    warnings.warn(f"The time slice requested, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset.")
 
         return self._ds
 
