@@ -10,6 +10,7 @@ import cf_xarray  # noqa
 import intake
 import numpy as np
 import pandas as pd
+import requests
 import yaml
 
 from siphon.catalog import TDSCatalog
@@ -27,6 +28,28 @@ def astype(value, type_):
             return [value]
         return type_(value)
     return value
+
+
+def status(urlpath):
+    """Check status of server for urlpath.
+
+    Parameters
+    ----------
+    urlpath : str
+        Path to file location to check.
+
+    Returns
+    -------
+    bool
+        If True, server was reachable.
+    """
+
+    resp = requests.get(urlpath + ".das")
+    if resp.status_code != 200:
+        status = False
+    else:
+        status = True
+    return status
 
 
 def file2dt(filename):

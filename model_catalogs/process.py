@@ -43,6 +43,8 @@ class DatasetTransform(GenericTransform):
     def urlpath(self):
         """Data location for target
 
+        Can be overwritten by `update_urlpath`
+
         Returns
         -------
         list
@@ -54,12 +56,24 @@ class DatasetTransform(GenericTransform):
         return self._urlpath
 
     @property
+    def status(self):
+        """Status of server for source.
+
+        Returns
+        -------
+        bool
+            If True, server was reachable.
+        """
+
+        if not hasattr(self, "_status"):
+            self._status = mc.status(mc.astype(self.urlpath, list)[0])
+        return self._status
+
+    @property
     def dates(self):
         """Dates associated with urlpath files
 
-        ...if there is more than one. Doesn't work for static links).
-
-        Currently not implemented for RTOFS models. So, this is really for NOAA OFS models.
+        ...if there is more than one. Doesn't work for static links or RTOFS models. So, this is really for NOAA OFS models.
 
         Returns
         -------
@@ -67,9 +81,7 @@ class DatasetTransform(GenericTransform):
             Ordered dates to match `urlpath` locations.
         """
 
-        if "rtofs" in self.urlpath[0]:
-            raise NotImplementedError("Dates is not implemented for RTOFS models yet.")
-        elif isinstance(self.urlpath, list):
+        if "catloc" in self.metadata:
             dates = []
             for url in self.urlpath:
                 dates.extend(mc.astype(mc.file2dt(url), list))
@@ -177,6 +189,41 @@ class DatasetTransform(GenericTransform):
                     "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )
 
+            # if "yesterday" is in user_parameters for original source, check that yesterday is still
+            # yesterday. Otherwise, info in source is old.
+            if any(
+                [
+                    "yesterday" in d.values()
+                    for d in self._source.describe()["user_parameters"]
+                ]
+            ):
+                check_yesterday = pd.Timestamp.today() - pd.Timedelta("1 day")
+                if yesterday.date() != check_yesterday.date():
+                    warnings.warn(
+                        f"You may be running with an out of date source, and you may consider restarting the kernel to update. Yesterday from code: {yesterday.date()}, yesterday right now: {check_yesterday.date()}.",  # noqa: E501
+                        UserWarning,
+                    )
+
+            # if "today" is in user_parameters for original source, check that today is still
+            # today. Otherwise, info in source is old.
+            if any(
+                [
+                    "tod" in d.values()
+                    for d in self._source.describe()["user_parameters"]
+                ]
+            ):
+                check_today = pd.Timestamp.today()
+                today = [
+                    d["default"]
+                    for d in self._source.describe()["user_parameters"]
+                    if "tod" in d.values()
+                ][0]
+                if today.date() != check_today.date():
+                    warnings.warn(
+                        f"You may be running with an out of date source, and you may consider restarting the kernel to update. Today from code: {today.date()}, today right now: {check_today.date()}.",  # noqa: E501
+                        RuntimeWarning,
+                    )
+
             # This sends the metadata to `add_attributes()`
             self._ds = self._transform(
                 self._source.to_dask(),
@@ -189,9 +236,27 @@ class DatasetTransform(GenericTransform):
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time
             if "start_date" in kwargs and "end_date" in kwargs:
-                self._ds = self._ds.cf.sel(
-                    T=slice(kwargs["start_date"], kwargs["end_date"])
-                )
+
+                try:
+                    ds_temp = self._ds.cf.sel(
+                        T=slice(kwargs["start_date"], kwargs["end_date"])
+                    )
+
+                    if len(ds_temp.cf["T"]) == 0:
+                        warnings.warn(
+                            f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset, and so was not used.",
+                            RuntimeWarning,
+                        )
+
+                    else:
+                        self._ds = ds_temp
+
+                except KeyError:
+                    # self._ds = self._ds
+                    warnings.warn(
+                        f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset, and so was not used.",
+                        RuntimeWarning,
+                    )
 
         return self._ds
 

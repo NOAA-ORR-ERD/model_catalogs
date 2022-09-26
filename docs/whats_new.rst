@@ -15,6 +15,9 @@ v0.4.0 (unreleased)
 * Improved date and datetime behavior for `select_date_range()`.
 * Updates chunking parameter for several models for performance reasons.
 * Updates CF coordinate standard names for several catalogs.
+* Input to ``mc.find_availability()`` can now be an Intake Catalog or Intake Source.
+* More robust calls to ``mc.find_availability()`` in case time range cannot be found.
+* Better server checks, using ``requests`` package to see if server is working. A source's server status can be checked with `source.status`.
 
 
 v0.3.0 (September 9, 2022)

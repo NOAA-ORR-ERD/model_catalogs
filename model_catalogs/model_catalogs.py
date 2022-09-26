@@ -17,8 +17,11 @@ from datetimerange import DateTimeRange
 from dateutil.parser import parse
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+from intake_xarray.opendap import OpenDapSource
 
 import model_catalogs as mc
+
+from model_catalogs.process import DatasetTransform
 
 
 DEFAULT = datetime(1970, 1, 1, 22, 22, 22)
@@ -207,7 +210,9 @@ def setup(override=False):
 def find_datetimes(source, find_start_datetime, find_end_datetime, override=False):
     """Find the start and/or end datetimes for source.
 
-    For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`. Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
+    For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`.
+
+    Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
 
     Uses ``cf-xarray`` to determine the time axis.
 
@@ -226,7 +231,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     Returns
     -------
     tuple
-        (start_datetime, end_datetime) where each are strings or can be None if they didn't need to be found.
+        Contains 'start_datetime' and 'end_datetime' where each are strings or can be None if they didn't need to be found.
     """
 
     filetype = source.cat.metadata["filetype"]
@@ -235,26 +240,17 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # which is all non-OFS models and OFS models that are already aggregated
     if "catloc" not in source.metadata:
 
-        try:
-            ds = source.to_dask()
-            # use one T in case there are more than one
-            start_datetime = (
-                str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
-            )
-            end_datetime = (
-                str(ds[ds.cf.axes["T"][0]].values[-1]) if find_end_datetime else None
-            )
-            ds.close()
-        except OSError:
-            warnings.warn(
-                f"Model {source.cat.name} with timing {source.name} cannot connect to server.",
-                RuntimeWarning,
-            )
-            return None, None
+        ds = source.to_dask()
+        # use one T in case there are more than one
+        tkey = ds.cf.axes["T"][0]
+        start_datetime = str(ds[tkey].values[0]) if find_start_datetime else None
+        end_datetime = str(ds[tkey].values[-1]) if find_end_datetime else None
+        ds.close()
 
     # for when we need to aggregate which is OFS models nowcast and hindcast
     # and forecast if there is no pre-made aggregation
     else:
+
         if not override and mc.is_fresh(
             mc.FILE_PATH_CATREFS(source.cat.name, source.name)
         ):
@@ -323,60 +319,47 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     return start_datetime, end_datetime
 
 
-def find_availability(cat, timings=None, override=False):
-    """Find availability for model timings.
+def find_availability_source(source, override=False):
+    """Find availabililty for source specifically.
 
-    The code will check for previously-calculated availability. If found, the "freshness" of the information is checked as compared with ``mc.FRESH`` parameters specified in ``__init__``.
-
-    Start and end datetimes are allowed to be calculated separately to save time.
-
-    Note that for unaggregated models with forecasts, this checks availability for the latest forecast, which goes forward in time from today. It is not possible to use this function to check for the case of a forecast forward in time from a past day.
+    This function is called by `find_availability()` for each source. If ``source.status`` is False, input source is returned with None for `start_datetime` and `end_datetime`.
 
     Parameters
     ----------
-    cat : Intake catalog
-        Catalog containing timing sources for which to find availability.
-    timings : str, list of strings, optional
-        Specified timing to find the availability for. If unspecified, loop over all timings and find
-        availability for all.
-    override : boolean, optional
-        Use `override=True` to find availability regardless of freshness.
+    source : Intake source
+        Source for which to find availability.
 
     Returns
     -------
-    Intake catalog
-        The input Intake catalog but with `start_datetime` and `end_datetime` added to metadata for the timings that were evaluated.
-
-    Examples
-    --------
-
-    Setup source catalog, then find availability for all timings of CIOFS model:
-
-    >>> source_cat = mc.setup()
-    >>> cat = mc.find_availability(source_cat['CIOFS']))
-
-    Find availability for only nowcast of CBOFS model:
-
-    >>> cat = mc.find_availability(source_cat['CBOFS'], 'nowcast')
+    Intake source
+        `start_datetime` and `end_datetime` are added to metadata of source.
     """
 
-    # if no timings input, loop through all
-    timings = list(cat) if timings is None else mc.astype(timings, list)
+    # if server is not working, return input source with None for new metadata
+    if not source.status:
+        warnings.warn(
+            f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.",
+            RuntimeWarning,
+        )
+        start_datetime, end_datetime = None, None
 
-    for timing in timings:
+    else:
+
         # check if start and end datetime files already exist and are new enough to use
         # check if already know the time and not stale
         # file times are given in UTC
         # If files are not stale, read in info from there
-        if not override and mc.is_fresh(mc.FILE_PATH_START(cat.name, timing)):
-            with open(mc.FILE_PATH_START(cat.name, timing), "r") as stream:
+        if not override and mc.is_fresh(
+            mc.FILE_PATH_START(source.cat.name, source.name)
+        ):
+            with open(mc.FILE_PATH_START(source.cat.name, source.name), "r") as stream:
                 start_datetime = yaml.safe_load(stream)["start_datetime"]
             find_start_datetime = False
         else:
             find_start_datetime = True  # need to still find the start_datetime
 
-        if not override and mc.is_fresh(mc.FILE_PATH_END(cat.name, timing)):
-            with open(mc.FILE_PATH_END(cat.name, timing), "r") as stream:
+        if not override and mc.is_fresh(mc.FILE_PATH_END(source.cat.name, source.name)):
+            with open(mc.FILE_PATH_END(source.cat.name, source.name), "r") as stream:
                 end_datetime = yaml.safe_load(stream)["end_datetime"]
             find_end_datetime = False
         else:
@@ -386,27 +369,126 @@ def find_availability(cat, timings=None, override=False):
         # find_start_datetime, find_end_datetime
         if find_start_datetime or find_end_datetime:
             start_temp, end_temp = find_datetimes(
-                cat[timing], find_start_datetime, find_end_datetime, override=override
+                source, find_start_datetime, find_end_datetime, override=override
             )
 
         start_datetime = start_temp if find_start_datetime else start_datetime
         end_datetime = end_temp if find_end_datetime else end_datetime
 
-        cat[timing].metadata["start_datetime"] = start_datetime
-        cat[timing].metadata["end_datetime"] = end_datetime
+    source.metadata["start_datetime"] = start_datetime
+    source.metadata["end_datetime"] = end_datetime
 
-    # Make new catalog to remember the new metadata
-    new_user_cat = mc.make_catalog(
-        [cat[timing] for timing in list(cat)],
-        full_cat_name=cat.name,
-        full_cat_description=cat.description,
-        full_cat_metadata=cat.metadata,
-        cat_driver=[cat[timing]._entry._driver for timing in list(cat)],
-        cat_path=None,
-        save_catalog=False,
-    )
+    return source
 
-    return new_user_cat
+
+def find_availability(cat_or_source, timing=None, override=False, verbose=False):
+    """Find availability for Catalog or Source.
+
+    The code will check for previously-calculated availability. If found, the "freshness" of the information is checked as compared with ``mc.FRESH`` parameters specified in ``__init__``.
+
+    Start and end datetimes are allowed to be calculated separately to save time.
+
+    Note that for unaggregated models with forecasts, this checks availability for the latest forecast, which goes forward in time from today. It is not possible to use this function to check for the case of a forecast forward in time from a past day.
+
+    Parameters
+    ----------
+    cat_or_source : Intake catalog or source
+        Catalog containing timing sources for which to find availability, or single Source for which to find availability.
+    timing : str, list of strings, optional
+        Specified timing(s) for which to find the availability for a catalog. If unspecified and cat_or_source is a Catalog, loop over all sources in catalog and find availability for all.
+    override : boolean, optional
+        Use `override=True` to find availability regardless of freshness.
+    verbose : boolean, optional
+        If True, `start_datetime` and `end_datetime` found for each Source will be printed.
+
+    Returns
+    -------
+    Intake catalog or source
+        If a Catalog was input, a Catalog will be returned; if a Source was input, a Source will be returned. For the single input Source or all Sources in the input Catalog, `start_datetime` and `end_datetime` are added to metadata.
+
+    Examples
+    --------
+
+    Set up source catalog, then find availability for all sources of CIOFS model:
+
+    >>> main_cat = mc.setup()
+    >>> cat = mc.find_availability(main_cat['CIOFS'], timing=['forecast', 'nowcast'])
+
+    Find availability for only nowcast of CBOFS model, and print it:
+
+    >>> source = mc.find_availability(main_cat['CBOFS']['nowcast'], verbose=True)
+    nowcast: 2022-08-22 13:00:00 to  2022-09-25 12:00:00
+    """
+
+    # Check in case user input main_catalog which is not correct
+    # if both the input obj and the items one layer down, contained in obj, are both catalogs, then
+    # a nested catalog was input which is not correct
+    if isinstance(cat_or_source, Catalog) and isinstance(
+        cat_or_source[list(cat_or_source)[0]], Catalog
+    ):
+        raise ValueError(
+            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['forecast']`."
+        )
+
+    # if Catalog was input
+    if isinstance(cat_or_source, Catalog):
+        # if no timing input, loop through all
+        timing = list(cat_or_source) if timing is None else mc.astype(timing, list)
+        sources = []
+        for timing in timing:
+            source = find_availability_source(
+                source=cat_or_source[timing], override=override
+            )
+            sources.append(source)
+            if verbose:
+                print(
+                    f"{source.name}: {source.metadata['start_datetime']} to {source.metadata['end_datetime']}"
+                )
+
+        # Make new catalog to remember the new metadata
+        new_user_cat = mc.make_catalog(
+            sources,
+            full_cat_name=cat_or_source.name,
+            full_cat_description=cat_or_source.description,
+            full_cat_metadata=cat_or_source.metadata,
+            cat_driver=[source._entry._driver for source in list(sources)],
+            cat_path=None,
+            save_catalog=False,
+        )
+
+        return new_user_cat
+
+    # if Source input
+    elif isinstance(cat_or_source, (OpenDapSource, DatasetTransform)):
+
+        # doesn't make sense to input a timing and source
+        if timing is not None:
+            raise ValueError("A source was input, so `timing` should be None.")
+
+        source = find_availability_source(source=cat_or_source, override=override)
+
+        if verbose:
+            print(
+                f"{source.name}: {source.metadata['start_datetime']} to  {source.metadata['end_datetime']}"
+            )
+
+        # Make new catalog to remember the new metadata, then extract source immediately
+        out_source = mc.make_catalog(
+            [source],
+            full_cat_name=cat_or_source.name,
+            full_cat_description=cat_or_source.description,
+            full_cat_metadata=cat_or_source.metadata,
+            cat_driver=cat_or_source._entry._driver,
+            cat_path=None,
+            save_catalog=False,
+        )[source.name]
+
+        return out_source
+
+    else:
+        raise ValueError(
+            f"Either an Intake catalog or Intake source should be input, but found object of type {type(cat_or_source)}."
+        )
 
 
 def transform_source(source_orig):
@@ -513,7 +595,7 @@ def select_date_range(
             "timing 'hindcast' does not have forecast files, so `end_date` should be a datetime representation."
         )
 
-    if end_date is not None and end_date < start_date:
+    if end_date is not None and end_date.date() < start_date.date():
         raise KeyError(
             f"`start_date` is {start_date} but needs to be earlier than `end_date` ({end_date})."
         )

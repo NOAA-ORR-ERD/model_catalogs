@@ -15,11 +15,14 @@ import pytest
 import xarray as xr
 import yaml
 
+from intake.catalog import Catalog
+from intake_xarray.opendap import OpenDapSource
 from pandas import Timestamp
 
 import model_catalogs as mc
 
 from model_catalogs import process
+from model_catalogs.process import DatasetTransform
 
 
 def test_setup():
@@ -54,7 +57,7 @@ def test_find_availability():
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
-        cat = mc.find_availability(main_cat[model], timings=timing, override=True)
+        cat = mc.find_availability(main_cat[model], timing=timing, override=True)
         if "start_datetime" not in cat[timing].metadata:
             warnings.warn(
                 f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
@@ -63,6 +66,28 @@ def test_find_availability():
         fname = mc.FILE_PATH_START(model, timing)
         if not mc.is_fresh(fname):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
+
+        # make sure catalog output since catalog was input
+        assert isinstance(cat, Catalog)
+
+        # also compare with requesting source directly
+        source = mc.find_availability(main_cat[model][timing])
+
+        # make sure source output since source was input
+        assert isinstance(source, (OpenDapSource, DatasetTransform))
+
+        assert (
+            cat[timing].metadata["start_datetime"] == source.metadata["start_datetime"]
+        )
+        assert cat[timing].metadata["end_datetime"] == source.metadata["end_datetime"]
+
+        # test that if server status is False, start_datetime, end_datetime are None
+        in_source = main_cat[model][timing]
+        in_source._status = False
+        with pytest.warns(RuntimeWarning):
+            out_source = mc.find_availability(in_source)
+        assert out_source.metadata["start_datetime"] is None
+        assert out_source.metadata["end_datetime"] is None
 
 
 @pytest.mark.slow
@@ -104,7 +129,7 @@ def test_select_date_range():
             main_cat[model], today.date(), tom.date(), timing=timing, override=True
         )
 
-        try:
+        if source.status:
             ds = source.to_dask()
 
             assert ds.cf["T"][0] == today.normalize()
@@ -125,11 +150,30 @@ def test_select_date_range():
                 end_of_day - pd.Timedelta(f"{dts[0]}") <= ds.cf["T"][-1] < end_of_day
             )
 
-        except OSError:
+        else:
             warnings.warn(
-                f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
+                f"Source {model}, {timing} server status is False.",  # noqa: E501
                 RuntimeWarning,
             )
+
+        # except OSError:
+        #     warnings.warn(
+        #         f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
+        #         RuntimeWarning,
+        #     )
+
+    # also make sure an incorrect requested datetime range returns a warning
+    # check this for static link models
+    test_models = {"HYCOM": "forecast", "CIOFS": "forecast"}
+
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        source = mc.select_date_range(
+            main_cat[model], "1980-1-1", "1980-1-2", timing=timing
+        )
+
+        with pytest.warns(RuntimeWarning):
+            ds = source.to_dask()
 
 
 def test_select_date_range_dates():
@@ -167,7 +211,7 @@ def test_select_date_range_dates():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timings=timing, override=True
+                    main_cat[model], timing=timing, override=True
                 )
             else:
                 cat = main_cat[model]
@@ -221,7 +265,7 @@ def test_select_date_range_dates():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timings=timing, override=True
+                    main_cat[model], timing=timing, override=True
                 )
             else:
                 cat = main_cat[model]
@@ -258,13 +302,25 @@ def check_source(source):
     """Check attributes of source for other tests."""
 
     try:
-        ds = source.to_dask()
-    except OSError:
+        if source.status:
+            ds = source.to_dask()
+        else:
+            warnings.warn(
+                f"Source {source.cat.name}, {source.name} server status is False.",
+                RuntimeWarning,
+            )
+            return
+    except Exception as e:
         warnings.warn(
-            f"Model {source.cat.name} with timing {source.name} is not working right now.",
-            RuntimeWarning,
+            f"Source {source.cat.name}, {source.name} could not be read in by `xarray`, with uncaught exception: {e}."
         )
         return
+    # except OSError:
+    #     warnings.warn(
+    #         f"Model {source.cat.name} with timing {source.name} is not working right now.",
+    #         RuntimeWarning,
+    #     )
+    #     return
 
     # check axis attributes have been assigned
     checks = [
@@ -353,9 +409,9 @@ def test_nowcast():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -373,9 +429,9 @@ def test_hindcast():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -393,9 +449,9 @@ def test_hindcast_forecast_aggregation():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 

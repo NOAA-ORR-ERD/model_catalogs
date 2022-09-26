@@ -22,7 +22,7 @@ color = true
 [tool.isort]
 known_third_party = ["appdirs", "cf_xarray", "dask", "datetimerange",
                      "intake", "intake-xarray", "netcdf4",
-                     "numpy", "pandas", "pip",
+                     "numpy", "pandas", "pip", "requests",
                      "setuptools", "siphon", "xarray"]
 
 [tool.pytest.ini_options]

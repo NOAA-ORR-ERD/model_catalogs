@@ -8,5 +8,6 @@ netcdf4
 numpy
 pandas
 pip
+requests
 siphon
 xarray
