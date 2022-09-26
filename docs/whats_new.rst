@@ -13,6 +13,8 @@ v0.4.0 (unreleased)
 * Fixed bug when applying `standard_name` attributes to coordinate variables.
 * ``model_catalogs`` can now understand the datetimes associated with NOAA OFS models. See `Model Aggregations <https://model-catalogs.readthedocs.io/en/latest/aggregations.html#>`_ for more details.
 * Improved date and datetime behavior for `select_date_range()`.
+* Updates chunking parameter for several models for performance reasons.
+* Updates CF coordinate standard names for several catalogs.
 
 
 v0.3.0 (September 9, 2022)

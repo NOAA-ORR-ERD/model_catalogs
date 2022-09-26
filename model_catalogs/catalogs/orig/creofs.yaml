@@ -12,8 +12,6 @@ sources:
   forecast:
     description: Unaggregated 3D Columbia River model in SELFE from 30 days ago with 48 hour forecast.
     args:
-      chunks:
-        time: 1
       compat: override
       combine: by_coords
       parallel: True
@@ -49,6 +47,8 @@ sources:
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
+        longitude: lon
+        latitude: lat
       coords:
         - time
         - zval
@@ -59,8 +59,6 @@ sources:
     driver: opendap
     description: Unaggregated 3D Columbia River model in SELFE from 2015-08-19 until 4 days ago, nowcast files only.
     args:
-      chunks:
-        time: 1
       compat: override
       combine: by_coords
       parallel: True
@@ -92,6 +90,8 @@ sources:
         sea_water_temperature: temp
         sea_water_practical_salinity: salinity
         time: time
+        longitude: lon
+        latitude: lat
       coords:
         - time
         - zval
