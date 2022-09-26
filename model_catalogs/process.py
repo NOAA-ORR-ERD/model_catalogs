@@ -43,6 +43,8 @@ class DatasetTransform(GenericTransform):
     def urlpath(self):
         """Data location for target
 
+        Can be overwritten by `update_urlpath`
+
         Returns
         -------
         list
@@ -71,9 +73,7 @@ class DatasetTransform(GenericTransform):
     def dates(self):
         """Dates associated with urlpath files
 
-        ...if there is more than one. Doesn't work for static links).
-
-        Currently not implemented for RTOFS models. So, this is really for NOAA OFS models.
+        ...if there is more than one. Doesn't work for static links or RTOFS models. So, this is really for NOAA OFS models.
 
         Returns
         -------
@@ -81,9 +81,7 @@ class DatasetTransform(GenericTransform):
             Ordered dates to match `urlpath` locations.
         """
 
-        if "rtofs" in self.urlpath[0]:
-            raise NotImplementedError("Dates is not implemented for RTOFS models yet.")
-        elif isinstance(self.urlpath, list):
+        if "catloc" in self.metadata:
             dates = []
             for url in self.urlpath:
                 dates.extend(mc.astype(mc.file2dt(url), list))

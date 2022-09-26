@@ -210,7 +210,9 @@ def setup(override=False):
 def find_datetimes(source, find_start_datetime, find_end_datetime, override=False):
     """Find the start and/or end datetimes for source.
 
-    For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`. Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
+    For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`.
+
+    Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
 
     Uses ``cf-xarray`` to determine the time axis.
 
@@ -229,7 +231,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     Returns
     -------
     tuple
-        (start_datetime, end_datetime) where each are strings or can be None if they didn't need to be found.
+        Contains 'start_datetime' and 'end_datetime' where each are strings or can be None if they didn't need to be found.
     """
 
     filetype = source.cat.metadata["filetype"]
@@ -241,11 +243,12 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
         # try:
         ds = source.to_dask()
         # use one T in case there are more than one
+        tkey = ds.cf.axes["T"][0]
         start_datetime = (
-            str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
+            str(ds[tkey].values[0]) if find_start_datetime else None
         )
         end_datetime = (
-            str(ds[ds.cf.axes["T"][0]].values[-1]) if find_end_datetime else None
+            str(ds[tkey].values[-1]) if find_end_datetime else None
         )
         ds.close()
         # except OSError:
@@ -258,6 +261,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # for when we need to aggregate which is OFS models nowcast and hindcast
     # and forecast if there is no pre-made aggregation
     else:
+
         if not override and mc.is_fresh(
             mc.FILE_PATH_CATREFS(source.cat.name, source.name)
         ):
