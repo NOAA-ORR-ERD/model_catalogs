@@ -238,22 +238,22 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # which is all non-OFS models and OFS models that are already aggregated
     if "catloc" not in source.metadata:
 
-        try:
-            ds = source.to_dask()
-            # use one T in case there are more than one
-            start_datetime = (
-                str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
-            )
-            end_datetime = (
-                str(ds[ds.cf.axes["T"][0]].values[-1]) if find_end_datetime else None
-            )
-            ds.close()
-        except OSError:
-            warnings.warn(
-                f"Model {source.cat.name} with timing {source.name} cannot connect to server.",
-                RuntimeWarning,
-            )
-            return None, None
+        # try:
+        ds = source.to_dask()
+        # use one T in case there are more than one
+        start_datetime = (
+            str(ds[ds.cf.axes["T"][0]].values[0]) if find_start_datetime else None
+        )
+        end_datetime = (
+            str(ds[ds.cf.axes["T"][0]].values[-1]) if find_end_datetime else None
+        )
+        ds.close()
+        # except OSError:
+        #     warnings.warn(
+        #         f"Model {source.cat.name} with timing {source.name} cannot connect to server.",
+        #         RuntimeWarning,
+        #     )
+        #     return None, None
 
     # for when we need to aggregate which is OFS models nowcast and hindcast
     # and forecast if there is no pre-made aggregation
@@ -329,7 +329,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 def find_availability_source(source, override=False):
     """Find availabililty for source specifically.
 
-    This function is called by `find_availability()` for each source.
+    This function is called by `find_availability()` for each source. If ``source.status`` is False, input source is returned with None for `start_datetime` and `end_datetime`.
 
     Parameters
     ----------
@@ -342,33 +342,40 @@ def find_availability_source(source, override=False):
         `start_datetime` and `end_datetime` are added to metadata of source.
     """
 
-    # check if start and end datetime files already exist and are new enough to use
-    # check if already know the time and not stale
-    # file times are given in UTC
-    # If files are not stale, read in info from there
-    if not override and mc.is_fresh(mc.FILE_PATH_START(source.cat.name, source.name)):
-        with open(mc.FILE_PATH_START(source.cat.name, source.name), "r") as stream:
-            start_datetime = yaml.safe_load(stream)["start_datetime"]
-        find_start_datetime = False
+    # if server is not working, return input source with None for new metadata
+    if not source.status:
+        warnings.warn(f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.", RuntimeWarning)
+        start_datetime, end_datetime = None, None
+
     else:
-        find_start_datetime = True  # need to still find the start_datetime
 
-    if not override and mc.is_fresh(mc.FILE_PATH_END(source.cat.name, source.name)):
-        with open(mc.FILE_PATH_END(source.cat.name, source.name), "r") as stream:
-            end_datetime = yaml.safe_load(stream)["end_datetime"]
-        find_end_datetime = False
-    else:
-        find_end_datetime = True  # need to still find the end_datetime
+        # check if start and end datetime files already exist and are new enough to use
+        # check if already know the time and not stale
+        # file times are given in UTC
+        # If files are not stale, read in info from there
+        if not override and mc.is_fresh(mc.FILE_PATH_START(source.cat.name, source.name)):
+            with open(mc.FILE_PATH_START(source.cat.name, source.name), "r") as stream:
+                start_datetime = yaml.safe_load(stream)["start_datetime"]
+            find_start_datetime = False
+        else:
+            find_start_datetime = True  # need to still find the start_datetime
 
-    # start and end temp could be None, depending on values of
-    # find_start_datetime, find_end_datetime
-    if find_start_datetime or find_end_datetime:
-        start_temp, end_temp = find_datetimes(
-            source, find_start_datetime, find_end_datetime, override=override
-        )
+        if not override and mc.is_fresh(mc.FILE_PATH_END(source.cat.name, source.name)):
+            with open(mc.FILE_PATH_END(source.cat.name, source.name), "r") as stream:
+                end_datetime = yaml.safe_load(stream)["end_datetime"]
+            find_end_datetime = False
+        else:
+            find_end_datetime = True  # need to still find the end_datetime
 
-    start_datetime = start_temp if find_start_datetime else start_datetime
-    end_datetime = end_temp if find_end_datetime else end_datetime
+        # start and end temp could be None, depending on values of
+        # find_start_datetime, find_end_datetime
+        if find_start_datetime or find_end_datetime:
+            start_temp, end_temp = find_datetimes(
+                source, find_start_datetime, find_end_datetime, override=override
+            )
+
+        start_datetime = start_temp if find_start_datetime else start_datetime
+        end_datetime = end_temp if find_end_datetime else end_datetime
 
     source.metadata["start_datetime"] = start_datetime
     source.metadata["end_datetime"] = end_datetime

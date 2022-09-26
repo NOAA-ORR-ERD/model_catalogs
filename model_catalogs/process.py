@@ -219,10 +219,21 @@ class DatasetTransform(GenericTransform):
                 if today.date() != check_today.date():
                     warnings.warn(
                         f"You may be running with an out of date source, and you may consider restarting the kernel to update. Today from code: {today.date()}, today right now: {check_today.date()}.",  # noqa: E501
-                        UserWarning,
+                        RuntimeWarning,
                     )
 
             # This sends the metadata to `add_attributes()`
+            # try:
+            #     self._ds = self._source.to_dask()
+            # except ValueError:
+            #     import pdb; pdb.set_trace()
+            #     # self._ds = self._ds
+            #     warnings.warn(f"The dataset for source {self.name}, {self.cat.name} is not valid and could not be read in.", RuntimeWarning)
+            #
+            # self._ds = self._transform(
+            #     self._ds,
+            #     metadata=self.metadata,
+            # )
             self._ds = self._transform(
                 self._source.to_dask(),
                 metadata=self.metadata,
@@ -236,13 +247,19 @@ class DatasetTransform(GenericTransform):
             if "start_date" in kwargs and "end_date" in kwargs:
 
                 try:
-                    self._ds = self._ds.cf.sel(
+                    ds_temp = self._ds.cf.sel(
                         T=slice(kwargs["start_date"], kwargs["end_date"])
                     )
 
+                    if len(ds_temp.cf['T']) == 0:
+                        warnings.warn(f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset, and so was not used.", RuntimeWarning)
+
+                    else:
+                        self._ds = ds_temp
+
                 except KeyError:
-                    self._ds = self._ds
-                    warnings.warn(f"The time slice requested, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset.")
+                    # self._ds = self._ds
+                    warnings.warn(f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, did not result in a valid Dataset, and so was not used.", RuntimeWarning)
 
         return self._ds
 

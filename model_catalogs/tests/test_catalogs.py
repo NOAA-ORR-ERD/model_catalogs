@@ -79,6 +79,14 @@ def test_find_availability():
         assert cat[timing].metadata['start_datetime'] == source.metadata['start_datetime']
         assert cat[timing].metadata['end_datetime'] == source.metadata['end_datetime']
 
+        # test that if server status is False, start_datetime, end_datetime are None
+        in_source = main_cat[model][timing]
+        in_source._status = False
+        with pytest.warns(RuntimeWarning):
+            out_source = mc.find_availability(in_source)
+        assert out_source.metadata["start_datetime"] is None
+        assert out_source.metadata["end_datetime"] is None
+
 
 @pytest.mark.slow
 def test_boundaries():
@@ -119,7 +127,7 @@ def test_select_date_range():
             main_cat[model], today.date(), tom.date(), timing=timing, override=True
         )
 
-        try:
+        if source.status:
             ds = source.to_dask()
 
             assert ds.cf["T"][0] == today.normalize()
@@ -140,11 +148,30 @@ def test_select_date_range():
                 end_of_day - pd.Timedelta(f"{dts[0]}") <= ds.cf["T"][-1] < end_of_day
             )
 
-        except OSError:
+        else:
             warnings.warn(
-                f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
+                f"Source {model}, {timing} server status is False.",  # noqa: E501
                 RuntimeWarning,
             )
+
+        # except OSError:
+        #     warnings.warn(
+        #         f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
+        #         RuntimeWarning,
+        #     )
+
+    # also make sure an incorrect requested datetime range returns a warning
+    # check this for static link models
+    test_models = {"HYCOM": "forecast", "CIOFS": "forecast"}
+
+    main_cat = mc.setup()
+    for model, timing in test_models.items():
+        source = mc.select_date_range(
+            main_cat[model], '1980-1-1', '1980-1-2', timing=timing
+        )
+
+        with pytest.warns(RuntimeWarning):
+            ds = source.to_dask()
 
 
 def test_select_date_range_dates():
@@ -273,13 +300,23 @@ def check_source(source):
     """Check attributes of source for other tests."""
 
     try:
-        ds = source.to_dask()
-    except OSError:
-        warnings.warn(
-            f"Model {source.cat.name} with timing {source.name} is not working right now.",
-            RuntimeWarning,
-        )
+        if source.status:
+            ds = source.to_dask()
+        else:
+            warnings.warn(
+                f"Source {source.cat.name}, {source.name} server status is False.",
+                RuntimeWarning,
+            )
+            return
+    except Exception as e:
+        warnings.warn(f"Source {source.cat.name}, {source.name} could not be read in by `xarray`, with uncaught exception: {e}.")
         return
+    # except OSError:
+    #     warnings.warn(
+    #         f"Model {source.cat.name} with timing {source.name} is not working right now.",
+    #         RuntimeWarning,
+    #     )
+    #     return
 
     # check axis attributes have been assigned
     checks = [
@@ -368,9 +405,9 @@ def test_nowcast():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -388,9 +425,9 @@ def test_hindcast():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -408,9 +445,9 @@ def test_hindcast_forecast_aggregation():
             source = main_cat[model][timing]
             try:
                 check_source(source)
-            except OSError:
+            except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} is not working right now.",
+                    f"Model {model} with timing {timing} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
