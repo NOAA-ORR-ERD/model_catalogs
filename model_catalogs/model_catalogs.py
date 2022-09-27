@@ -475,9 +475,9 @@ def find_availability(cat_or_source, timing=None, override=False, verbose=False)
         # Make new catalog to remember the new metadata, then extract source immediately
         out_source = mc.make_catalog(
             [source],
-            full_cat_name=cat_or_source.name,
-            full_cat_description=cat_or_source.description,
-            full_cat_metadata=cat_or_source.metadata,
+            full_cat_name=cat_or_source.cat.name,
+            full_cat_description=cat_or_source.cat.description,
+            full_cat_metadata=cat_or_source.cat.metadata,
             cat_driver=cat_or_source._entry._driver,
             cat_path=None,
             save_catalog=False,
@@ -527,7 +527,12 @@ def transform_source(source_orig):
 
 
 def select_date_range(
-    cat, start_date, end_date=None, timing=None, use_forecast_files=None, override=False
+    cat_or_source,
+    start_date,
+    end_date=None,
+    timing=None,
+    use_forecast_files=None,
+    override=False,
 ):
     """For NOAA OFS unaggregated models: Update `urlpath` locations in `Source`.
 
@@ -537,8 +542,8 @@ def select_date_range(
 
     Parameters
     ----------
-    cat: Intake catalog
-        An intake catalog for a specific model entry.
+    cat_or_source : Intake catalog or source
+        Catalog containing timing sources, or single Source.
     start_date: datetime-interpretable str or pd.Timestamp
         Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results.
     end_date: datetime-interpretable str, pd.Timestamp, or None; optional
@@ -551,7 +556,7 @@ def select_date_range(
         * If `end_date` is in the future, `use_forecast_files` is set to True and the forecast is read in, but stopped at `end_date`.
         * User can set `use_forecast_files=True` with an end_date in the past to get old forecast model results for end_date for unaggregated NOAA OFS models. This case is probably not well-used and is not regularly tested. The results from using this combination of inputs does not align with the results of ``mc.find_availability()`` since the forecast is not the latest.
     timing: str, optional
-        Which timing to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing must be provided for a single timing. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
+        Which timing to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing can be provided for a single timing, or ``find_availability()`` will be run if needed. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
     use_forecast_files : bool or None, optional
         This parameter is typically set by the code and is not used by the user. However, in one use case the user can input `use_forecast_files=True`: when they want to read in a forecast from the past for a NOAA OFS model. Otherwise do not use this parameter directly.
     override : boolean, optional
@@ -569,17 +574,23 @@ def select_date_range(
 
     >>> main_cat = mc.setup()
     >>> today = pd.Timestamp.today()
-    >>> cat = main_cat["LMHOFS"]
-    >>> source = mc.select_date_range(cat, start_date=today, end_date=None, timing="forecast")
+    >>> source = mc.select_date_range(main_cat["LMHOFS"]["forecast"], start_date=today, end_date=None)
 
-    Find availability for model (for forecast and hindcast timings), then find
-    urlpaths:
+    Find urlpaths with ``select_date_range`` and have it run ``find_availability()``:
 
-    >>> cat = mc.find_availability(main_cat['LMHOFS'])
-    >>> today = pd.Timestamp.today()
-    >>> source = mc.select_date_range(cat, start_date=today, end_date=today)
+    >>> source = mc.select_date_range(main_cat['LMHOFS'], start_date=today, end_date=today)
 
     """
+
+    # Check in case user input main_catalog which is not correct
+    # if both the input obj and the items one layer down, contained in obj, are both catalogs, then
+    # a nested catalog was input which is not correct
+    if isinstance(cat_or_source, Catalog) and isinstance(
+        cat_or_source[list(cat_or_source)[0]], Catalog
+    ):
+        raise ValueError(
+            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['forecast']`."
+        )
 
     # save these to determine if user input dates with times or not
     start_date_input, end_date_input = start_date, end_date
@@ -658,44 +669,59 @@ def select_date_range(
         end_date_loop = end_date
         use_forecast_files = True
 
-    # if there is only one timing, use it
-    if timing is None and len(list(cat)) == 1:
-        timing = list(cat)[0]
+    # if Catalog was input, determine which timing to use to get to a source
+    if isinstance(cat_or_source, Catalog):
 
-    elif timing is None and any(
-        [
-            "start_datetime" not in cat[timing].metadata
-            or "end_datetime" not in cat[timing].metadata
-            for timing in list(cat)
-        ]
-    ):
-        raise KeyError(
-            "Run `mc.find_availability()` for this model before running this command. Otherwise input timing that contains desired date range."  # noqa: E501
-        )
+        cat = cat_or_source
 
-    # which source to use from catalog for desired date range
-    if timing is None:
-        user_range = DateTimeRange(start_date, end_date)
+        # if there is only one timing, use it
+        if timing is None and len(list(cat)) == 1:
+            timing = list(cat)[0]
 
-        for timing in list(cat):
-            timing_range = DateTimeRange(
-                cat[timing].metadata["start_datetime"],
-                cat[timing].metadata["end_datetime"],
+        elif timing is None and any(
+            [
+                "start_datetime" not in cat[timing].metadata
+                or "end_datetime" not in cat[timing].metadata
+                for timing in list(cat)
+            ]
+        ):
+            warnings.warn(
+                "`find_availability()` has not been run for this model — running now..."
             )
-            try:  # use this timing if it is in the date range
-                if user_range in timing_range:
-                    break
-            except TypeError:
-                continue
-        else:
-            raise ValueError("date range does not fully fit into any model timings")
+            cat = mc.find_availability(cat, verbose=True)
+            # raise KeyError(
+            #     "Run `mc.find_availability()` for this model before running this command. Otherwise input timing that contains desired date range."  # noqa: E501
+            # )
 
-    if use_forecast_files and timing == "hindcast":
-        raise KeyError(
-            "timing 'hindcast' does not have forecast files, so `use_forecast_files` should be False."
-        )
+        # which source to use from catalog for desired date range
+        if timing is None:
+            user_range = DateTimeRange(start_date, end_date)
 
-    source = cat[timing]
+            for timing in list(cat):
+                timing_range = DateTimeRange(
+                    cat[timing].metadata["start_datetime"],
+                    cat[timing].metadata["end_datetime"],
+                )
+                try:  # use this timing if it is in the date range
+                    if user_range in timing_range:
+                        break
+                except TypeError:
+                    continue
+            else:
+                raise ValueError("date range does not fully fit into any model timings")
+
+        if use_forecast_files and timing == "hindcast":
+            raise KeyError(
+                "timing 'hindcast' does not have forecast files, so `use_forecast_files` should be False."
+            )
+
+        source = cat[timing]
+
+    # if Source input
+    elif isinstance(cat_or_source, (OpenDapSource, DatasetTransform)):
+
+        source = cat_or_source
+        timing = source.name
 
     # catch the models that require aggregation
     if "catloc" in source.metadata:
@@ -726,7 +752,7 @@ def select_date_range(
                 if date.date() == end_date_loop.date() and use_forecast_files
                 else False
             )
-            # import pdb; pdb.set_trace()
+
             fname = mc.FILE_PATH_AGG_FILE_LOCS(
                 source.cat.name, timing, date, is_forecast
             )
@@ -746,14 +772,27 @@ def select_date_range(
                 elif len(catrefs[0]) == 2:
                     cat_ref_to_match = (date.strftime("%Y"), date.strftime("%m"))
 
-                ind = catrefs.index(cat_ref_to_match)
+                if cat_ref_to_match in catrefs:
+                    ind = catrefs.index(cat_ref_to_match)
+                else:
+                    warnings.warn(
+                        f"Probably the time range requested is not available for model {source.cat.name}, timing {source.name}. Returning source now.",
+                        RuntimeWarning,
+                    )
+                    return source
 
                 filelocs = mc.find_filelocs(
-                    catrefs[ind], source.metadata["catloc"], cat.metadata["filetype"]
+                    catrefs[ind],
+                    source.metadata["catloc"],
+                    source.cat.metadata["filetype"],
                 )
 
                 agg_filelocs = mc.agg_for_date(
-                    date, filelocs, cat.metadata["filetype"], is_forecast, pattern
+                    date,
+                    filelocs,
+                    source.cat.metadata["filetype"],
+                    is_forecast,
+                    pattern,
                 )
 
                 with open(fname, "w") as outfile:
@@ -795,6 +834,6 @@ def select_date_range(
     }
     source.metadata.update(metadata)
     # Add original overall model catalog metadata to this next version
-    source.metadata.update(cat.metadata)
+    source.metadata.update(source.cat.metadata)
 
     return source

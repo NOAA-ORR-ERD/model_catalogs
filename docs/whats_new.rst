@@ -1,6 +1,15 @@
 :mod:`What's New`
 ----------------------------
 
+v0.4.1 (unreleased)
+===================
+
+* Updates to ``select_date_range()``:
+  - can input catalog or source
+  - if ``find_availability`` needs to have been run, it will be run for you
+* added note about choosing chunks to `How to Add a New Model <https://model-catalogs.readthedocs.io/en/latest/add_model.html#>`_
+
+
 v0.4.0 (September 26, 2022)
 ===========================
 

@@ -9,14 +9,36 @@
    :hidden:
    :caption: Documentation
 
-``model_catalogs``
-******************
 
-.. automodule:: model_catalogs.model_catalogs
+Top-level API
+*************
+
+.. autosummary::
+   :toctree: generated/
+
+   model_catalogs.setup
+   model_catalogs.find_availability
+   model_catalogs.select_date_range
+
+
+Paths available
+***************
+
+.. automodule:: model_catalogs
    :members:
    :inherited-members:
    :undoc-members:
    :show-inheritance:
+
+
+``model_catalogs``
+******************
+
+.. automodule:: model_catalogs.model_catalogs
+  :members:
+  :inherited-members:
+  :undoc-members:
+  :show-inheritance:
 
 
 ``utils``

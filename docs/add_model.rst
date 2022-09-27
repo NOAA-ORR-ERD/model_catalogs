@@ -37,6 +37,8 @@ A basic template for your ``.yaml`` file is::
 
 Your catalog file needs to have the ``.yaml`` suffix and be present in ``mc.CAT_PATH_ORIG`` to be found.
 
+Chunks are difficult to choose in general. Start with an existing model's options if there is something similar to the new model. In general, reasonable chunks options are: None, -1, 'auto', or {'[time axis name': 1}. You'll need to test the resulting behavior with each option. What is best depends on a lot of things.
+
 
 Skip straight to ``extract_model``
 ----------------------------------
