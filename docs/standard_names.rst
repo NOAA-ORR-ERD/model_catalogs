@@ -9,6 +9,7 @@
 These are the ``standard_names`` used in ``model_catalogs``:
 
 * air_temperature
+* angle_of_rotation_from_east_to_x
 * dew_point_temperature
 * eastward_sea_water_velocity
 * eastward_wind
