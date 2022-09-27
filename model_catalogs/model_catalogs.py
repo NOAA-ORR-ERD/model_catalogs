@@ -538,7 +538,7 @@ def select_date_range(
     Parameters
     ----------
     cat_or_source : Intake catalog or source
-        Catalog containing timing sources for which to find availability, or single Source for which to find availability.
+        Catalog containing timing sources, or single Source.
     start_date: datetime-interpretable str or pd.Timestamp
         Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results.
     end_date: datetime-interpretable str, pd.Timestamp, or None; optional
@@ -551,7 +551,7 @@ def select_date_range(
         * If `end_date` is in the future, `use_forecast_files` is set to True and the forecast is read in, but stopped at `end_date`.
         * User can set `use_forecast_files=True` with an end_date in the past to get old forecast model results for end_date for unaggregated NOAA OFS models. This case is probably not well-used and is not regularly tested. The results from using this combination of inputs does not align with the results of ``mc.find_availability()`` since the forecast is not the latest.
     timing: str, optional
-        Which timing to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing must be provided for a single timing. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
+        Which timing to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise timing can be provided for a single timing, or ``find_availability()`` will be run if needed. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one timing available for cat, that one will be used without specifying it.
     use_forecast_files : bool or None, optional
         This parameter is typically set by the code and is not used by the user. However, in one use case the user can input `use_forecast_files=True`: when they want to read in a forecast from the past for a NOAA OFS model. Otherwise do not use this parameter directly.
     override : boolean, optional
@@ -569,15 +569,11 @@ def select_date_range(
 
     >>> main_cat = mc.setup()
     >>> today = pd.Timestamp.today()
-    >>> cat = main_cat["LMHOFS"]
-    >>> source = mc.select_date_range(cat, start_date=today, end_date=None, timing="forecast")
+    >>> source = mc.select_date_range(main_cat["LMHOFS"]["forecast"], start_date=today, end_date=None)
 
-    Find availability for model (for forecast and hindcast timings), then find
-    urlpaths:
+    Find urlpaths with ``select_date_range`` and have it run ``find_availability()``:
 
-    >>> cat = mc.find_availability(main_cat['LMHOFS'])
-    >>> today = pd.Timestamp.today()
-    >>> source = mc.select_date_range(cat, start_date=today, end_date=today)
+    >>> source = mc.select_date_range(main_cat['LMHOFS'], start_date=today, end_date=today)
 
     """
 
@@ -749,7 +745,7 @@ def select_date_range(
                 if date.date() == end_date_loop.date() and use_forecast_files
                 else False
             )
-            # import pdb; pdb.set_trace()
+
             fname = mc.FILE_PATH_AGG_FILE_LOCS(
                 source.cat.name, timing, date, is_forecast
             )
@@ -769,7 +765,11 @@ def select_date_range(
                 elif len(catrefs[0]) == 2:
                     cat_ref_to_match = (date.strftime("%Y"), date.strftime("%m"))
 
-                ind = catrefs.index(cat_ref_to_match)
+                if cat_ref_to_match in catrefs:
+                    ind = catrefs.index(cat_ref_to_match)
+                else:
+                    warnings.warn(f"Probably the time range requested is not available for model {source.cat.name}, timing {source.name}. Returning source now.", RuntimeWarning)
+                    return source
 
                 filelocs = mc.find_filelocs(
                     catrefs[ind], source.metadata["catloc"], source.cat.metadata["filetype"]

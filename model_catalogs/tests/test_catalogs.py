@@ -126,7 +126,7 @@ def test_select_date_range():
     main_cat = mc.setup()
     for model, timing in test_models.items():
         source = mc.select_date_range(
-            main_cat[model], today.date(), tom.date(), timing=timing, override=True
+            main_cat[model][timing], today.date(), tom.date(), override=True
         )
 
         if source.status:
@@ -156,12 +156,6 @@ def test_select_date_range():
                 RuntimeWarning,
             )
 
-        # except OSError:
-        #     warnings.warn(
-        #         f"Running model {model} with timing {timing} in `select_date_range()` did not return the correct date range.",  # noqa: E501
-        #         RuntimeWarning,
-        #     )
-
     # also make sure an incorrect requested datetime range returns a warning
     # check this for static link models
     test_models = {"HYCOM": "forecast", "CIOFS": "forecast"}
@@ -169,7 +163,7 @@ def test_select_date_range():
     main_cat = mc.setup()
     for model, timing in test_models.items():
         source = mc.select_date_range(
-            main_cat[model], "1980-1-1", "1980-1-2", timing=timing
+            main_cat[model][timing], "1980-1-1", "1980-1-2"
         )
 
         with pytest.warns(RuntimeWarning):
@@ -216,10 +210,9 @@ def test_select_date_range_dates():
             else:
                 cat = main_cat[model]
             source = mc.select_date_range(
-                cat,
+                cat[timing],
                 start_date=tc["sday"],
                 end_date=tc["eday"],
-                timing=timing,
                 override=True,
             )
 
@@ -270,10 +263,9 @@ def test_select_date_range_dates():
             else:
                 cat = main_cat[model]
             source = mc.select_date_range(
-                cat,
+                cat[timing],
                 start_date=tc["sday"],
                 end_date=tc["eday"],
-                timing=timing,
                 override=True,
             )
 
@@ -591,8 +583,7 @@ def test_urlpath_after_select():
 
     day = "2022-1-1"
     source = mc.select_date_range(
-        main_cat["CREOFS"],
-        timing="hindcast",
+        main_cat["CREOFS"]["hindcast"],
         start_date=day,
         end_date=day,
         override=True,

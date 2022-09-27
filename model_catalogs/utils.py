@@ -295,11 +295,14 @@ def filedates2df(filelocs):
         filenames.extend([fname] * len(filedate))
         filedates.extend(filedate)
 
-    # Make dataframe and sort resulting df by index which is the datetime of each file
-    df = pd.DataFrame(index=filedates, data={"filenames": filenames}).sort_index()
+    # Make dataframe
+    df = pd.DataFrame(index=filedates, data={"filenames": filenames})
 
-    # remove rows if index is duplicated
-    df = df[~df.index.duplicated(keep="last")]
+    # Sort resulting df by filenames and then by index which is the datetime of each file
+    df = df.sort_values(axis='index', by='filenames').sort_index()
+
+    # remove rows if index is duplicated, sorting makes it so nowcast files are kept
+    df = df[~df.index.duplicated(keep="first")]
 
     return df
 
