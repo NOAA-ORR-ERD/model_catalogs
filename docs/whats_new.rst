@@ -1,8 +1,8 @@
 :mod:`What's New`
 ----------------------------
 
-v0.4.1 (unreleased)
-===================
+v0.4.1 (September 27, 2022)
+===========================
 
 * Updates to ``select_date_range()``:
   - can input catalog or source
