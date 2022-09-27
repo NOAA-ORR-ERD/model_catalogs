@@ -558,16 +558,16 @@ def test_filedates2df():
 
     # also no duplicate in ordered_fnames
     ordered_fnames = [
-        "nos.creofs.fields.n000.20220920.t15z.nc",
-        "nos.creofs.fields.n001.20220920.t15z.nc",
-        "nos.creofs.fields.n002.20220920.t15z.nc",
-        "nos.creofs.fields.n003.20220920.t15z.nc",
-        "nos.creofs.fields.n004.20220920.t15z.nc",
-        "nos.creofs.fields.n005.20220920.t15z.nc",
-        "nos.creofs.fields.n006.20220920.t15z.nc",
-        "nos.creofs.fields.f001.20220920.t15z.nc",
-        "nos.creofs.fields.f002.20220920.t15z.nc",
-        "nos.creofs.fields.f003.20220920.t15z.nc",
+'nos.creofs.fields.n000.20220920.t15z.nc',
+ 'nos.creofs.fields.n001.20220920.t15z.nc',
+ 'nos.creofs.fields.n002.20220920.t15z.nc',
+ 'nos.creofs.fields.n003.20220920.t15z.nc',
+ 'nos.creofs.fields.n004.20220920.t15z.nc',
+ 'nos.creofs.fields.n005.20220920.t15z.nc',
+ 'nos.creofs.fields.f000.20220920.t15z.nc',
+ 'nos.creofs.fields.f001.20220920.t15z.nc',
+ 'nos.creofs.fields.f002.20220920.t15z.nc',
+ 'nos.creofs.fields.f003.20220920.t15z.nc'
     ]
 
     assert ordered_fnames == list(df["filenames"].values)
