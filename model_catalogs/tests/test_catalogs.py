@@ -162,9 +162,7 @@ def test_select_date_range():
 
     main_cat = mc.setup()
     for model, timing in test_models.items():
-        source = mc.select_date_range(
-            main_cat[model][timing], "1980-1-1", "1980-1-2"
-        )
+        source = mc.select_date_range(main_cat[model][timing], "1980-1-1", "1980-1-2")
 
         with pytest.warns(RuntimeWarning):
             ds = source.to_dask()

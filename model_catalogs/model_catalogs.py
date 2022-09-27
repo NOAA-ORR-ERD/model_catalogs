@@ -527,7 +527,12 @@ def transform_source(source_orig):
 
 
 def select_date_range(
-    cat_or_source, start_date, end_date=None, timing=None, use_forecast_files=None, override=False
+    cat_or_source,
+    start_date,
+    end_date=None,
+    timing=None,
+    use_forecast_files=None,
+    override=False,
 ):
     """For NOAA OFS unaggregated models: Update `urlpath` locations in `Source`.
 
@@ -680,7 +685,9 @@ def select_date_range(
                 for timing in list(cat)
             ]
         ):
-            warnings.warn("`find_availability()` has not been run for this model — running now...")
+            warnings.warn(
+                "`find_availability()` has not been run for this model — running now..."
+            )
             cat = mc.find_availability(cat, verbose=True)
             # raise KeyError(
             #     "Run `mc.find_availability()` for this model before running this command. Otherwise input timing that contains desired date range."  # noqa: E501
@@ -768,15 +775,24 @@ def select_date_range(
                 if cat_ref_to_match in catrefs:
                     ind = catrefs.index(cat_ref_to_match)
                 else:
-                    warnings.warn(f"Probably the time range requested is not available for model {source.cat.name}, timing {source.name}. Returning source now.", RuntimeWarning)
+                    warnings.warn(
+                        f"Probably the time range requested is not available for model {source.cat.name}, timing {source.name}. Returning source now.",
+                        RuntimeWarning,
+                    )
                     return source
 
                 filelocs = mc.find_filelocs(
-                    catrefs[ind], source.metadata["catloc"], source.cat.metadata["filetype"]
+                    catrefs[ind],
+                    source.metadata["catloc"],
+                    source.cat.metadata["filetype"],
                 )
 
                 agg_filelocs = mc.agg_for_date(
-                    date, filelocs, source.cat.metadata["filetype"], is_forecast, pattern
+                    date,
+                    filelocs,
+                    source.cat.metadata["filetype"],
+                    is_forecast,
+                    pattern,
                 )
 
                 with open(fname, "w") as outfile:
