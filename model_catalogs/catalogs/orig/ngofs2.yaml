@@ -1,21 +1,21 @@
 name: NGOFS2
-description: NOAA/NOS Northern Gulf of Mexico Operational Forecast System 
+description: NOAA/NOS Northern Gulf of Mexico Operational Forecast System
 metadata:
   long_name: Northern Gulf of Mexico
   html_desc: A <a href="http://tidesandcurrents.noaa.gov/ofs/ngofs2/ngofs2.html" target="_blank">
             Northern Gulf of Mexico Operational Forecast System (NGOFS)</a>
-            was developed in a joint project of the 
+            was developed in a joint project of the
             <a href="http://www.nauticalcharts.noaa.gov/" target="_blank">
-            NOAA/National Ocean Service's (NOS) Office of Coast Survey </a>, 
+            NOAA/National Ocean Service's (NOS) Office of Coast Survey </a>,
             the <a href="http://tidesandcurrents.noaa.gov/" target="_blank">
-            NOAA/NOS Center for Operational Oceanographic Products and Services (CO-OPS)</a>, 
+            NOAA/NOS Center for Operational Oceanographic Products and Services (CO-OPS)</a>,
             the <a href="http://mag.ncep.noaa.gov" target="_blank">
-            NOAA/National Weather Service's (NWS) National Centers 
-            for Environmental Prediction (NCEP) Central Operations (NCO)</a>, and the 
+            NOAA/National Weather Service's (NWS) National Centers
+            for Environmental Prediction (NCEP) Central Operations (NCO)</a>, and the
             <a href="http://fvcom.smast.umassd.edu/" target="_blank">
-            University of Massachusetts, Dartmouth </a> using the Finite Volume Coastal Ocean 
-            Model (FVCOM).             
-            For detailed model information, visit the NOAA CO-OPS 
+            University of Massachusetts, Dartmouth </a> using the Finite Volume Coastal Ocean
+            Model (FVCOM).
+            For detailed model information, visit the NOAA CO-OPS
             <a href="http://tidesandcurrents.noaa.gov/ofs/ngofs2/ngofs_info.html" target="_blank">
             model information page.</a>
   grid_dim_(node,nele,siglay): [303714,569405,40]

@@ -1,5 +1,5 @@
 name: LSOFS
-description: NOAA/NOS Lake Superior Operational Forecast System 
+description: NOAA/NOS Lake Superior Operational Forecast System
 metadata:
   long_name: Lake Superior
   grid_dim_(xyz): [61,30,20]

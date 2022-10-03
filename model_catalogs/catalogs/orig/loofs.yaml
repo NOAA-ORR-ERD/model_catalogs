@@ -1,5 +1,5 @@
 name: LOOFS
-description: NOAA/NOS Lake Ontario Operational Forecast System 
+description: NOAA/NOS Lake Ontario Operational Forecast System
 metadata:
   long_name: Lake Ontario
   grid_dim_(xyz): [61,25,20]
