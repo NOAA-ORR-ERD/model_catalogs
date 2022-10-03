@@ -227,7 +227,7 @@ def test_select_date_range_dates():
     # check hindcast, which stops 4 days ago and does not have forecast files
     fivedays = (
         pd.Timestamp.today().normalize()
-        - pd.Timedelta("5 days")
+        - pd.Timedelta("6 days")
         + pd.Timedelta("6:00:00")
     )
     fivedays_date = str(fivedays.date())
