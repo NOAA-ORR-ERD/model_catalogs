@@ -1,6 +1,7 @@
 name: RTOFS-WEST
 description: Real-Time Ocean Forecast System model in HYCOM for the U.S. West Coast.
 metadata:
+  long_name: NOAA/NCEP RTOFS West Coast
   grid_dim_(xyz): [1000,1600,40]
   grid_res_min_(deg): 1/24
   grid_res_max_(deg): 1/24

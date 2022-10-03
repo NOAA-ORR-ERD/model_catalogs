@@ -1,6 +1,13 @@
 name: HYCOM
-description: 3D Global Ocean Forecasting System (GOFS) 3.1
+description: NRL Global Ocean Forecasting System (GOFS) 3.1
 metadata:
+  long_name: Global Ocean (GOFS 3.1)
+  html_desc: The 1/12° Global Ocean Forecast System is based on the 
+            <a href="https://hycom.org" target="_blank"> HYCOM model</a> and run
+            operationally by the US Navy.
+            For more details about the system visit the
+            <a href="https://www7320.nrlssc.navy.mil/GLBhycomcice1-12/" target="_blank"> 
+            GOFS 3.1 website</a>.
   grid_dim_(xyz): [4500,4251,40]
   grid_res_min_(deg): 1/12
   grid_res_max_(deg): 1/12

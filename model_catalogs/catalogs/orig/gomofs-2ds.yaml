@@ -1,6 +1,7 @@
 name: GOMOFS-2DS
 description: 2D selection of 3D Gulf of Maine model in ROMS.
 metadata:
+  long_name: Gulf of Maine
   grid_dim_(xyz): [777,1173,1]
   grid_res_min_(km): 0.7
   grid_res_max_(km): 0.7

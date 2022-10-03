@@ -1,6 +1,20 @@
 name: WCOFS
-description: 3D West Coast model in ROMS.
+description: NOAA/NOS West Coast Operational Forecast System 
 metadata:
+  long_name: US West Coast
+  html_desc: The <a href="http://tidesandcurrents.noaa.gov/ofs/wcofs/wcofs.html" target="_blank">
+            West Coast Operational Forecast System (CIOFS)</a> was developed by 
+            the <a href="http://www.nauticalcharts.noaa.gov/" target="_blank">
+            NOAA/National Ocean Service/Office of Coast Survey</a> in a joint project 
+            with the <a href="http://tidesandcurrents.noaa.gov/" target="_blank">
+            NOAA/NOS/Center for Operational Oceanographic Products and Services 
+            (CO-OPS)</a> and the <a href="http://mag.ncep.noaa.gov" target="_blank">
+            NOAA/National Weather Service/National Centers for 
+            Environmental Prediction (NCEP) Central Operations (NCO)</a> using 
+            the Regional Ocean Modeling System (ROMS)</a>.                    
+            For detailed model information, visit the NOAA CO-OPS 
+            <a href="http://tidesandcurrents.noaa.gov/ofs/wcofs/wcofs_info.html" target="_blank">
+            model information page.</a>
   grid_dim_(xyz): [696,2032,50]
   grid_res_min_(km): 4
   grid_res_max_(km): 4

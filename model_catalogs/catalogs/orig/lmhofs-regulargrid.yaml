@@ -1,6 +1,7 @@
 name: LMHOFS-REGULARGRID
 description: 3D Lake Michigan and Huron model in FVCOM, interpolated to regular grid.
 metadata:
+  long_name: Lakes Michigan and Huron
   grid_dim_(xyz): [837,478,24]
   grid_res_min_(km): 1
   grid_res_max_(km): 1

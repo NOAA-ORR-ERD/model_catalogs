@@ -1,6 +1,7 @@
 name: GFS-1-4DEG
-description: 3D Global Forecast System, 1/4 degree horizontal resolution.
+description: NOAA/NCEP Global Forecast System (GFS), 1/4 degree horizontal resolution.
 metadata:
+  long_name: Global Winds (GFS-1/4 degree)
   grid_dim_(xyz): [1440,721,?]
   grid_res_min_(deg): 1/4
   grid_res_max_(deg): 1/4

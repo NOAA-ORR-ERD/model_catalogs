@@ -1,6 +1,7 @@
 name: LSOFS
-description: 3D Lake Superior model in POM.
+description: NOAA/NOS Lake Superior Operational Forecast System 
 metadata:
+  long_name: Lake Superior
   grid_dim_(xyz): [61,30,20]
   grid_res_min_(km): 10
   grid_res_max_(km): 10

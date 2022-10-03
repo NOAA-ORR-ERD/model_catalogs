@@ -1,6 +1,7 @@
 name: RTOFS-EAST
 description: Real-Time Ocean Forecast System model in HYCOM for the U.S. East Coast.
 metadata:
+  long_name: NOAA/NCEP RTOFS East Coast
   grid_dim_(xyz): [700,1650,40]
   grid_res_min_(deg): 1/24
   grid_res_max_(deg): 1/24
