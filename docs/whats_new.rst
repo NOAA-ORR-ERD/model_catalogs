@@ -5,6 +5,7 @@ v0.4.2 (unreleased)
 ==============
 
 * Added `long_name` and `html_desc` to the catalog files
+* Revised overall_start/end_datetime attributes to be more consistent
 
 v0.4.1 (September 27, 2022)
 ===========================
