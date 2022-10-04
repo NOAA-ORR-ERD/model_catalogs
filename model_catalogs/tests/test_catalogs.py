@@ -148,7 +148,10 @@ def test_select_date_range():
 
             end_of_day = tom.normalize() + pd.Timedelta("1 day")
             assert bool(
-                end_of_day - pd.Timedelta(f"{dts[0]}") <= ds.cf["T"][-1] < end_of_day
+                end_of_day
+                - pd.Timedelta(f"{float(dts[0])} {np.datetime_data(dts[0])[0]}")
+                <= ds.cf["T"][-1]
+                < end_of_day
             )
 
         else:
