@@ -3,7 +3,7 @@ description: NOAA/NOS West Coast Operational Forecast System
 metadata:
   long_name: US West Coast
   html_desc: The <a href="http://tidesandcurrents.noaa.gov/ofs/wcofs/wcofs.html" target="_blank">
-            West Coast Operational Forecast System (CIOFS)</a> was developed by
+            West Coast Operational Forecast System (WCOFS)</a> was developed by
             the <a href="http://www.nauticalcharts.noaa.gov/" target="_blank">
             NOAA/National Ocean Service/Office of Coast Survey</a> in a joint project
             with the <a href="http://tidesandcurrents.noaa.gov/" target="_blank">
