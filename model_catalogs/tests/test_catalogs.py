@@ -140,7 +140,8 @@ def test_select_date_range():
             # make sure all dts are the same (some are 42 seconds off for some reason but that is ok)
             assert all(
                 [
-                    pd.Timedelta(f"{float(dt)} {np.datetime_data(dt)[0]}") < pd.Timedelta("1 minute")
+                    pd.Timedelta(f"{float(dt)} {np.datetime_data(dt)[0]}")
+                    < pd.Timedelta("1 minute")
                     for dt in dts - dts[0]
                 ]
             )
