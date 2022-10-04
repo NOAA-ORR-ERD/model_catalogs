@@ -35,8 +35,8 @@ sources:
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.sfbofs.regulargrid.n000.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/SFBOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.sfbofs.regulargrid.n001.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/SFBOFS/MODELS/catalog.xml'
-      overall_start_datetime: 'Available starting 1 day before present day.'
-      overall_end_datetime: 'Available through 48 hours after present time'
+      overall_start_datetime: 'starting 1 day before present day'
+      overall_end_datetime: '48 hours after present time'
       output_period_(hr): 1
       axis:
         T: ocean_time

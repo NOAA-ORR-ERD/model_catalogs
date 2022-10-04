@@ -79,8 +79,8 @@ sources:
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NYOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.nyofs.fields.nowcast.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t05z.nc"
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NYOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.nyofs.fields.nowcast.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t11z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NYOFS/MODELS/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 48 hours after present time'
+      overall_start_datetime: '1 month before present day'
+      overall_end_datetime: '48 hours after present time'
       pattern: '*.nyofs.{filetype}.n*.{date.year}{str(date.month).zfill(2)}{str(date.day).zfill(2)}.t??z.*'
       notes: 'treat_last_day_as_forecast==True will not work here'
       output_period_(hr): 1
@@ -126,8 +126,8 @@ sources:
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-nyofs-files/2022/07/nos.nyofs.fields.nowcast.20220701.t05z.nc"
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-nyofs-files/2022/07/nos.nyofs.fields.nowcast.20220701.t11z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-nyofs-files/catalog.xml'
-      overall_start_datetime: 'Available starting 2015-08-19. Stations files are inconsistently available back into 2014.'
-      overall_end_datetime: 'Available through 4 days before present time'
+      overall_start_datetime: 'starting 2015-08-19'
+      overall_end_datetime: '4 days before present time'
       output_period_(hr): 1
       axis:
         T: time
@@ -159,8 +159,8 @@ sources:
       engine: netcdf4
       urlpath: https://www.ncei.noaa.gov/thredds/dodsC/model-nyofs-agg/Aggregated_NYOFS_Fields_Forecast_best.ncd
     metadata:
-      overall_start_datetime: 'Available starting 2017-05-01.'
-      overall_end_datetime: 'Available to 2019-11-27.'
+      overall_start_datetime: 'starting 2017-05-01'
+      overall_end_datetime: 'to 2019-11-27'
       output_period_(hr): 1
       axis:
         T: time

@@ -31,7 +31,7 @@ sources:
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ yesterday.year }}{{ yesterday.strftime('%m') }}{{ yesterday.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
     metadata:
-      overall_start_datetime: 'Daily starting 1 day before present day.'
+      overall_start_datetime: '1 day before present day'
       overall_end_datetime: '7 days after present day'
       output_period_(hr): 24
       axis:
@@ -68,7 +68,7 @@ sources:
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_uvel"
         - "https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global{{ tod.year }}{{ tod.strftime('%m') }}{{ tod.strftime('%d') }}/rtofs_glo_3dz_forecast_daily_vvel"
     metadata:
-      overall_start_datetime: 'Daily starting present day.'
+      overall_start_datetime: 'Daily starting present day'
       overall_end_datetime: '8 days after present day'
       output_period_(hr): 24
       axis:

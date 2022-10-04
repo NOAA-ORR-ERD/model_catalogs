@@ -47,8 +47,8 @@ sources:
       "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/WCOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.wcofs.fields.n006.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc",
       ]
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/WCOFS/MODELS/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 72 hours after present time'
+      overall_start_datetime: '1 month before present day'
+      overall_end_datetime: '72 hours after present time'
       output_period_(hr): 3
       axis:
         T: ocean_time
@@ -88,8 +88,8 @@ sources:
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220701.t03z.nc"
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-wcofs-files/2022/07/nos.wcofs.fields.n003.20220702.t03z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-wcofs-files/catalog.xml'
-      overall_start_datetime: 'Available starting 2021-03-22'
-      overall_end_datetime: 'Available through 4 days before present time'
+      overall_start_datetime: 'starting 2021-03-22'
+      overall_end_datetime: '4 days before present time'
       output_period_(hr): 3
       axis:
         T: ocean_time
