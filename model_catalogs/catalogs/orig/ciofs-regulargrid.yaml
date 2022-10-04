@@ -1,6 +1,7 @@
 name: CIOFS-REGULARGRID
 description: 3D Cook Inlet model in ROMS, interpolated to regular grid.
 metadata:
+  long_name: Cook Inlet
   grid_dim_(xyz): [1461,973,26]
   grid_res_min_(km): 0.5
   grid_res_max_(km): 0.5

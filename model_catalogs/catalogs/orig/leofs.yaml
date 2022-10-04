@@ -1,6 +1,23 @@
 name: LEOFS
-description: 3D Lake Erie model in FVCOM.
+description: NOAA/NOS Lake Erie Operational Forecast System
 metadata:
+  long_name: Lake Erie
+  html_desc: The <a href="http://tidesandcurrents.noaa.gov/ofs/leofs/leofs.html" target="_blank">
+            Lake Erie Operational Forecast System (LEOFS)</a> was jointly developed by the
+            <a href="http://tidesandcurrents.noaa.gov/" target="_blank">
+            NOAA/NOS Center for Operational Oceanographic Products and Services (CO-OPS)</a>
+            and <a href="http://www.nauticalcharts.noaa.gov/" target="_blank">
+            Office of Coast Survey</a>, <a href="http://www.glerl.noaa.gov/" target="_blank">
+            the Great Lakes Environmental Research Laboratory (GLERL)</a>,
+            the <a href="http://mag.ncep.noaa.gov" target="_blank">
+            NOAA/National Weather Service's (NWS) National Centers
+            for Environmental Prediction (NCEP) Central Operations (NCO)</a>,
+            and the<a href="http://fvcom.smast.umassd.edu/" target="_blank">
+            University of Massachusetts, Dartmouth </a> using the Finite Volume Coastal Ocean
+            Model (FVCOM).
+            For detailed model information, visit the NOAA CO-OPS
+            <a href="http://tidesandcurrents.noaa.gov/ofs/leofs/leofs_info.html" target="_blank">
+            model information page.</a>
   grid_dim_(node,nele,siglay): [6106,11509,20]
   grid_res_min_(km): 0.4
   grid_res_max_(km): 4

@@ -1,6 +1,7 @@
 name: LOOFS
-description: 3D Lake Ontario model in POM.
+description: NOAA/NOS Lake Ontario Operational Forecast System
 metadata:
+  long_name: Lake Ontario
   grid_dim_(xyz): [61,25,20]
   grid_res_min_(km): 5
   grid_res_max_(km): 5

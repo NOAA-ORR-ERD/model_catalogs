@@ -1,6 +1,7 @@
 name: RTOFS-ALASKA
 description: Real-Time Ocean Forecast System model in HYCOM for Alaska.
 metadata:
+  long_name: NOAA/NCEP RTOFS Alaska Region
   grid_dim_(xyz): [500,700,40]
   grid_res_min_(deg): 1/12
   grid_res_max_(deg): 1/12

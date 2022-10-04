@@ -1,6 +1,7 @@
 name: GFS-1DEG
 description: 3D Global Forecast System, 1 degree horizontal resolution.
 metadata:
+  long_name: Global Winds (GFS-1 degree)
   grid_dim_(xyz): [360,181,?]
   grid_res_min_(deg): 1
   grid_res_max_(deg): 1

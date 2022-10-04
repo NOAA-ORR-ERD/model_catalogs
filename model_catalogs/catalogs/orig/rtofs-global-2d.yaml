@@ -1,6 +1,7 @@
 name: RTOFS-GLOBAL-2D
 description: Real-Time Ocean Forecast System model in HYCOM, 2D.
 metadata:
+  long_name: NOAA/NCEP RTOFS 2D
   grid_dim_(xyz): [4320,2160,1]
   grid_res_min_(deg): 1/12
   grid_res_max_(deg): 1/12

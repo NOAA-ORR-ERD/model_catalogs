@@ -1,6 +1,22 @@
 name: CREOFS
-description: 3D Columbia River model in SELFE.
+description: NOAA/NOS Columbia River Operational Forecast System
 metadata:
+  long_name: Columbia River
+  html_desc: The <a href="http://tidesandcurrents.noaa.gov/ofs/creofs/creofs.html" target="_blank">
+            Columbia River Estuary Operational Forecast System (CREOFS)</a> was
+            jointly developed by the <a href="http://www.ohsu.edu/xd/" target="_blank">
+            Oregon Health & Science University (OHSU)</a>,
+            the <a href="http://www.nauticalcharts.noaa.gov/" target="_blank">
+            NOAA/National Ocean Service's (NOS) Office of Coast Survey </a> and
+            <a href="http://tidesandcurrents.noaa.gov/" target="_blank">
+            Center for Operational Oceanographic Products and Services (CO-OPS)</a>,
+            and the <a href="http://mag.ncep.noaa.gov" target="_blank">
+            NOAA/National Weather Service's (NWS) National Centers
+            for Environmental Prediction (NCEP) Central Operations (NCO)</a>.
+            The CREOFS model domain includes the upper and lower Columbia River and Estuary.
+            For detailed model information, visit the NOAA CO-OPS
+            <a href="http://tidesandcurrents.noaa.gov/ofs/creofs/creofs_info.html" target="_blank">
+            model information page</a>.
   grid_dim_(node,nele,nv): [74061,142684,54]
   grid_res_min_(km): 0.01
   grid_res_max_(km): 40

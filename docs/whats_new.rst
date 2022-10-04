@@ -1,5 +1,10 @@
 :mod:`What's New`
 ----------------------------
+v0.4.2 (unreleased)
+
+==============
+
+* Added `long_name` and `html_desc` to the catalog files
 
 v0.4.1 (September 27, 2022)
 ===========================

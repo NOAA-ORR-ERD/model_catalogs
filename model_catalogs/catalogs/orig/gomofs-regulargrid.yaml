@@ -1,6 +1,7 @@
 name: GOMOFS-REGULARGRID
 description: 3D Gulf of Maine model in ROMS, interpolated to regular grid.
 metadata:
+  long_name: Gulf of Maine
   grid_dim_(xyz): [1066,737,39]
   grid_res_min_(km): 1
   grid_res_max_(km): 1

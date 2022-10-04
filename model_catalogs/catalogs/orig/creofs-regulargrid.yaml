@@ -1,6 +1,7 @@
 name: CREOFS-REGULARGRID
 description: 3D Columbia River model in SELFE, interpolated to regular grid.
 metadata:
+  long_name: Columbia River
   grid_dim_(xyz): [612,1111,39]
   grid_res_min_(km): 1
   grid_res_max_(km): 1

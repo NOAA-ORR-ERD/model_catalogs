@@ -1,6 +1,7 @@
 name: WCOFS-REGULARGRID
 description: 3D West Coast model in ROMS, interpolated to regular grid.
 metadata:
+  long_name: US West Coast
   grid_dim_(xyz): [833,935,40]
   grid_res_min_(km): 4
   grid_res_max_(km): 4
