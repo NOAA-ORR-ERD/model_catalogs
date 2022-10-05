@@ -1,4 +1,4 @@
-name: LEOFS-REGULARGRID
+name: LEOFS-RGRID
 description: 3D Lake Erie model in FVCOM, interpolated to regular grid.
 metadata:
   long_name: Lake Erie

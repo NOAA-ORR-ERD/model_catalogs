@@ -1,4 +1,4 @@
-name: CREOFS-REGULARGRID
+name: CREOFS-RGRID
 description: 3D Columbia River model in SELFE, interpolated to regular grid.
 metadata:
   long_name: Columbia River

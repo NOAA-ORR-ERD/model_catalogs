@@ -1,4 +1,4 @@
-name: NGOFS2-REGULARGRID
+name: NGOFS2-RGRID
 description: 3D Northern Gulf of Mexico model in FVCOM, interpolated to regular grid.
 metadata:
   long_name: Northern Gulf of Mexico

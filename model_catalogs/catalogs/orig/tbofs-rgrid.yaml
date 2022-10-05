@@ -1,4 +1,4 @@
-name: TBOFS-REGULARGRID
+name: TBOFS-RGRID
 description: 3D Tampa Bay model in ROMS, interpolated to regular grid.
 metadata:
   long_name: Tampa Bay

@@ -1,4 +1,4 @@
-name: CBOFS-REGULARGRID
+name: CBOFS-RGRID
 description: 3D Chesapeake Bay model in ROMS, interpolated to regular grid.
 metadata:
   long_name: Chesapeake Bay

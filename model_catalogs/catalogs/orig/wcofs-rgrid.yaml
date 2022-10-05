@@ -1,4 +1,4 @@
-name: WCOFS-REGULARGRID
+name: WCOFS-RGRID
 description: 3D West Coast model in ROMS, interpolated to regular grid.
 metadata:
   long_name: US West Coast

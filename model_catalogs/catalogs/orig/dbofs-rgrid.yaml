@@ -1,4 +1,4 @@
-name: DBOFS-REGULARGRID
+name: DBOFS-RGRID
 description: 3D Delaware Bay model in ROMS, interpolated to regular grid.
 metadata:
   long_name: Delaware Bay
