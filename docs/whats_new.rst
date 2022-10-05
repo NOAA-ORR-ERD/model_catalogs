@@ -6,6 +6,7 @@ v0.4.2 (unreleased)
 
 * Added `long_name` and `html_desc` to the catalog files
 * Revised overall_start/end_datetime attributes to be more consistent
+* Renamed Intake Source names from "timing"s to "model_source"s. Also some of the specific model names changed. All source names changed to reflect where the model output is coming from and whether the files are unaggregated or not.
 
 v0.4.1 (September 27, 2022)
 ===========================

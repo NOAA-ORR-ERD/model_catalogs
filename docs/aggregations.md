@@ -198,7 +198,7 @@ Note that the base thredds catalog location is saved for each relevant NOAA OFS 
 ```
 import model_catalogs as mc
 main_cat = mc.setup()
-main_cat['CBOFS']['nowcast'].metadata['catloc']
+main_cat['CBOFS']['coops-forecast-noagg'].metadata['catloc']
 ```
 
 which would return
@@ -214,7 +214,7 @@ There is a function in `model_catalogs` that interprets the known NOAA OFS model
 ```
 import model_catalogs as mc
 main_cat = mc.setup()
-[mc.file2dt(url) for url in main_cat['NGOFS2']['forecast'].urlpath]
+[mc.file2dt(url) for url in main_cat['NGOFS2']['coops-forecast-noagg'].urlpath]
 ```
 
 returns, for example:
@@ -241,15 +241,15 @@ Aggregating part of a set of files requires an additional step. You would need t
 ```
     name: CBOFS
     sources:
-      nowcast:
-    driver: opendap
-    description: Unaggregated 3D Chesapeake Bay model in ROMS from 30 days ago with 48 hour forecast.
-    args:
-      chunks:
-        ocean_time: 1
-      parallel: True
-      engine: netcdf4
-      preprocess: True
+      coops-forecast-noagg:
+      driver: opendap
+      description: Unaggregated 3D Chesapeake Bay model in ROMS from 30 days ago with 48 hour forecast.
+      args:
+        chunks:
+          ocean_time: 1
+        parallel: True
+        engine: netcdf4
+        preprocess: True
 ```
 
 - in ``model_catalogs`` ``process.py``, a conditional statement can look for the ``preprocess: True`` flag and if present, run preprocessing code for this case that will pull out the first N timesteps of each model output file.
