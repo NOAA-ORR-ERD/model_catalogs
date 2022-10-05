@@ -10,7 +10,7 @@ metadata:
 
 sources:
 
-  forecast:
+  nomads-forecast-yesterday:
     driver: opendap
     description: 6-hourly 3D Real-Time Ocean Forecast System model in HYCOM for the U.S. East Coast from 2 days ago through 5 day forecast from yesterday.
     parameters:
@@ -52,7 +52,7 @@ sources:
         time: time
 
   # the necessary files are only available starting partway through the day
-  nowcast:
+  nomads-forecast-today:
     driver: opendap
     description: 6-hourly 3D Real-Time Ocean Forecast System model in HYCOM for the U.S. East Coast from yesterday through 5 day forecast.
     parameters:

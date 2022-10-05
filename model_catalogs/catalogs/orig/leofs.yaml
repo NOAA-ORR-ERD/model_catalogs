@@ -26,7 +26,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D Lake Erie model in FVCOM from 30 days ago with 120 hour forecast.
     args:
       chunks:
@@ -93,7 +93,7 @@ sources:
         - latc
         - lonc
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D Lake Erie model in FVCOM from 2016-03-10 until 4 days ago, nowcast files only.
     args:

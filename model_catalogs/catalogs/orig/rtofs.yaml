@@ -9,7 +9,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  nomads-forecast-yesterday:
     driver: opendap
     description: Daily 3D Real-Time Ocean Forecast System model in HYCOM yesterday through 8 day forecast from yesterday.
     parameters:
@@ -45,7 +45,7 @@ sources:
         sea_water_temperature: temperature
         sea_water_practical_salinity: salinity
         time: time
-  nowcast:
+  nomads-forecast-today:
     driver: opendap
     description: Daily 3D Real-Time Ocean Forecast System model in HYCOM for present day through 8 day forecast.
     parameters:

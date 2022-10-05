@@ -25,7 +25,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D San Francisco Bay model in FVCOM from 30 days ago with 48 hour forecast.
     args:
       chunks:
@@ -91,7 +91,7 @@ sources:
         - latc
         - lonc
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D San Francisco Bay model in FVCOM from 2015-08-19 until 4 days ago, nowcast files only.
     args:

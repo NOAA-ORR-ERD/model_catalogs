@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D San Francisco Bay model in FVCOM, interpolated to regular grid, from 1 day ago with 48 hour forecast.
     args:
       chunks:

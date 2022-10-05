@@ -22,7 +22,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-agg:
     driver: opendap
     description: Aggregated 3D New York Harbor model in POM from 7 days ago with 48 hour forecast.
     args:
@@ -55,7 +55,7 @@ sources:
         - lat
         - lon
 
-  nowcast:
+  coops-forecast-noagg:
     driver: opendap
     description: Unaggregated 3D New York Harbor model in POM from 30 days ago with 48 hour forecast.
     args:
@@ -105,7 +105,7 @@ sources:
         - lat
         - lon
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D New York Harbor model in POM from 2015-08-19 until 4 days ago, nowcast files only.
     args:
@@ -150,7 +150,7 @@ sources:
         - lat
         - lon
 
-  hindcast-forecast-aggregation:
+  ncei-archive-agg:
     driver: opendap
     description: Aggregated 3D New York Harbor model in POM from 2017-05-01 until 2019-11-27.
     args:

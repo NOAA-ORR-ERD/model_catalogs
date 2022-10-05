@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D Lake Erie model in FVCOM, interpolated to regular grid, from 1 day ago with 120 hour forecast.
     args:
       chunks:

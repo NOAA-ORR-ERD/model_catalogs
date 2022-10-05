@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D West Coast model in ROMS, interpolated to regular grid, from 1 day ago with 72 hour forecast.
     args:
       chunks:

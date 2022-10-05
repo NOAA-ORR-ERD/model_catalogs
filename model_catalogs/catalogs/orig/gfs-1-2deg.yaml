@@ -9,7 +9,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  ucar-forecast-agg:
     driver: opendap
     description: Aggregated 3D Global Forecast System forecast, 1/2 degree horizontal resolution, from two months ago with 16 day forecast.
     args:

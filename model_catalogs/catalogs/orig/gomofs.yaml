@@ -23,7 +23,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-agg:
     driver: opendap
     description: Aggregated 3D Gulf of Maine model in ROMS from 7 days ago with 72 hour forecast.
     args:
@@ -55,7 +55,7 @@ sources:
         time: time
         upward_sea_water_velocity: w
 
-  nowcast:
+  coops-forecast-noagg:
     driver: opendap
     description: Unaggregated 3D Gulf of Maine model in ROMS from 30 days ago with 72 hour forecast.
     args:
@@ -101,7 +101,7 @@ sources:
         time: ocean_time
         upward_sea_water_velocity: w
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D Gulf of Maine model in ROMS from 2018-05-10 until 4 days ago, nowcast files only.
     args:
@@ -146,7 +146,7 @@ sources:
         time: ocean_time
         upward_sea_water_velocity: w
 
-  hindcast-forecast-aggregation:
+  ncei-archive-agg:
     driver: opendap
     description: Aggregated 3D Gulf of Maine model in ROMS from 2018-01-09 until 4 days ago.
     args:

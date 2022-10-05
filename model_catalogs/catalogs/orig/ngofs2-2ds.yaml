@@ -10,7 +10,7 @@ metadata:
   filetype: '2ds'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 2D selection of 3D Northern Gulf of Mexico model in FVCOM, from 30 days ago with 54 hour forecast.
     args:
       chunks:
@@ -68,7 +68,7 @@ sources:
         - lonc
 
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 2D selection of 3D Northern Gulf of Mexico model in FVCOM from 2021-03-22 until 4 days ago, nowcast files only.
     args:

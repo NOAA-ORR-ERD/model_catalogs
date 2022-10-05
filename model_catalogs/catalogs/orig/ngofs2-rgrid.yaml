@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D Northern Gulf of Mexico model in FVCOM, interpolated to regular grid, from 1 day ago with 54 hour forecast.
     args:
       chunks:
