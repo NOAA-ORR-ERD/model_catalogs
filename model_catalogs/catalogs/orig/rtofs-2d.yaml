@@ -1,4 +1,4 @@
-name: RTOFS-GLOBAL-2D
+name: RTOFS-2D
 description: Real-Time Ocean Forecast System model in HYCOM, 2D.
 metadata:
   long_name: NOAA/NCEP RTOFS 2D

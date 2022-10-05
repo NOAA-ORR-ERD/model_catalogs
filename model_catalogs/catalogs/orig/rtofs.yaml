@@ -1,4 +1,4 @@
-name: RTOFS-GLOBAL
+name: RTOFS
 description: NOAA/NCEP Real-Time Ocean Forecast System
 metadata:
   long_name: Global Ocean (RTOFS)

@@ -1,4 +1,4 @@
-name: RTOFS-ALASKA
+name: RTOFS-AK
 description: Real-Time Ocean Forecast System model in HYCOM for Alaska.
 metadata:
   long_name: NOAA/NCEP RTOFS Alaska Region
