@@ -1,4 +1,4 @@
-name: HYCOM
+name: GOFS
 description: NRL Global Ocean Forecasting System (GOFS) 3.1
 metadata:
   long_name: Global Ocean (GOFS 3.1)
