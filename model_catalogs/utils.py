@@ -139,17 +139,17 @@ def get_fresh_parameter(filename):
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
-        timing = filename.name.split("_")[1]
+        model_source = filename.name.split("_")[1]
         if "start" in filename.name:
-            mu = mc.FRESH[timing]["start"]
+            mu = mc.FRESH[model_source]["start"]
         elif "end" in filename.name:
-            mu = mc.FRESH[timing]["end"]
+            mu = mc.FRESH[model_source]["end"]
         elif "catrefs" in filename.name:
-            mu = mc.FRESH[timing]["catrefs"]
+            mu = mc.FRESH[model_source]["catrefs"]
     # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
-        timing = filename.name.split("_")[1]
-        mu = mc.FRESH[timing]["file_locs"]
+        model_source = filename.name.split("_")[1]
+        mu = mc.FRESH[model_source]["file_locs"]
     # a compiled catalog file
     elif filename.parent == mc.CACHE_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
@@ -531,8 +531,8 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
         # try with forecast but if it doesn't work, use nowcast
         # this avoids problematic NOAA OFS aggregations when they are broken
         try:
-            timing = "forecast"
-            source_orig = cat_orig[timing]
+            model_source = "forecast"
+            source_orig = cat_orig[model_source]
             source_transform = mc.transform_source(source_orig)
 
             # need to make catalog to transfer information properly from
@@ -548,11 +548,11 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
             )
 
             # read in model output
-            ds = cat_transform[timing].to_dask()
+            ds = cat_transform[model_source].to_dask()
 
         except OSError:
-            timing = "nowcast"
-            source_orig = cat_orig[timing]
+            model_source = "nowcast"
+            source_orig = cat_orig[model_source]
             source_transform = mc.transform_source(source_orig)
 
             # need to make catalog to transfer information properly from
@@ -568,7 +568,7 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
             )
 
             # read in model output
-            ds = cat_transform[timing].to_dask()
+            ds = cat_transform[model_source].to_dask()
 
         # find boundary information for model
         if "alpha_shape" in cat_orig.metadata:

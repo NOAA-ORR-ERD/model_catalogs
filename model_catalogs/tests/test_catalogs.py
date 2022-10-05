@@ -36,7 +36,7 @@ def test_setup():
         assert fname.exists()
         assert mc.is_fresh(fname)
 
-    # Check that timings are correct for one test case
+    # Check that model_sources are correct for one test case
     assert sorted(list(main_cat["CBOFS"])) == ["forecast", "hindcast", "nowcast"]
     assert main_cat["CBOFS"].metadata["geospatial_bounds"]
 
@@ -56,14 +56,14 @@ def test_find_availability():
     }
 
     main_cat = mc.setup()
-    for model, timing in test_models.items():
-        cat = mc.find_availability(main_cat[model], timing=timing, override=True)
-        if "start_datetime" not in cat[timing].metadata:
+    for model, model_source in test_models.items():
+        cat = mc.find_availability(main_cat[model], model_source=model_source, override=True)
+        if "start_datetime" not in cat[model_source].metadata:
             warnings.warn(
-                f"Running model {model} with timing {timing} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
+                f"Running model {model} with model_source {model_source} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
                 RuntimeWarning,
             )
-        fname = mc.FILE_PATH_START(model, timing)
+        fname = mc.FILE_PATH_START(model, model_source)
         if not mc.is_fresh(fname):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
 
@@ -71,18 +71,18 @@ def test_find_availability():
         assert isinstance(cat, Catalog)
 
         # also compare with requesting source directly
-        source = mc.find_availability(main_cat[model][timing])
+        source = mc.find_availability(main_cat[model][model_source])
 
         # make sure source output since source was input
         assert isinstance(source, (OpenDapSource, DatasetTransform))
 
         assert (
-            cat[timing].metadata["start_datetime"] == source.metadata["start_datetime"]
+            cat[model_source].metadata["start_datetime"] == source.metadata["start_datetime"]
         )
-        assert cat[timing].metadata["end_datetime"] == source.metadata["end_datetime"]
+        assert cat[model_source].metadata["end_datetime"] == source.metadata["end_datetime"]
 
         # test that if server status is False, start_datetime, end_datetime are None
-        in_source = main_cat[model][timing]
+        in_source = main_cat[model][model_source]
         in_source._status = False
         with pytest.warns(RuntimeWarning):
             out_source = mc.find_availability(in_source)
@@ -124,9 +124,9 @@ def test_select_date_range():
     tom = today + pd.Timedelta("1 day")
 
     main_cat = mc.setup()
-    for model, timing in test_models.items():
+    for model, model_source in test_models.items():
         source = mc.select_date_range(
-            main_cat[model][timing], today.date(), tom.date(), override=True
+            main_cat[model][model_source], today.date(), tom.date(), override=True
         )
 
         if source.status:
@@ -156,7 +156,7 @@ def test_select_date_range():
 
         else:
             warnings.warn(
-                f"Source {model}, {timing} server status is False.",  # noqa: E501
+                f"Source {model}, {model_source} server status is False.",  # noqa: E501
                 RuntimeWarning,
             )
 
@@ -165,8 +165,8 @@ def test_select_date_range():
     test_models = {"HYCOM": "forecast", "CIOFS": "forecast"}
 
     main_cat = mc.setup()
-    for model, timing in test_models.items():
-        source = mc.select_date_range(main_cat[model][timing], "1980-1-1", "1980-1-2")
+    for model, model_source in test_models.items():
+        source = mc.select_date_range(main_cat[model][model_source], "1980-1-1", "1980-1-2")
 
         with pytest.warns(RuntimeWarning):
             ds = source.to_dask()
@@ -203,16 +203,16 @@ def test_select_date_range_dates():
     ]
 
     main_cat = mc.setup()
-    for model, timing in test_models.items():
+    for model, model_source in test_models.items():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timing=timing, override=True
+                    main_cat[model], model_source=model_source, override=True
                 )
             else:
                 cat = main_cat[model]
             source = mc.select_date_range(
-                cat[timing],
+                cat[model_source],
                 start_date=tc["sday"],
                 end_date=tc["eday"],
                 override=True,
@@ -256,16 +256,16 @@ def test_select_date_range_dates():
     ]
 
     main_cat = mc.setup()
-    for model, timing in test_models.items():
+    for model, model_source in test_models.items():
         for tc in test_conditions:
             if tc["tend_known"] is None:
                 cat = mc.find_availability(
-                    main_cat[model], timing=timing, override=True
+                    main_cat[model], model_source=model_source, override=True
                 )
             else:
                 cat = main_cat[model]
             source = mc.select_date_range(
-                cat[timing],
+                cat[model_source],
                 start_date=tc["sday"],
                 end_date=tc["eday"],
                 override=True,
@@ -311,7 +311,7 @@ def check_source(source):
         return
     # except OSError:
     #     warnings.warn(
-    #         f"Model {source.cat.name} with timing {source.name} is not working right now.",
+    #         f"Model {source.cat.name} with model_source {source.name} is not working right now.",
     #         RuntimeWarning,
     #     )
     #     return
@@ -372,16 +372,16 @@ def test_forecast():
     """
 
     main_cat = mc.setup()
-    timing = "forecast"
+    model_source = "forecast"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
-        source = main_cat[model][timing]
+        source = main_cat[model][model_source]
         try:
             check_source(source)
         except AssertionError:
             warnings.warn(
-                f"Model {model} with timing {timing} does not have proper attributes.",
+                f"Model {model} with model_source {model_source} does not have proper attributes.",
                 RuntimeWarning,
             )
 
@@ -395,17 +395,17 @@ def test_nowcast():
     """
 
     main_cat = mc.setup()
-    timing = "nowcast"
+    model_source = "nowcast"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
-        if timing in list(main_cat[model]):
-            source = main_cat[model][timing]
+        if model_source in list(main_cat[model]):
+            source = main_cat[model][model_source]
             try:
                 check_source(source)
             except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} does not have proper attributes.",
+                    f"Model {model} with model_source {model_source} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -415,17 +415,17 @@ def test_hindcast():
     """Test all known models for running in hindcast mode."""
 
     main_cat = mc.setup()
-    timing = "hindcast"
+    model_source = "hindcast"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
-        if timing in list(main_cat[model]):
-            source = main_cat[model][timing]
+        if model_source in list(main_cat[model]):
+            source = main_cat[model][model_source]
             try:
                 check_source(source)
             except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} does not have proper attributes.",
+                    f"Model {model} with model_source {model_source} does not have proper attributes.",
                     RuntimeWarning,
                 )
 
@@ -435,17 +435,17 @@ def test_hindcast_forecast_aggregation():
     """Test all known models for running in hindcast aggregation mode."""
 
     main_cat = mc.setup()
-    timing = "hindcast-forecast-aggregation"
+    model_source = "hindcast-forecast-aggregation"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
-        if timing in list(main_cat[model]):
-            source = main_cat[model][timing]
+        if model_source in list(main_cat[model]):
+            source = main_cat[model][model_source]
             try:
                 check_source(source)
             except AssertionError:
                 warnings.warn(
-                    f"Model {model} with timing {timing} does not have proper attributes.",
+                    f"Model {model} with model_source {model_source} does not have proper attributes.",
                     RuntimeWarning,
                 )
 

@@ -77,10 +77,10 @@ CACHE_PATH_AVAILABILITY.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_FILE_LOCS.mkdir(parents=True, exist_ok=True)
 
 
-def TEST_PATH_FILE(model, timing):
+def TEST_PATH_FILE(model, model_source):
     """Return file path to test file."""
     model = model.lower().replace("-", "_")
-    return (TEST_PATH_FILES / f"{model}_{timing}").with_suffix(".nc")
+    return (TEST_PATH_FILES / f"{model}_{model_source}").with_suffix(".nc")
 
 
 def FILE_PATH_ORIG(model):
@@ -94,14 +94,14 @@ def FILE_PATH_COMPILED(model):
 
 
 # availability file names
-def FILE_PATH_START(model, timing):
-    """Return filename for model/timing start time."""
-    return CACHE_PATH_AVAILABILITY / f"{model}_{timing}_start_datetime.yaml"
+def FILE_PATH_START(model, model_source):
+    """Return filename for model/model_source start time."""
+    return CACHE_PATH_AVAILABILITY / f"{model}_{model_source}_start_datetime.yaml"
 
 
-def FILE_PATH_END(model, timing):
-    """Return filename for model/timing end time."""
-    return CACHE_PATH_AVAILABILITY / f"{model}_{timing}_end_datetime.yaml"
+def FILE_PATH_END(model, model_source):
+    """Return filename for model/model_source end time."""
+    return CACHE_PATH_AVAILABILITY / f"{model}_{model_source}_end_datetime.yaml"
 
 
 def FILE_PATH_BOUNDARIES(model):
@@ -109,17 +109,17 @@ def FILE_PATH_BOUNDARIES(model):
     return (CAT_PATH_BOUNDARIES / model).with_suffix(".yaml")
 
 
-def FILE_PATH_CATREFS(model, timing):
-    """Return filename for model/timing start time."""
-    return CACHE_PATH_AVAILABILITY / f"{model}_{timing}_catrefs.yaml"
+def FILE_PATH_CATREFS(model, model_source):
+    """Return filename for model/model_source start time."""
+    return CACHE_PATH_AVAILABILITY / f"{model}_{model_source}_catrefs.yaml"
 
 
-def FILE_PATH_AGG_FILE_LOCS(model, timing, date, is_fore):
+def FILE_PATH_AGG_FILE_LOCS(model, model_source, date, is_fore):
     """Return filename for aggregated file locations.
 
     Date included to day."""
     date = astype(date, pd.Timestamp)
-    name = f"{model}_{timing}_{date.isoformat()[:10]}_is-forecast_{is_fore}.yaml"
+    name = f"{model}_{model_source}_{date.isoformat()[:10]}_is-forecast_{is_fore}.yaml"
     return CACHE_PATH_FILE_LOCS / name
 
 
