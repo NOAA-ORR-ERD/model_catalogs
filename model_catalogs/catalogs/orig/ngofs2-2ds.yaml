@@ -37,8 +37,8 @@ sources:
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.2ds.n000.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/NGOFS2/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.ngofs2.2ds.n003.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t03z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/NGOFS2/MODELS/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 54 hours after present time'
+      overall_start_datetime: '1 month before present day'
+      overall_end_datetime: '54 hours after present time'
       output_period_(hr): 1
       axis: &axis
         T: time
@@ -90,8 +90,8 @@ sources:
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.2ds.n000.20220701.t03z.nc"
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-ngofs2-files/2022/07/nos.ngofs2.2ds.n000.20220701.t09z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-ngofs2-files/catalog.xml'
-      overall_start_datetime: 'Available starting 2021-03-22'
-      overall_end_datetime: 'Available through 4 days before present time'
+      overall_start_datetime: 'starting 2021-03-22'
+      overall_end_datetime: '4 days before present time'
       output_period_(hr): 1
       axis: *axis
       standard_names: *standard_names

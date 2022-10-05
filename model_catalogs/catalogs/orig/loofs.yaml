@@ -68,8 +68,8 @@ sources:
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LOOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/glofs.loofs.fields.nowcast.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t00z.nc"
         - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LOOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/glofs.loofs.fields.nowcast.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t06z.nc"
       catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LOOFS/MODELS/catalog.xml'
-      overall_start_datetime: 'Available from a month before present day.'
-      overall_end_datetime: 'Available through 120 hours after present time.'
+      overall_start_datetime: '1 month before present day'
+      overall_end_datetime: '120 hours after present time'
       notes: 'treat_last_day_as_forecast==True will not work here'
       output_period_(hr): 1
       axis:
@@ -101,7 +101,7 @@ sources:
         time: 1
       compat: override
       combine: by_coords
-      # decode_times: False  # the older output has calendar 'gregorian_proleptic' instead of standard name 'proleptic_gregorian'
+      # decode_times: False  # the older output has calendar 'gregorian_proleptic'instead of standard name 'proleptic_gregorian'
       parallel: True
       data_vars: minimal
       coords: minimal
@@ -115,8 +115,8 @@ sources:
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-loofs-files/2022/07/glofs.loofs.fields.nowcast.20220701.t00z.nc"
         - "https://www.ncei.noaa.gov/thredds/dodsC/model-loofs-files/2022/07/glofs.loofs.fields.nowcast.20220701.t06z.nc"
       catloc: 'https://www.ncei.noaa.gov/thredds/catalog/model-loofs-files/catalog.xml'
-      overall_start_datetime: 'Available starting 2016-03-01.'
-      overall_end_datetime: 'Available through 4 days before present time.'
+      overall_start_datetime: 'starting 2016-03-01'
+      overall_end_datetime: '4 days before present time'
       output_period_(hr): 1
       axis:
         T: time
@@ -148,8 +148,8 @@ sources:
       engine: netcdf4
       urlpath: https://www.ncei.noaa.gov/thredds/dodsC/model-loofs-agg/Aggregated_LOOFS_Fields_Forecast_best.ncd
     metadata:
-      overall_start_datetime: 'Available starting 2017-02-25.'
-      overall_end_datetime: 'Available to 2019-11-27.'
+      overall_start_datetime: 'starting 2017-02-25'
+      overall_end_datetime: 'to 2019-11-27'
       output_period_(hr): 1
       axis:
         T: time
