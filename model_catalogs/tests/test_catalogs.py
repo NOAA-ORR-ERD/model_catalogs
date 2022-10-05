@@ -1,10 +1,5 @@
 """
-Make sure catalog creation is working.
-
-Some tests won't consistently run, I think because of connection issues with
-NOAA servers. I can't make progress on these so I will save them at the bottom
-of this script, commented out, and I will run abbreviated sample versions of
-them instead.
+Make sure catalogs work correctly. If this doesn't run once, try again since the servers can be finnicky.
 """
 
 import warnings
@@ -37,11 +32,11 @@ def test_setup():
         assert mc.is_fresh(fname)
 
     # Check that model_sources are correct for one test case
-    assert sorted(list(main_cat["CBOFS"])) == ["forecast", "hindcast", "nowcast"]
+    assert sorted(list(main_cat["CBOFS"])) == ["coops-forecast-agg", "coops-forecast-noagg", "ncei-archive-noagg"]
     assert main_cat["CBOFS"].metadata["geospatial_bounds"]
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_find_availability():
     """Test find_availability.
 
@@ -50,9 +45,9 @@ def test_find_availability():
 
     # test models with fast static links and that require aggregations
     test_models = {
-        "HYCOM": "forecast",
-        "DBOFS": "nowcast",
-        "SFBOFS": "hindcast",
+        "GOFS": "hycom-forecast-agg",
+        "DBOFS": "coops-forecast-noagg",
+        "SFBOFS": "ncei-archive-noagg",
     }
 
     main_cat = mc.setup()
@@ -90,11 +85,11 @@ def test_find_availability():
         assert out_source.metadata["end_datetime"] is None
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_boundaries():
     """Test one faster model and compare with existing file."""
 
-    model = "hycom"
+    model = "gofs"
 
     # Calculate
     boundaries = mc.calculate_boundaries(
@@ -109,7 +104,7 @@ def test_boundaries():
     assert boundaries[model]["wkt"] == boundaries_read["wkt"]
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_select_date_range():
     """Test functionality in `select_date_range()`.
 
@@ -117,7 +112,7 @@ def test_select_date_range():
     and tomorrow.
     """
 
-    test_models = {"HYCOM": "forecast", "CIOFS": "nowcast"}
+    test_models = {"GOFS": "hycom-forecast-agg", "CIOFS": "coops-forecast-noagg"}
 
     today = pd.Timestamp.today() - pd.Timedelta("1 day")
     # today = pd.Timestamp.today(tz="UTC") - pd.Timedelta("1 day")
@@ -162,7 +157,7 @@ def test_select_date_range():
 
     # also make sure an incorrect requested datetime range returns a warning
     # check this for static link models
-    test_models = {"HYCOM": "forecast", "CIOFS": "forecast"}
+    test_models = {"GOFS": "hycom-forecast-agg", "CIOFS": "coops-forecast-agg"}
 
     main_cat = mc.setup()
     for model, model_source in test_models.items():
@@ -189,7 +184,7 @@ def test_select_date_range_dates():
     yes_end = yes_st + pd.Timedelta("23:00:00")
     tod = pd.Timestamp.today().normalize() + pd.Timedelta("6:00:00")
 
-    test_models = {"CBOFS": "nowcast", "NYOFS": "nowcast"}
+    test_models = {"CBOFS": "coops-forecast-noagg", "NYOFS": "coops-forecast-noagg"}
     test_conditions = [
         {"sday": yes, "eday": yes, "tst_known": yes_st, "tend_known": yes_end},
         {
@@ -228,7 +223,7 @@ def test_select_date_range_dates():
             ddf = pd.Series(source.dates).diff()
             assert (ddf[1:] - ddf.median() < pd.Timedelta("1 min")).all()
 
-    # check hindcast, which stops 4 days ago and does not have forecast files
+    # check archive, which stops 4 days ago and does not have forecast files
     fivedays = (
         pd.Timestamp.today().normalize()
         - pd.Timedelta("6 days")
@@ -238,7 +233,7 @@ def test_select_date_range_dates():
     fivedays_st = fivedays.normalize()
     fivedays_end = fivedays_st + pd.Timedelta("23:00:00")
 
-    test_models = {"SFBOFS": "hindcast"}
+    test_models = {"SFBOFS": "ncei-archive-noagg"}
     # check t-1_known of None with find_availability output
     test_conditions = [
         {
@@ -282,14 +277,14 @@ def test_select_date_range_dates():
             assert (ddf[1:] - ddf.median() < pd.Timedelta("1 min")).all()
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_process():
     """Test that dataset is processed."""
 
     main_cat = mc.setup()
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
-    assert "lon" in main_cat["LOOFS"]["nowcast"].to_dask().coords
+    assert "lon" in main_cat["LOOFS"]["coops-forecast-noagg"].to_dask().coords
 
 
 def check_source(source):
@@ -336,8 +331,8 @@ def check_source(source):
 
     # check cf-xarray
     # AXIS X and Y won't be defined for unstructured model unless interpolated
-    if "SELFE" in source.cat.description or "FVCOM" in source.cat.description:
-        if "REGULARGRID" in source.cat.name:
+    if "SELFE" in source.target.description or "FVCOM" in source.target.description:
+        if "RGRID" in source.cat.name:
             assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
         elif "2DS" in source.cat.name:
             assert sorted(list(ds.cf.axes.keys())) == ["T"]
@@ -364,82 +359,18 @@ def check_source(source):
 
 
 @pytest.mark.slow
-def test_forecast():
-    """Test all known models for running in forecast mode.
+def test_sources():
+    """Test all known model sources.
 
-    Fails gracefully. Does not require running `select_date_range()` because forecasts always have some
+    Fails gracefully. Does not require running `select_date_range()` because sources always have some
     known files included or a static link.
     """
 
     main_cat = mc.setup()
-    model_source = "forecast"
 
     for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
         model = cat_loc.stem.upper()
-        source = main_cat[model][model_source]
-        try:
-            check_source(source)
-        except AssertionError:
-            warnings.warn(
-                f"Model {model} with model_source {model_source} does not have proper attributes.",
-                RuntimeWarning,
-            )
-
-
-@pytest.mark.slow
-def test_nowcast():
-    """Test all known models for running in nowcast mode.
-
-    Fails gracefully. Does not require running `select_date_range()` because they always have some known
-    files included or a static link.
-    """
-
-    main_cat = mc.setup()
-    model_source = "nowcast"
-
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        model = cat_loc.stem.upper()
-        if model_source in list(main_cat[model]):
-            source = main_cat[model][model_source]
-            try:
-                check_source(source)
-            except AssertionError:
-                warnings.warn(
-                    f"Model {model} with model_source {model_source} does not have proper attributes.",
-                    RuntimeWarning,
-                )
-
-
-@pytest.mark.slow
-def test_hindcast():
-    """Test all known models for running in hindcast mode."""
-
-    main_cat = mc.setup()
-    model_source = "hindcast"
-
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        model = cat_loc.stem.upper()
-        if model_source in list(main_cat[model]):
-            source = main_cat[model][model_source]
-            try:
-                check_source(source)
-            except AssertionError:
-                warnings.warn(
-                    f"Model {model} with model_source {model_source} does not have proper attributes.",
-                    RuntimeWarning,
-                )
-
-
-@pytest.mark.slow
-def test_hindcast_forecast_aggregation():
-    """Test all known models for running in hindcast aggregation mode."""
-
-    main_cat = mc.setup()
-    model_source = "hindcast-forecast-aggregation"
-
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        model = cat_loc.stem.upper()
-        if model_source in list(main_cat[model]):
+        for model_source in list(main_cat[model]):
             source = main_cat[model][model_source]
             try:
                 check_source(source)
@@ -456,7 +387,7 @@ def test_urlpath():
     main_cat = mc.setup()
 
     # shows 2 default files
-    assert len(main_cat["NGOFS2"]["forecast"].urlpath) == 2
+    assert len(main_cat["NGOFS2"]["coops-forecast-noagg"].urlpath) == 2
 
 
 def test_file2dt():
@@ -577,7 +508,7 @@ def test_filedates2df():
     assert ordered_fnames == list(df["filenames"].values)
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_urlpath_after_select():
     """urlpath is replaced after select_date_range"""
 
@@ -585,7 +516,7 @@ def test_urlpath_after_select():
 
     day = "2022-1-1"
     source = mc.select_date_range(
-        main_cat["CREOFS"]["hindcast"],
+        main_cat["CREOFS"]["ncei-archive-noagg"],
         start_date=day,
         end_date=day,
         override=True,

@@ -126,24 +126,30 @@ def FILE_PATH_AGG_FILE_LOCS(model, model_source, date, is_fore):
 # Fresh parameters: how long until model output avialability will be refreshed
 # for `find_availabililty()` if requested
 FRESH = {
-    "forecast": {
+    "coops-forecast-agg": {
         "start": "1 day",
         "end": "4 hours",
         "catrefs": "6 hours",
         "file_locs": "4 hours",
     },
-    "nowcast": {
+    "coops-forecast-noagg": {
         "start": "3 days",
         "end": "4 hours",
         "catrefs": "6 hours",
         "file_locs": "4 hours",
     },
-    "hindcast": {
+    "ncei-archive-noagg": {
         "start": "7 days",
         "end": "1 day",
         "catrefs": "1 day",
         "file_locs": "1 day",
     },
-    "hindcast-forecast-aggregation": {"start": "7 days", "end": "1 day"},
+    "ncei-archive-agg": {"start": "7 days", "end": "1 day"},
+    "default": {
+        "start": "1 day",
+        "end": "4 hours",
+        "catrefs": "6 hours",
+        "file_locs": "4 hours",
+        },
     "compiled": "6 hours",  # want to be on the same calendar day as when they were compiled; this approximates that.  # noqa: E501
 }

@@ -132,7 +132,7 @@ def setup(override=False):
     Returns
     -------
     Intake catalog
-        Nested Intake catalog with a source for each model in ``mc.CAT_PATH_ORIG``. Each source/model in turn has a source for each model_source available (e.g., "forecast", "hindcast").
+        Nested Intake catalog with a catalog for each model in ``mc.CAT_PATH_ORIG``. Each model in turn has one or more model_source available (e.g., "coops-forecast-agg", "coops-forecast-noagg").
 
     Examples
     --------
@@ -141,11 +141,11 @@ def setup(override=False):
 
     >>> cat = mc.setup()
 
-    Examine list of sources/models available in catalog:
+    Examine list of models available in catalog:
 
     >>> list(cat)
 
-    Examine the sources for a specific model in the catalog:
+    Examine the model_sources for a specific model in the catalog:
 
     >>> list(cat['CBOFS'])
     """
@@ -212,7 +212,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 
     For sources with static urlpaths, this opens the Dataset and checks the first time for `start_datetime` and the last time for `end_datetime`.
 
-    Some NOAA OFS models require aggregation: some forecasts, all nowcasts, and all hindcasts. For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
+    Some NOAA OFS sources require aggregation: model_source names "coops-forecast-noagg" and "ncei-archive-noagg". For these, the available year and months of the thredd server subcatalogs are found with ``find_catrefs()``. `start_datetime` is found by further evaluating to make sure that files in the subcatalogs are both available on the page and that the days represented by model output files are consecutive (there are missing dates). `end_datetime` is found from the most recent subcatalog files since there aren't missing files and dates on the recent end of the time ranges.
 
     Uses ``cf-xarray`` to determine the time axis.
 
@@ -247,8 +247,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
         end_datetime = str(ds[tkey].values[-1]) if find_end_datetime else None
         ds.close()
 
-    # for when we need to aggregate which is OFS models nowcast and hindcast
-    # and forecast if there is no pre-made aggregation
+    # for when we need to aggregate which is for model_source: ncei-archive-noagg and coops-forecast-noagg
     else:
 
         if not override and mc.is_fresh(
@@ -388,7 +387,7 @@ def find_availability(cat_or_source, model_source=None, override=False, verbose=
 
     Start and end datetimes are allowed to be calculated separately to save time.
 
-    Note that for unaggregated models with forecasts, this checks availability for the latest forecast, which goes forward in time from today. It is not possible to use this function to check for the case of a forecast forward in time from a past day.
+    Note that for unaggregated models with forecasts (currently just model_source "coops-forecast-noagg"), this checks availability for the latest forecast, which goes forward in time from today. It is not possible to use this function to check for the case of a forecast forward in time from a past day.
 
     Parameters
     ----------
@@ -412,12 +411,12 @@ def find_availability(cat_or_source, model_source=None, override=False, verbose=
     Set up source catalog, then find availability for all sources of CIOFS model:
 
     >>> main_cat = mc.setup()
-    >>> cat = mc.find_availability(main_cat['CIOFS'], model_source=['forecast', 'nowcast'])
+    >>> cat = mc.find_availability(main_cat['CIOFS'], model_source=['coops-forecast-agg', 'coops-forecast-noagg'])
 
-    Find availability for only nowcast of CBOFS model, and print it:
+    Find availability for only model_source "coops-forecast-noagg" of CBOFS model, and print it:
 
-    >>> source = mc.find_availability(main_cat['CBOFS']['nowcast'], verbose=True)
-    nowcast: 2022-08-22 13:00:00 to  2022-09-25 12:00:00
+    >>> source = mc.find_availability(main_cat['CBOFS']['coops-forecast-noagg'], verbose=True)
+    coops-forecast-noagg: 2022-08-22 13:00:00 to  2022-09-25 12:00:00
     """
 
     # Check in case user input main_catalog which is not correct
@@ -427,7 +426,7 @@ def find_availability(cat_or_source, model_source=None, override=False, verbose=
         cat_or_source[list(cat_or_source)[0]], Catalog
     ):
         raise ValueError(
-            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['forecast']`."
+            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['coops-forecast-agg']`."
         )
 
     # if Catalog was input
@@ -538,7 +537,7 @@ def select_date_range(
 
     For other models, set up so that `start_date` and `end_date` are used to filter resulting Dataset in time. For all models, save `start_date` and `end_date` in the `Source` metadata.
 
-    NOAA OFS model sources that require aggregation need to have the specific file paths found for each file that will be read in. This function does that, based on the desired date range, and returns a `Source` with file locations in the `urlpath`. This function can also be used with any model that does not require this (because the model paths are either static or deterministic) but in those cases it does not need to be used; they will have the start and end dates applied to filter the resulting model output after ``to_dask()`` is called.
+    NOAA OFS model sources that require aggregation (currently for model_sources "coops-forecast-noagg" and "ncei-archive-noagg") need to have the specific file paths found for each file that will be read in. This function does that, based on the desired date range, and returns a `Source` with file locations in the `urlpath`. This function can also be used with any model that does not require this (because the model paths are either static or deterministic) but in those cases it does not need to be used; they will have the start and end dates applied to filter the resulting model output after ``to_dask()`` is called.
 
     Parameters
     ----------
@@ -547,7 +546,7 @@ def select_date_range(
     start_date: datetime-interpretable str or pd.Timestamp
         Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results.
     end_date: datetime-interpretable str, pd.Timestamp, or None; optional
-        Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results. end_date can be None which indicates the user wants all available model output after start_date; this optional is not available for unaggregated historical NOAA OFS models which do not contain forecast files.
+        Date (and possibly time) of start to desired model date range. If input date does not include a time, times will be included from the start of the day. If a time is input in `start_date`, it is used to narrow the time range of the results. end_date can be None which indicates the user wants all available model output after start_date; this optional is not available for unaggregated historical NOAA OFS models which do not contain forecast files (i.e., model_source "ncei-archive-noagg").
 
         There are several use cases to specify:
 
@@ -556,7 +555,7 @@ def select_date_range(
         * If `end_date` is in the future, `use_forecast_files` is set to True and the forecast is read in, but stopped at `end_date`.
         * User can set `use_forecast_files=True` with an end_date in the past to get old forecast model results for end_date for unaggregated NOAA OFS models. This case is probably not well-used and is not regularly tested. The results from using this combination of inputs does not align with the results of ``mc.find_availability()`` since the forecast is not the latest.
     model_source: str, optional
-        Which model_source to use. If ``mc.find_availability()`` has been run, the code will determine whether `start_date`, `end_date` are in "forecast" or "hindcast". Otherwise model_source can be provided for a single model_source, or ``find_availability()`` will be run if needed. Normally the options are "forecast", "nowcast", or "hindcast", and sometimes "hindcast-forecast-aggregation". An exception is if there is only one model_source available for cat, that one will be used without specifying it.
+        Which model_source to use. If ``mc.find_availability()`` has been run, the code will determine which model_source in the Catalog to use based on `start_date` and `end_date`. Otherwise a single model_source can be provided, or ``find_availability()`` will be run if needed. An exception is if there is only one model_source available for cat, that one will be used without specifying it.
     use_forecast_files : bool or None, optional
         This parameter is typically set by the code and is not used by the user. However, in one use case the user can input `use_forecast_files=True`: when they want to read in a forecast from the past for a NOAA OFS model. Otherwise do not use this parameter directly.
     override : boolean, optional
@@ -574,7 +573,7 @@ def select_date_range(
 
     >>> main_cat = mc.setup()
     >>> today = pd.Timestamp.today()
-    >>> source = mc.select_date_range(main_cat["LMHOFS"]["forecast"], start_date=today, end_date=None)
+    >>> source = mc.select_date_range(main_cat["LMHOFS"]["coops-forecast-noagg"], start_date=today, end_date=None)
 
     Find urlpaths with ``select_date_range`` and have it run ``find_availability()``:
 
@@ -589,7 +588,7 @@ def select_date_range(
         cat_or_source[list(cat_or_source)[0]], Catalog
     ):
         raise ValueError(
-            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['forecast']`."
+            "A nested catalog was input, but should be either a catalog that contains sources instead of catalogs, or a source. For example, try `main_cat['CBOFS']` or `main_cat['CBOFS']['coops-forecast-agg']`."
         )
 
     # save these to determine if user input dates with times or not
@@ -601,9 +600,9 @@ def select_date_range(
 
     today = pd.Timestamp.today()
 
-    if end_date is None and model_source == "hindcast":
+    if end_date is None and model_source == "ncei-archive-noagg":
         raise KeyError(
-            "model_source 'hindcast' does not have forecast files, so `end_date` should be a datetime representation."
+            "model_source 'ncei-archive-noagg' does not have forecast files, so `end_date` should be a datetime representation."
         )
 
     if end_date is not None and end_date.date() < start_date.date():
@@ -678,6 +677,12 @@ def select_date_range(
         if model_source is None and len(list(cat)) == 1:
             model_source = list(cat)[0]
 
+        # is model_source was input, make sure it is in the Catalog
+        if model_source is not None and model_source not in list(cat):
+            raise KeyError(
+                f"User input model_source {model_source} but it is not a source in catalog {cat.name}."  # noqa: E501
+            )
+
         elif model_source is None and any(
             [
                 "start_datetime" not in cat[model_source].metadata
@@ -710,9 +715,9 @@ def select_date_range(
             else:
                 raise ValueError("date range does not fully fit into any model model_sources")
 
-        if use_forecast_files and model_source == "hindcast":
+        if use_forecast_files and model_source == "ncei-archive-noagg":
             raise KeyError(
-                "model_source 'hindcast' does not have forecast files, so `use_forecast_files` should be False."
+                "model_source 'ncei-archive-noagg' does not have forecast files, so `use_forecast_files` should be False."
             )
 
         source = cat[model_source]
