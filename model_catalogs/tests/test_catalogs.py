@@ -32,7 +32,11 @@ def test_setup():
         assert mc.is_fresh(fname)
 
     # Check that model_sources are correct for one test case
-    assert sorted(list(main_cat["CBOFS"])) == ["coops-forecast-agg", "coops-forecast-noagg", "ncei-archive-noagg"]
+    assert sorted(list(main_cat["CBOFS"])) == [
+        "coops-forecast-agg",
+        "coops-forecast-noagg",
+        "ncei-archive-noagg",
+    ]
     assert main_cat["CBOFS"].metadata["geospatial_bounds"]
 
 
@@ -52,7 +56,9 @@ def test_find_availability():
 
     main_cat = mc.setup()
     for model, model_source in test_models.items():
-        cat = mc.find_availability(main_cat[model], model_source=model_source, override=True)
+        cat = mc.find_availability(
+            main_cat[model], model_source=model_source, override=True
+        )
         if "start_datetime" not in cat[model_source].metadata:
             warnings.warn(
                 f"Running model {model} with model_source {model_source} in `find_availability()` did not result in `start_datetime` in the catalog metadata.",  # noqa: E501
@@ -72,9 +78,13 @@ def test_find_availability():
         assert isinstance(source, (OpenDapSource, DatasetTransform))
 
         assert (
-            cat[model_source].metadata["start_datetime"] == source.metadata["start_datetime"]
+            cat[model_source].metadata["start_datetime"]
+            == source.metadata["start_datetime"]
         )
-        assert cat[model_source].metadata["end_datetime"] == source.metadata["end_datetime"]
+        assert (
+            cat[model_source].metadata["end_datetime"]
+            == source.metadata["end_datetime"]
+        )
 
         # test that if server status is False, start_datetime, end_datetime are None
         in_source = main_cat[model][model_source]
@@ -161,7 +171,9 @@ def test_select_date_range():
 
     main_cat = mc.setup()
     for model, model_source in test_models.items():
-        source = mc.select_date_range(main_cat[model][model_source], "1980-1-1", "1980-1-2")
+        source = mc.select_date_range(
+            main_cat[model][model_source], "1980-1-1", "1980-1-2"
+        )
 
         with pytest.warns(RuntimeWarning):
             ds = source.to_dask()

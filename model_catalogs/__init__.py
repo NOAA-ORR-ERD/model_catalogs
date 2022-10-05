@@ -150,6 +150,6 @@ FRESH = {
         "end": "4 hours",
         "catrefs": "6 hours",
         "file_locs": "4 hours",
-        },
+    },
     "compiled": "6 hours",  # want to be on the same calendar day as when they were compiled; this approximates that.  # noqa: E501
 }

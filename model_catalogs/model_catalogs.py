@@ -172,7 +172,8 @@ def setup(override=False):
             # original file but applies metadata from original catalog file
             # to the resulting dataset after calling `to_dask()`
             source_transforms = [
-                mc.transform_source(cat_orig[model_source]) for model_source in list(cat_orig)
+                mc.transform_source(cat_orig[model_source])
+                for model_source in list(cat_orig)
             ]
 
             # need to make catalog to transfer information properly from
@@ -432,7 +433,11 @@ def find_availability(cat_or_source, model_source=None, override=False, verbose=
     # if Catalog was input
     if isinstance(cat_or_source, Catalog):
         # if no model_source input, loop through all
-        model_source = list(cat_or_source) if model_source is None else mc.astype(model_source, list)
+        model_source = (
+            list(cat_or_source)
+            if model_source is None
+            else mc.astype(model_source, list)
+        )
         sources = []
         for model_source in model_source:
             source = find_availability_source(
@@ -713,7 +718,9 @@ def select_date_range(
                 except TypeError:
                     continue
             else:
-                raise ValueError("date range does not fully fit into any model model_sources")
+                raise ValueError(
+                    "date range does not fully fit into any model model_sources"
+                )
 
         if use_forecast_files and model_source == "ncei-archive-noagg":
             raise KeyError(
