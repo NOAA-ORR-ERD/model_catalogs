@@ -1,24 +1,25 @@
-name: Tests # regular only, on matrix of OSes
+name: Slow Tests # regular and slow, on all OSes but only Python 3.9
 on:
   push:
     branches:
       - "main"
-  pull_request:
-    branches:
-      - "*"
+  # pull_request:
+  #   branches:
+  #     - "*"
   schedule:
-    - cron: "0 12 * * 1"
+    - cron: "0 13 * * 1"
 
 
 jobs:
-  tests:
-    name: Build (${{ matrix.python-version }} | ${{ matrix.os }})
+  # slow tests
+  slow_tests:
+    name: Slow tests, Build (${{ matrix.python-version }} | ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ["macos-latest", "ubuntu-latest", "windows-latest"]
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
@@ -45,13 +46,12 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest --cov=./ --cov-report=xml
-      # have this happen on the following set of (slow) tests only
-      # - name: Upload code coverage to Codecov
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     file: ./coverage.xml
-      #     flags: unittests
-      #     env_vars: OS,PYTHON
-      #     name: codecov-umbrella
-      #     fail_ci_if_error: false
+          pytest --cov=./ --cov-report=xml --runslow model_catalogs
+      - name: Upload code coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
