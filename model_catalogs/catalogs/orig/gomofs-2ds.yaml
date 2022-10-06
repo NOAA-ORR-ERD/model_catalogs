@@ -10,7 +10,7 @@ metadata:
   filetype: '2ds'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     driver: opendap
     description: Unaggregated 2D selection of 3D Gulf of Maine model in ROMS, from 30 days ago with 72 hour forecast.
     args:
@@ -55,7 +55,7 @@ sources:
         sea_water_practical_salinity: salt_sur
         time: ocean_time
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 2D selection of 3D Gulf of Maine model in ROMS, from 2018-05-10 until 4 days ago, nowcast files only.
     args:

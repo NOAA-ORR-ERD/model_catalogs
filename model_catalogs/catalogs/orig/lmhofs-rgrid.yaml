@@ -1,4 +1,4 @@
-name: LMHOFS-REGULARGRID
+name: LMHOFS-RGRID
 description: 3D Lake Michigan and Huron model in FVCOM, interpolated to regular grid.
 metadata:
   long_name: Lakes Michigan and Huron
@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D Lake Michigan and Huron model in FVCOM, interpolated to regular grid, from 1 day ago with 120 hour forecast.
     args:
       chunks:

@@ -164,9 +164,8 @@ class DatasetTransform(GenericTransform):
             kwargs = self._params["transform_kwargs"]
 
             # Checks to catch potential user pitfalls
-            # Make sure that user has filled in urlpath if needed: OFS nowcast
-            # and some OFS forecast. These are unaggregated and come with 2
-            # sample files but user should be warned if they haven't been
+            # Make sure that user has filled in urlpath if needed if model_source is coops-forecast-noagg.
+            # These are unaggregated and come with 2 sample files but user should be warned if they haven't been
             # replaced since it might be a mistake
             if "sample_locs" in self._source.metadata:
                 if self._source.urlpath == self._source.metadata["sample_locs"]:
@@ -175,7 +174,7 @@ class DatasetTransform(GenericTransform):
                         UserWarning,
                     )
 
-            # Make sure that user has filled in urlpath if needed: OFS hindcast
+            # Make sure that source has urlpath
             # check for if the urlpath is null and if so `select_date_range()`
             # needs to be run to fill it in
             elif self._source.urlpath is None:

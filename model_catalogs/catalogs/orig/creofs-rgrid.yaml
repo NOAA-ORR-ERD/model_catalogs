@@ -1,4 +1,4 @@
-name: CREOFS-REGULARGRID
+name: CREOFS-RGRID
 description: 3D Columbia River model in SELFE, interpolated to regular grid.
 metadata:
   long_name: Columbia River
@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated Columbia River model in SELFE, interpolated to regular grid, from 1 day ago with 48 hour forecast.
     args:
       chunks:

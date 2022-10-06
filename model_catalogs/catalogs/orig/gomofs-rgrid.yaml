@@ -1,4 +1,4 @@
-name: GOMOFS-REGULARGRID
+name: GOMOFS-RGRID
 description: 3D Gulf of Maine model in ROMS, interpolated to regular grid.
 metadata:
   long_name: Gulf of Maine
@@ -10,7 +10,7 @@ metadata:
   filetype: 'regulargrid'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     driver: opendap
     description: Unaggregated 3D Gulf of Maine model in ROMS, interpolated to regular grid, from 1 day ago with 72 hour forecast.
     args:

@@ -25,7 +25,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D Columbia River model in SELFE from 30 days ago with 48 hour forecast.
     args:
       compat: override
@@ -71,7 +71,7 @@ sources:
         - lat
         - lon
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D Columbia River model in SELFE from 2015-08-19 until 4 days ago, nowcast files only.
     args:

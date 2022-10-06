@@ -1,4 +1,4 @@
-name: RTOFS-GLOBAL-2D
+name: RTOFS-2D
 description: Real-Time Ocean Forecast System model in HYCOM, 2D.
 metadata:
   long_name: NOAA/NCEP RTOFS 2D
@@ -9,7 +9,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  nomads-forecast-yesterday:
     driver: opendap
     description: 3-hourly 2D Real-Time Ocean Forecast System model in HYCOM from yesterday through 7 day forecast from yesterday.
     parameters:
@@ -48,7 +48,7 @@ sources:
         sea_water_practical_salinity: sss
         time: time
 
-  forecast2:
+  nomads-forecast-today:
     driver: opendap
     description: 3-hourly 2D Real-Time Ocean Forecast System model in HYCOM from today through 7 day forecast.
     parameters:
@@ -88,7 +88,7 @@ sources:
         sea_water_practical_salinity: sss
         time: time
 
-  nowcast:
+  nomads-archive-hourly:
     driver: opendap
     description: Hourly 2D Real-Time Ocean Forecast System model in HYCOM from 2 days ago through yesterday.
     parameters:

@@ -10,7 +10,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-agg:
     driver: opendap
     description: Aggregated 3D Lake Superior model in POM from 7 days ago with 120 hour forecast.
     args:
@@ -45,7 +45,7 @@ sources:
         - lat
         - lon
 
-  nowcast:
+  coops-forecast-noagg:
     driver: opendap
     description: Unaggregated 3D Lake Superior model in POM from 30 days ago with 120 hour forecast.
     args:
@@ -96,7 +96,7 @@ sources:
         - lat
         - lon
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D Lake Superior model in POM from 2016-03-06 until 4 days ago, nowcast files only.
     args:
@@ -144,7 +144,7 @@ sources:
         - lat
         - lon
 
-  hindcast-forecast-aggregation:
+  ncei-archive-agg:
     driver: opendap
     description: Aggregated 3D Lake Superior model in POM from 2017-02-25 until 2019-09-24.
     args:

@@ -24,7 +24,7 @@ def astype(value, type_):
     Particularly made to work correctly for returning string, `PosixPath`, or `Timestamp` as list.
     """
     if not isinstance(value, type_):
-        if type_ == list and isinstance(value, (str, pathlib.PosixPath, pd.Timestamp)):
+        if type_ == list and isinstance(value, (str, pathlib.PurePath, pd.Timestamp)):
             return [value]
         return type_(value)
     return value
@@ -139,17 +139,21 @@ def get_fresh_parameter(filename):
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
-        timing = filename.name.split("_")[1]
+        model_source = filename.name.split("_")[1]
+        if model_source not in mc.FRESH.keys():
+            model_source = "default"
         if "start" in filename.name:
-            mu = mc.FRESH[timing]["start"]
+            mu = mc.FRESH[model_source]["start"]
         elif "end" in filename.name:
-            mu = mc.FRESH[timing]["end"]
+            mu = mc.FRESH[model_source]["end"]
         elif "catrefs" in filename.name:
-            mu = mc.FRESH[timing]["catrefs"]
+            mu = mc.FRESH[model_source]["catrefs"]
     # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
-        timing = filename.name.split("_")[1]
-        mu = mc.FRESH[timing]["file_locs"]
+        model_source = filename.name.split("_")[1]
+        if model_source not in mc.FRESH.keys():
+            model_source = "default"
+        mu = mc.FRESH[model_source]["file_locs"]
     # a compiled catalog file
     elif filename.parent == mc.CACHE_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
@@ -256,7 +260,7 @@ def find_bbox(ds, dd=None, alpha=None):
     elif hasmask or ("nele" in ds.dims):  # unstructured
 
         assertion = (
-            "dd and alpha need to be defined in the source_catalog for this model."
+            "dd and alpha need to be defined in the catalog metadata for this model."
         )
         assert dd is not None and alpha is not None, assertion
 
@@ -319,7 +323,7 @@ def agg_for_date(date, strings, filetype, is_forecast=False, pattern=None):
     strings: list
         List of strings to be filtered. Expected to be file locations from a thredds catalog.
     filetype: str
-        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid" or "2ds" also. This availability information is in the source catalog for the model under `filetypes` metadata.
+        Which filetype to use. Every NOAA OFS model has "fields" available, but some have "regulargrid" or "2ds" also. This availability information is in the catalog metadata for the model under `filetypes` metadata.
     is_forecast: bool, optional
         If True, then date is the last day of the time period being sought and the forecast files should be brought in along with the nowcast files, to get the model output the length of the forecast out in time. The forecast files brought in will have the latest timing cycle of the day that is available. If False, all nowcast files (for all timing cycles) are brought in.
     pattern: str, optional
@@ -491,7 +495,7 @@ def find_filelocs(catref, catloc, filetype="fields"):
 def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=False):
     """Calculate boundary information for all models.
 
-    This loops over all catalog files available in ``mc.CAT_PATH_ORIG``, tries first with forecast source and then with nowcast source if necessary to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+    This loops over all catalog files available in ``mc.CAT_PATH_ORIG``, will try with multiple model_source if necessary (in case servers aren't working) to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
 
     The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
 
@@ -528,11 +532,9 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
         # open model catalog
         cat_orig = intake.open_catalog(cat_loc)
 
-        # try with forecast but if it doesn't work, use nowcast
-        # this avoids problematic NOAA OFS aggregations when they are broken
-        try:
-            timing = "forecast"
-            source_orig = cat_orig[timing]
+        # loop over available sources and use the first that works
+        for model_source in list(cat_orig):
+            source_orig = cat_orig[model_source]
             source_transform = mc.transform_source(source_orig)
 
             # need to make catalog to transfer information properly from
@@ -547,28 +549,11 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
                 save_catalog=False,
             )
 
-            # read in model output
-            ds = cat_transform[timing].to_dask()
+            if cat_transform[model_source].status:
 
-        except OSError:
-            timing = "nowcast"
-            source_orig = cat_orig[timing]
-            source_transform = mc.transform_source(source_orig)
-
-            # need to make catalog to transfer information properly from
-            # source_orig to source_transform
-            cat_transform = mc.make_catalog(
-                source_transform,
-                full_cat_name=cat_orig.name,  # model name
-                full_cat_description=cat_orig.description,
-                full_cat_metadata=cat_orig.metadata,
-                cat_driver=mc.process.DatasetTransform,
-                cat_path=None,
-                save_catalog=False,
-            )
-
-            # read in model output
-            ds = cat_transform[timing].to_dask()
+                # read in model output
+                ds = cat_transform[model_source].to_dask()
+                break
 
         # find boundary information for model
         if "alpha_shape" in cat_orig.metadata:

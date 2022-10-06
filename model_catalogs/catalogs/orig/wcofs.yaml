@@ -23,7 +23,7 @@ metadata:
   filetype: 'fields'
 
 sources:
-  forecast:
+  coops-forecast-noagg:
     description: Unaggregated 3D West Coast model in ROMS from 30 days ago with 72 hour forecast.
     args:
       compat: override
@@ -67,7 +67,7 @@ sources:
         time: ocean_time
         upward_sea_water_velocity: w
 
-  hindcast:
+  ncei-archive-noagg:
     driver: opendap
     description: Unaggregated 3D West Coast model in ROMS from 2021-03-22 until 4 days ago, nowcast files only.
     args:
