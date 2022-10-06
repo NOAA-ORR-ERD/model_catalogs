@@ -24,7 +24,7 @@ def astype(value, type_):
     Particularly made to work correctly for returning string, `PosixPath`, or `Timestamp` as list.
     """
     if not isinstance(value, type_):
-        if type_ == list and isinstance(value, (str, pathlib.PosixPath, pd.Timestamp)):
+        if type_ == list and isinstance(value, (str, pathlib.PurePath, pd.Timestamp)):
             return [value]
         return type_(value)
     return value
