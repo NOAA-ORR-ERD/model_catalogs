@@ -177,7 +177,7 @@ def test_select_date_range():
             main_cat[model][model_source], "1980-1-1", "1980-1-2"
         )
 
-        with pytest.warns(RuntimeWarning):
+        with pytest.raises(RuntimeError):
             ds = source.to_dask()
 
 
