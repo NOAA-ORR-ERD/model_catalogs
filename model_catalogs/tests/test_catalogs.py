@@ -4,6 +4,8 @@ Make sure catalogs work correctly. If this doesn't run once, try again since the
 
 import warnings
 
+from unittest import mock
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -584,3 +586,22 @@ def test_setting_std_name():
     ds = process.add_attributes(ds, metadata=metadata)
     assert ds["lon"].attrs["standard_name"] == "longitude"
     assert ds["lat"].attrs["standard_name"] == "latitude"
+
+
+@mock.patch("xarray.open_dataset")
+def test_wrong_time_range(mock_open_dataset):
+    ds = xr.Dataset()
+    dates = pd.date_range("2000-1-1", "2000-2-1", freq="1D")
+    ds["time"] = ("time", dates, {"axis": "T"})
+    mock_open_dataset.return_value = ds
+
+    # have to use a real cat/source pair to get this to work, but it isn't actually called in to_dask
+    main_cat = mc.setup()
+    cat0 = main_cat[list(main_cat)[0]]
+    source0 = cat0[list(cat0)[0]]
+    source0.metadata = {}
+    source0 = mc.select_date_range(
+        source0, start_date="2001-10-1", end_date="2001-10-2"
+    )
+    with pytest.raises(RuntimeError):
+        source0.to_dask()

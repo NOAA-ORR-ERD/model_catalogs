@@ -242,11 +242,10 @@ class DatasetTransform(GenericTransform):
                     )
 
                     if len(ds_temp.cf["T"]) == 0:
-                        warnings.warn(
-                            f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset, and so was not used.",
-                            RuntimeWarning,
+                        self._ds = None
+                        raise RuntimeError(
+                            f"The time slice requested for source {self.name}, {self.cat.name}, {kwargs['start_date']} to {kwargs['end_date']}, results in no times in the Dataset."
                         )
-
                     else:
                         self._ds = ds_temp
 
