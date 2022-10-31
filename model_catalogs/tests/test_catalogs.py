@@ -235,30 +235,26 @@ def test_select_date_range_dates():
             ddf = pd.Series(source.dates).diff()
             assert (ddf[1:] - ddf.median() < pd.Timedelta("1 min")).all()
 
-    # check archive, which stops 4 days ago and does not have forecast files
-    fivedays = (
-        pd.Timestamp.today().normalize()
-        - pd.Timedelta("6 days")
-        + pd.Timedelta("6:00:00")
-    )
-    fivedays_date = str(fivedays.date())
-    fivedays_st = fivedays.normalize()
-    fivedays_end = fivedays_st + pd.Timedelta("23:00:00")
+    # check archive, which stopped 10/22/22 and does not have forecast files
+    date = pd.Timestamp('2022-10-20T06:00')
+    date_date = str(date.date())
+    date_st = date.normalize()
+    date_end = date_st + pd.Timedelta("23:00:00")
 
     test_models = {"SFBOFS": "ncei-archive-noagg"}
     # check t-1_known of None with find_availability output
     test_conditions = [
         {
-            "sday": fivedays,
-            "eday": fivedays,
-            "tst_known": fivedays_st,
-            "tend_known": fivedays_end,
+            "sday": date,
+            "eday": date,
+            "tst_known": date_st,
+            "tend_known": date_end,
         },
         {
-            "sday": fivedays_date,
-            "eday": fivedays_date,
-            "tst_known": fivedays_st,
-            "tend_known": fivedays_end,
+            "sday": date_date,
+            "eday": date_date,
+            "tst_known": date_st,
+            "tend_known": date_end,
         },
     ]
 
@@ -296,7 +292,7 @@ def test_process():
     main_cat = mc.setup()
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
-    assert "lon" in main_cat["LOOFS"]["coops-forecast-noagg"].to_dask().coords
+    assert "lon" in main_cat["LOOFS-FVCOM"]["coops-forecast-noagg"].to_dask().coords
 
 
 def check_source(source):
