@@ -1,6 +1,12 @@
 :mod:`What's New`
 ----------------------------
 
+v0.6.0 (unreleased)
+===================
+* LSOFS and LOOFS have new FVCOM versions. So, there are new versions of the model files:
+  * `lsofs.yaml` and `loofs.yaml` are still the legacy POM version of the models but no longer have source `coops-forecast-noagg`, and their metadata have been updated to reflect the end dates of the model sources.
+  * new catalog files `lsofs-fvcom.yaml` and `loofs-fvcom.yaml` have source `coops-forecast-noagg` that points to the new FVCOM version of the models.
+
 v0.5.0 (October 7, 2022)
 ========================
 
