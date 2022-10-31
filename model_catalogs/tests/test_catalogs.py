@@ -236,7 +236,7 @@ def test_select_date_range_dates():
             assert (ddf[1:] - ddf.median() < pd.Timedelta("1 min")).all()
 
     # check archive, which stopped 10/22/22 and does not have forecast files
-    date = pd.Timestamp('2022-10-20T06:00')
+    date = pd.Timestamp("2022-10-20T06:00")
     date_date = str(date.date())
     date_st = date.normalize()
     date_end = date_st + pd.Timedelta("23:00:00")
