@@ -593,6 +593,7 @@ def test_wrong_time_range(mock_open_dataset):
     ds = xr.Dataset()
     dates = pd.date_range("2000-1-1", "2000-2-1", freq="1D")
     ds["time"] = ("time", dates, {"axis": "T"})
+    ds.encoding["coordinates"] = "time"
     mock_open_dataset.return_value = ds
 
     # have to use a real cat/source pair to get this to work, but it isn't actually called in to_dask
