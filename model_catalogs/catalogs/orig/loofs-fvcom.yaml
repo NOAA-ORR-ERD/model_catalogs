@@ -1,0 +1,80 @@
+name: LOOFS-FVCOM
+description: NOAA/NOS Lake Ontario Operational Forecast System
+metadata:
+  long_name: Lake Ontario
+  grid_dim_(node,nele,siglay): [34395,64453,20]
+  grid_res_min_(km): 0.2
+  grid_res_max_(km): 2.5
+  grid_type: 'unstructured'
+  alpha_shape: [5,5]  # dd, alpha
+  filetype: 'fields'
+
+sources:
+  coops-forecast-noagg:
+    driver: opendap
+    description: Unaggregated 3D Lake Ontario model in FVCOM from 30 days ago with 120 hour forecast.
+    args:
+      # xarray.open_dataset/open_mfdataset options:
+      chunks:
+        time: 1
+      drop_variables: &drop_variables
+        - Itime
+        - Itime2
+      # xarray.open_mfdataset options that make read-in faster by providing assumptions
+      compat: override
+      combine: by_coords
+      parallel: True
+      data_vars: minimal
+      coords: minimal
+      # these are for the engine
+      preload_varmap: &preload_varmap
+        siglay: sigma_layers
+        siglev: sigma_levels
+      # Luke's engine which is in extract_model for reading in FVCOM
+      engine: triangularmesh_netcdf
+      urlpath: &urlpath
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LOOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.loofs.fields.n001.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t00z.nc"
+        - "https://opendap.co-ops.nos.noaa.gov/thredds/dodsC/NOAA/LOOFS/MODELS/{{yesterday.year}}/{{yesterday.strftime('%m')}}/{{yesterday.strftime('%d')}}/nos.loofs.fields.n002.{{yesterday.year}}{{yesterday.strftime('%m')}}{{yesterday.strftime('%d')}}.t00z.nc"
+    parameters:
+      yesterday:
+        description: Pandas like Timestamp for yesterday
+        type: datetime  # one of bool, str, int, float, list[str | int | float], datetime,
+    metadata:
+      sample_locs: *urlpath
+      catloc: 'https://opendap.co-ops.nos.noaa.gov/thredds/catalog/NOAA/LOOFS/MODELS/catalog.xml'
+      overall_start_datetime: '1 month before present day'
+      overall_end_datetime: '120 hours after present time'
+      notes: 'treat_last_day_as_forecast==True will not work here'
+      output_period_(hr): 1
+      axis: &axes
+        T: time
+        X: x
+        Y: y
+      standard_names: &standard_names
+        longitude:
+          - lon
+          - lonc
+        latitude:
+          - lat
+          - latc
+        eastward_sea_water_velocity: u
+        eastward_wind: uwind_speed
+        northward_sea_water_velocity: v
+        northward_wind: vwind_speed
+        ocean_sigma_coordinate: [sigma_layers, sigma_levels]
+        sea_floor_depth: h
+        sea_surface_elevation: zeta
+        sea_water_temperature: temp
+        sea_water_practical_salinity: salinity
+        time: time
+      coords: &coords
+        - time
+        - sigma_layers
+        - sigma_levels
+        - lat
+        - lon
+        - latc
+        - lonc
+      formula_terms: &formula_terms
+        sigma_layers: "sigma: sigma_layers eta: zeta depth: h"
+        sigma_levels: "sigma: sigma_levels eta: zeta depth: h"
