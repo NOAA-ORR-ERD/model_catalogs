@@ -157,7 +157,7 @@ def setup(override=False):
         # re-compile together catalog file if user wants to override possibly
         # existing file or if is not fresh
         if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.stem)):
-
+ 
             cat_orig = intake.open_catalog(cat_loc)
 
             # add previously-saved boundary info

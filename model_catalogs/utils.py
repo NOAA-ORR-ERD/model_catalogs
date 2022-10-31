@@ -55,7 +55,7 @@ def status(urlpath):
 def file2dt(filename):
     """Return Timestamp of NOAA OFS filename
 
-    ...without reading in the filename to xarray. See `docs <https://model-catalogs.readthedocs.io/en/latest/aggregations.html>`_ for details on the formula. Most NOAA OFS models have 1 timestep per file, but LSOFS, LOOFS, and NYOFS have 6.
+    ...without reading in the filename to xarray. See `docs <https://model-catalogs.readthedocs.io/en/latest/aggregations.html>`_ for details on the formula. Most NOAA OFS models have 1 timestep per file, but NYOFS has 6.
 
     Parameters
     ----------
@@ -84,18 +84,16 @@ def file2dt(filename):
     regex = re.compile(".t[0-9]{2}z.")
     cycle = int(regex.findall(filename)[0][2:4])
 
-    # LSOFS, LOOFS, NYOFS: multiple times per file
+    # NYOFS: multiple times per file
     if fnmatch.fnmatch(filename, "*.nowcast.*"):
 
         date = [date + pd.Timedelta(f"{cycle - dt} hours") for dt in range(6)[::-1]]
 
-    # LSOFS, LOOFS, NYOFS: multiple times per file
+    # NYOFS: multiple times per file
     elif fnmatch.fnmatch(filename, "*.forecast.*"):
 
-        # models all have different forecast lengths!
-        if "lsofs" in filename or "loofs" in filename:
-            nfiles = 60
-        elif "nyofs" in filename:
+        # models all have different forecast lengths! Though only nyofs is left in this category
+        if "nyofs" in filename:
             nfiles = 54
 
         date = [date + pd.Timedelta(f"{cycle + 1 + dt} hours") for dt in range(nfiles)]
