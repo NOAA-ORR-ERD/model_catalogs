@@ -316,7 +316,9 @@ def test_process():
     main_cat = mc.setup()
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
-    assert "lon" in list(main_cat["LOOFS-FVCOM"]["coops-forecast-noagg"].to_dask().coords)
+    assert "lon" in list(
+        main_cat["LOOFS-FVCOM"]["coops-forecast-noagg"].to_dask().coords
+    )
 
 
 def check_source(source):
