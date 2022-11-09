@@ -30,7 +30,7 @@ def astype(value, type_):
     return value
 
 
-def status(urlpath):
+def status(urlpath, suffix=".das"):
     """Check status of server for urlpath.
 
     Parameters
@@ -44,7 +44,7 @@ def status(urlpath):
         If True, server was reachable.
     """
 
-    resp = requests.get(urlpath + ".das")
+    resp = requests.get(urlpath + suffix)
     if resp.status_code != 200:
         status = False
     else:
@@ -423,7 +423,7 @@ def find_catrefs(catloc):
         .catalog_refs
     )
     # If there are more catalog references, run another level of catalog and combine, ## 2
-    if len(cat_ref_test) > 1:
+    if len(cat_ref_test) > 0:
         catrefs2 = [
             cat.catalog_refs[catref[0]]
             .follow()

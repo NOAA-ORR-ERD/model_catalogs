@@ -337,6 +337,7 @@ def find_availability_source(source, override=False):
 
     # if server is not working, return input source with None for new metadata
     if not source.status:
+        # raise RuntimeError(f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.")
         warnings.warn(
             f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.",
             RuntimeWarning,
@@ -735,9 +736,29 @@ def select_date_range(
         source = cat_or_source
         model_source = source.name
 
+    # if server is not working, return input source with None for new metadata
+    if not source.status:
+        # raise RuntimeError(f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.")
+        warnings.warn(
+            f"Server for source {source.cat.name}, {source.name}, is not working. Urlpath checked was {mc.astype(source.urlpath, list)[0]}.",
+            RuntimeWarning,
+        )
+        return source
+
     # catch the models that require aggregation
     if "catloc" in source.metadata:
         pattern = source.metadata["pattern"] if "pattern" in source.metadata else None
+
+        # check catalog
+        if not mc.status(source.metadata["catloc"], suffix=""):
+            raise RuntimeError(
+                f"Catalog {source.metadata['catloc']} for source {source.cat.name}, {source.name}, is not working."
+            )
+            # warnings.warn(
+            #     f"Catalog {source.metadata['catloc']} for source {source.cat.name}, {source.name}, is not working.",
+            #     RuntimeWarning,
+            # )
+            # return None
 
         if not override and mc.is_fresh(
             mc.FILE_PATH_CATREFS(source.cat.name, source.name)
@@ -747,7 +768,10 @@ def select_date_range(
             ) as stream:
                 catrefs = yaml.safe_load(stream)["catrefs"]
         else:
-            catrefs = mc.find_catrefs(source.metadata["catloc"])
+            try:
+                catrefs = mc.find_catrefs(source.metadata["catloc"])
+            except Exception as e:
+                print(e)
             catrefs = sorted(catrefs)  # earliest first, most recent last
             with open(
                 mc.FILE_PATH_CATREFS(source.cat.name, source.name), "w"
