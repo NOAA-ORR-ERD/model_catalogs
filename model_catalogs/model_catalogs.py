@@ -11,6 +11,7 @@ import cf_xarray  # noqa
 import intake
 import intake.source.derived
 import pandas as pd
+import requests
 import yaml
 
 from datetimerange import DateTimeRange
@@ -434,16 +435,23 @@ def find_availability(cat_or_source, model_source=None, override=False, verbose=
     # if Catalog was input
     if isinstance(cat_or_source, Catalog):
         # if no model_source input, loop through all
-        model_source = (
+        model_sources = (
             list(cat_or_source)
             if model_source is None
             else mc.astype(model_source, list)
         )
         sources = []
-        for model_source in model_source:
-            source = find_availability_source(
-                source=cat_or_source[model_source], override=override
-            )
+        for model_source in model_sources:
+            try:
+                source = find_availability_source(
+                    source=cat_or_source[model_source], override=override
+                )
+            except requests.exceptions.HTTPError:
+                print(f"Found a server error with {model_source}")
+                source = cat_or_source[model_source]
+            # source = find_availability_source(
+            #     source=cat_or_source[model_source], override=override
+            # )
             sources.append(source)
             if verbose:
                 print(
