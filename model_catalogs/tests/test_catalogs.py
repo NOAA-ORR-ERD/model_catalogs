@@ -79,14 +79,14 @@ def test_find_availability():
         # make sure source output since source was input
         assert isinstance(source, (OpenDapSource, DatasetTransform))
 
-#         assert (
-#             cat[model_source].metadata["start_datetime"]
-#             == source.metadata["start_datetime"]
-#         )
-#         assert (
-#             cat[model_source].metadata["end_datetime"]
-#             == source.metadata["end_datetime"]
-#         )
+        #         assert (
+        #             cat[model_source].metadata["start_datetime"]
+        #             == source.metadata["start_datetime"]
+        #         )
+        #         assert (
+        #             cat[model_source].metadata["end_datetime"]
+        #             == source.metadata["end_datetime"]
+        #         )
 
         # test that if server status is False, start_datetime, end_datetime are None
         in_source = main_cat[model][model_source]
