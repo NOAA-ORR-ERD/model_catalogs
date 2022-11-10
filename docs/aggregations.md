@@ -25,6 +25,9 @@ However, LSOFS, LOOFS, and NYOFS follow a different convention. For 3-D field ou
 
 where `[nowcast|forecast]` denotes either the nowcast or forecast results, `tCCz` is the cycle of the day and there are 6 model outputs per file.
 
+**Note**
+As of October 2022, developmental versions of LSOFS and LOOFS have started to replace the old POM models. So, whether the files follow the general aggregation rules or the specific older rules depends on what source you retrieve the output from.
+
 ### File selection and order
 
 #### Forecast
@@ -56,7 +59,7 @@ Similarly append the forecast that is the same update cycle as the most recent n
 
 ##### LSOFS, LOOFS, NYOFS
 
-LSOFS, LOOFS, and NYOFS are different. They have 6 model outputs per file, and a sequence of files to make a time series forward in time with a forecast looks like:
+LSOFS and LOOFS before October 2022, and NYOFS are different. They have 6 model outputs per file, and a sequence of files to make a time series forward in time with a forecast looks like:
 
  - `glofs.lsofs.fields.nowcast.20220916.t00z.nc`
  - `glofs.lsofs.fields.nowcast.20220916.t06z.nc`
@@ -87,7 +90,7 @@ where ``n000`` files have been left off the list since they are duplicates.
 
 ##### LSOFS, LOOFS, NYOFS
 
-For LSOFS, LOOFS, and NYOFS, a day of model output with no forecast looks like:
+For LSOFS and LOOFS before October 2022, and NYOFS, a day of model output with no forecast looks like:
 
  - `glofs.lsofs.fields.nowcast.20220915.t00z.nc`
  - `glofs.lsofs.fields.nowcast.20220915.t06z.nc`
@@ -163,6 +166,9 @@ The formula are:
 
 
 #### LSOFS, LOOFS, NYOFS
+
+**Note**
+LSOFS and LOOFS models changed in October 2022 to be FVCOM instead of POM and model output going forward from then do not follow these legacy rules.
 
 Each nowcast model output file for these three models contains 6 model time steps. The last model time step in a given file corresponds to the datetime information in the file name, and the other file times are each an hour previous.
 

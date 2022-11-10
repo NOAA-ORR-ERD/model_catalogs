@@ -30,7 +30,7 @@ def astype(value, type_):
     return value
 
 
-def status(urlpath):
+def status(urlpath, suffix=".das"):
     """Check status of server for urlpath.
 
     Parameters
@@ -44,7 +44,7 @@ def status(urlpath):
         If True, server was reachable.
     """
 
-    resp = requests.get(urlpath + ".das")
+    resp = requests.get(urlpath + suffix)
     if resp.status_code != 200:
         status = False
     else:
@@ -55,7 +55,7 @@ def status(urlpath):
 def file2dt(filename):
     """Return Timestamp of NOAA OFS filename
 
-    ...without reading in the filename to xarray. See `docs <https://model-catalogs.readthedocs.io/en/latest/aggregations.html>`_ for details on the formula. Most NOAA OFS models have 1 timestep per file, but LSOFS, LOOFS, and NYOFS have 6.
+    ...without reading in the filename to xarray. See `docs <https://model-catalogs.readthedocs.io/en/latest/aggregations.html>`_ for details on the formula. Most NOAA OFS models have 1 timestep per file, but NYOFS has 6.
 
     Parameters
     ----------
@@ -84,18 +84,16 @@ def file2dt(filename):
     regex = re.compile(".t[0-9]{2}z.")
     cycle = int(regex.findall(filename)[0][2:4])
 
-    # LSOFS, LOOFS, NYOFS: multiple times per file
+    # NYOFS: multiple times per file
     if fnmatch.fnmatch(filename, "*.nowcast.*"):
 
         date = [date + pd.Timedelta(f"{cycle - dt} hours") for dt in range(6)[::-1]]
 
-    # LSOFS, LOOFS, NYOFS: multiple times per file
+    # NYOFS: multiple times per file
     elif fnmatch.fnmatch(filename, "*.forecast.*"):
 
-        # models all have different forecast lengths!
-        if "lsofs" in filename or "loofs" in filename:
-            nfiles = 60
-        elif "nyofs" in filename:
+        # models all have different forecast lengths! Though only nyofs is left in this category
+        if "nyofs" in filename:
             nfiles = 54
 
         date = [date + pd.Timedelta(f"{cycle + 1 + dt} hours") for dt in range(nfiles)]
@@ -425,7 +423,7 @@ def find_catrefs(catloc):
         .catalog_refs
     )
     # If there are more catalog references, run another level of catalog and combine, ## 2
-    if len(cat_ref_test) > 1:
+    if len(cat_ref_test) > 0:
         catrefs2 = [
             cat.catalog_refs[catref[0]]
             .follow()
