@@ -158,6 +158,18 @@ class DatasetTransform(GenericTransform):
 
         if self._ds is None:
 
+            # This is a special flag to be able to just quickly connect to the model output
+            # without all the extra checks and processing (other than to transform the original
+            # target). Used to find_availability without modifying the Dataset itself.
+            if (
+                "skip_dask_processing" in self._kwargs
+                and self._kwargs["skip_dask_processing"]
+            ):
+                return self._transform(
+                    self._source.to_dask(),
+                    metadata=self.metadata,
+                )
+
             if not hasattr(self, "target"):
                 self.target
 

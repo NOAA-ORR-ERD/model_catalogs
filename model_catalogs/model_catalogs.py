@@ -242,6 +242,8 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # which is all non-OFS models and OFS models that are already aggregated
     if "catloc" not in source.metadata:
 
+        # flag to process.py for `to_dask()` call to skip detailed processing since just a quick check. Doesn't save ds to source._ds or cache.
+        source._kwargs["skip_dask_processing"] = True
         ds = source.to_dask()
         # use one T in case there are more than one
         tkey = ds.cf.axes["T"][0]
