@@ -7,6 +7,7 @@ v0.6.0 (unreleased)
   * `lsofs.yaml` and `loofs.yaml` are still the legacy POM version of the models but no longer have source `coops-forecast-noagg`, and their metadata have been updated to reflect the end dates of the model sources.
   * new catalog files `lsofs-fvcom.yaml` and `loofs-fvcom.yaml` have source `coops-forecast-noagg` that points to the new FVCOM version of the models.
 * If user requests time range that is not available for a source, it will now error instead of warn.
+* Bug fixed in `find_availability` so that when a source that does not have a catloc entry is checked, the Dataset is read in without extra processing and checks (including limiting the time range which otherwise would impact checking the time availability).
 
 v0.5.0 (October 7, 2022)
 ========================
