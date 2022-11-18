@@ -43,14 +43,38 @@ except DistributionNotFound:
 # this is where the original model catalog files and previously-calculated
 # model boundaries can be found, which are hard-wired in the repo
 # version change for this behavior
-try:  # >= Python 3.9
-    CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
-except AttributeError:  # < Python3.9
-    with importlib.resources.path("model_catalogs", "catalogs") as pth:
-        CAT_PATH = pth
-CAT_PATH_ORIG = CAT_PATH / "orig"
-CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
-CAT_PATH_TRANSFORM = CAT_PATH / "transform.yaml"
+def set_cat_paths(cat_path=None):
+    '''
+    set the paths for the catalog (yml files)
+
+    :param cat_path: path to the source catalog
+
+    NOTE: These three paths need to exist, as do:
+      cat_path
+      cat_path/orig
+      cat_path/boundaries
+    '''
+    # fixme: global's not ideal -- better to have a mutable config object:
+    #        maybe a dict or dataclass
+    global CAT_PATH
+    global CAT_PATH_ORIG
+    global CAT_PATH_BOUNDARIES
+    global CAT_PATH_TRANSFORM
+
+    if cat_path is None:
+        try:  # >= Python 3.9
+            CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
+        except AttributeError:  # < Python3.9
+            with importlib.resources.path("model_catalogs", "catalogs") as pth:
+                CAT_PATH = pth
+    else:
+        CAT_PATH = Path(cat_path)
+
+    CAT_PATH_ORIG = CAT_PATH / "orig"
+    CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
+    CAT_PATH_TRANSFORM = CAT_PATH / "transform.yaml"
+
+set_cat_paths()
 
 # test files
 try:  # >= Python 3.9
