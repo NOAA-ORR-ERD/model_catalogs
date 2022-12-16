@@ -1,10 +1,10 @@
 model_catalogs
 ==============================
-[![Build Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/Tests?logo=github&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/axiom-data-science/model_catalogs/test.yaml?branch=main&logo=github&style=for-the-badge)](https://github.com/axiom-data-science/model_catalogs/actions/workflows/test.yaml)
 [![Code Coverage](https://img.shields.io/codecov/c/github/NOAA-ORR-ERD/model_catalogs.svg?style=for-the-badge)](https://codecov.io/gh/NOAA-ORR-ERD/model_catalogs)
 [![License:MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://img.shields.io/readthedocs/model_catalogs/latest.svg?style=for-the-badge)](https://model_catalogs.readthedocs.io/en/latest/?badge=latest)
-[![Code Style Status](https://img.shields.io/github/workflow/status/NOAA-ORR-ERD/model_catalogs/linting%20with%20pre-commit?label=Code%20Style&style=for-the-badge)](https://github.com/NOAA-ORR-ERD/model_catalogs/actions)
+[![Code Style Status](https://img.shields.io/github/actions/workflow/status/axiom-data-science/model_catalogs/linting.yaml?branch=main&label=Code%20Style&style=for-the-badge)](https://github.com/axiom-data-science/model_catalogs/actions/workflows/linting.yaml)
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/model_catalogs.svg?style=for-the-badge)](https://anaconda.org/conda-forge/model_catalogs)
 [![Python Package Index](https://img.shields.io/pypi/v/model_catalogs.svg?style=for-the-badge)](https://pypi.org/project/model_catalogs)
 
