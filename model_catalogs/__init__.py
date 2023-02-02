@@ -4,12 +4,12 @@ Set up for using package.
 
 import importlib
 
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import pandas as pd
 
 from appdirs import AppDirs
-from importlib.metadata import PackageNotFoundError, version
 
 from .model_catalogs import (  # noqa
     find_availability,
