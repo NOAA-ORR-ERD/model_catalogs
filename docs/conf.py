@@ -18,7 +18,7 @@ import sys
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 # see https://pypi.org/project/setuptools-scm/ for details
-from pkg_resources import get_distribution
+from importlib.metadata import version as imversion
 
 
 print("python exec:", sys.executable)
@@ -32,10 +32,10 @@ import model_catalogs  # noqa: F401, E402, isort:skip
 # -- Project information -----------------------------------------------------
 
 project = "model_catalogs"
-copyright = "2022, Kristen Thyng"
-author = "Kristen Thyng"
+copyright = "2022–2023, Axiom Data Science"
+author = "Axiom Data Science"
 
-release = get_distribution("model_catalogs").version
+release = imversion("model_catalogs")
 # for example take major/minor
 version = ".".join(release.split(".")[:2])
 
