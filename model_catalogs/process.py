@@ -66,7 +66,12 @@ class DatasetTransform(GenericTransform):
         """
 
         if not hasattr(self, "_status"):
-            self._status = mc.status(mc.astype(self.urlpath, list)[0])
+            
+            if self.target.describe()["driver"][0] == "opendap":
+                suffix = ".das"
+            else:
+                suffix = ""
+            self._status = mc.status(mc.astype(self.urlpath, list)[0], suffix=suffix)
         return self._status
 
     @property
@@ -189,13 +194,13 @@ class DatasetTransform(GenericTransform):
             # Make sure that source has urlpath
             # check for if the urlpath is null and if so `select_date_range()`
             # needs to be run to fill it in
-            elif self._source.urlpath is None:
+            elif self.target.urlpath is None:
                 raise KeyError(
                     "The input source `urlpath` does not have a value. You probably want to run `mc.select_date_range()` before running `to_dask()`."  # noqa: E501
                 )
 
             # Alert if triangularmesh engine is required (from FVCOM) but not present
-            if self._source.engine == "triangularmesh_netcdf" and not EM_AVAILABLE:
+            if self.target.describe()["driver"][0] == "opendap" and self.target.engine == "triangularmesh_netcdf" and not EM_AVAILABLE:
                 raise ModuleNotFoundError(  # pragma: no cover
                     "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )

@@ -3,6 +3,8 @@
 
 v0.6.0 (unreleased)
 ===================
+* User can work with a local catalog file now! See WHAT DOCS for details.
+* Removed requirement for `filetype` to be in catalog if sources in catalog do not need to be aggregated.
 * LSOFS and LOOFS have new FVCOM versions. So, there are new versions of the model files:
   * `lsofs.yaml` and `loofs.yaml` are still the legacy POM version of the models but no longer have source `coops-forecast-noagg`, and their metadata have been updated to reflect the end dates of the model sources.
   * new catalog files `lsofs-fvcom.yaml` and `loofs-fvcom.yaml` have source `coops-forecast-noagg` that points to the new FVCOM version of the models.

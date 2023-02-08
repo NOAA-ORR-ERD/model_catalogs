@@ -19,6 +19,7 @@ from dateutil.parser import parse
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from intake_xarray.opendap import OpenDapSource
+from pathlib import PurePath
 
 import model_catalogs as mc
 
@@ -36,6 +37,7 @@ def make_catalog(
     cat_driver,
     cat_path=None,
     save_catalog=True,
+    return_cat: bool = True,
 ):
     """Construct single catalog from multiple catalogs or sources.
 
@@ -62,6 +64,8 @@ def make_catalog(
        will use `full_cat_name`.
     save_catalog : bool, optional
         Defaults to True, and saves to cat_path.
+    return_cat : bool, optional
+        Return catalog.
 
     Returns
     -------
@@ -117,16 +121,81 @@ def make_catalog(
     if save_catalog:
         cat.save(cat_path)
 
-    return cat
+    if return_cat:
+        return cat
 
 
-def setup(override=False):
+def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, boundaries=False, 
+                 save_boundaries=False):
+    """_summary_
+
+    Parameters
+    ----------
+    cat_loc : str, Catalog
+        Can be the name of a subcatalog in `intake.cat` that has been installed or can be the path to a catalog.
+    save_catalog : bool, optional
+        Defaults to True, and saves to cat_path.
+    return_cat : bool, optional
+        Return catalog.
+    override : boolean, optional
+        Use `override=True` to compile the catalog files together regardless of freshness.
+    boundaries : boolean, optional
+        If True, find or calculate domain boundary of model.
+    """
+    
+    if isinstance(cat_loc, Catalog):
+        cat_orig = cat_loc
+    else:
+        cat_loc = PurePath(cat_loc)
+        cat_orig = intake.open_catalog(cat_loc)
+
+    if boundaries:
+        if mc.FILE_PATH_BOUNDARIES(cat_orig.name.lower()).is_file() and not override:
+            # add previously-saved boundary info
+            # this was calculated with mc.calculate_boundaries()
+            with open(mc.FILE_PATH_BOUNDARIES(cat_orig.name.lower()), "r") as stream:
+                boundary = yaml.safe_load(stream)
+        else:
+            boundary = mc.calculate_boundaries(cat_orig, save_files=save_boundaries, return_boundaries=True)[cat_orig.name]
+        
+        # add to cat_orig metadata
+        cat_orig.metadata["bounding_box"] = boundary["bbox"]
+        cat_orig.metadata["geospatial_bounds"] = boundary["wkt"]
+
+    # get transform of each original catalog file, which points to
+    # original file but applies metadata from original catalog file
+    # to the resulting dataset after calling `to_dask()`
+    source_transforms = [
+        mc.transform_source(cat_orig[model_source])
+        for model_source in list(cat_orig)
+    ]
+
+    # need to make catalog to transfer information properly from
+    # source_orig to source_transform
+    cat = mc.make_catalog(
+        source_transforms,
+        full_cat_name=cat_orig.name,  # model name
+        full_cat_description=cat_orig.description,
+        full_cat_metadata=cat_orig.metadata,
+        cat_driver=mc.process.DatasetTransform,
+        cat_path=mc.CACHE_PATH_COMPILED,
+        save_catalog=True,
+        return_cat=True,
+    )
+    
+    if return_cat:
+        return cat
+
+
+def setup(locs="mc_", override=False):
     """Setup reference catalogs for models.
 
     Loops over hard-wired "orig" catalogs available in ``mc.CAT_PATH_ORIG``, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
 
     Parameters
     ----------
+    locs : str, list
+        The name of a catalog in the default intake catalog `intake.cat`.
     override : boolean, optional
         Use `override=True` to compile the catalog files together regardless of freshness.
 
@@ -150,45 +219,60 @@ def setup(override=False):
 
     >>> list(cat['CBOFS'])
     """
+    
+    locs = mc.astype(locs, list)
+    
+    # arrange inputs into list of known Catalog instances and Paths to catalogs
+    initial_cats = []
+    for loc in locs:
+    
+        # initial_cats is a list of Catalogs in this case
+        cats = [intake.cat[cat_name] for cat_name in list(intake.cat) if loc in cat_name]
+
+        # remove the prefix from the catalog name
+        for cat in cats:
+            cat.name = cat.name.lstrip(loc)
+    
+        # check for if loc is instead a path to a catalog
+        if len(cats) == 0:
+            # initial_cats is a list of one Path in this case
+            cats = [PurePath(loc)]
+        
+        # now cats is a list of Catalogs or a list of one Path
+        initial_cats.extend(cats)
+    
+    # # LOC IS A STRING CURRENTLY
+    
+    # # start with one, then UPDATE TO MULTIPLE
+    # # initial_cats is a list of Catalogs in this case
+    # initial_cats = [intake.cat[cat_name] for cat_name in list(intake.cat) if loc in cat_name]
+    
+    # # remove the prefix from the catalog name
+    # for cat in initial_cats:
+    #     cat.name = cat.name.lstrip(loc)
+    
+    # # check for if loc is instead a path to a catalog
+    # if len(initial_cats) == 0:
+    #     # initial_cats is a list of one Path in this case
+    #     initial_cats = [PurePath(loc)]
+    # else:
+    #     # UPDATE ERROR
+    #     raise KeyError(f"The requested catalog {loc} needs to have been previously installed with intake.")
 
     cat_transform_locs = []
-    # Loop over all hard-wired original catalog files, one per model
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+    for cat in list(initial_cats):
+        
+        if isinstance(cat, PurePath):
+            name = cat.stem
+        elif isinstance(cat, Catalog):
+            name = cat.name
+        # import pdb; pdb.set_trace()
 
         # re-compile together catalog file if user wants to override possibly
         # existing file or if is not fresh
-        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.stem)):
-
-            cat_orig = intake.open_catalog(cat_loc)
-
-            # add previously-saved boundary info
-            # this was calculated with mc.calculate_boundaries()
-            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.stem), "r") as stream:
-                boundary = yaml.safe_load(stream)
-            # add to cat_orig metadata
-            cat_orig.metadata["bounding_box"] = boundary["bbox"]
-            cat_orig.metadata["geospatial_bounds"] = boundary["wkt"]
-
-            # get transform of each original catalog file, which points to
-            # original file but applies metadata from original catalog file
-            # to the resulting dataset after calling `to_dask()`
-            source_transforms = [
-                mc.transform_source(cat_orig[model_source])
-                for model_source in list(cat_orig)
-            ]
-
-            # need to make catalog to transfer information properly from
-            # source_orig to source_transform
-            mc.make_catalog(
-                source_transforms,
-                full_cat_name=cat_orig.name,  # model name
-                full_cat_description=cat_orig.description,
-                full_cat_metadata=cat_orig.metadata,
-                cat_driver=mc.process.DatasetTransform,
-                cat_path=mc.CACHE_PATH_COMPILED,
-                save_catalog=True,
-            )
-        cat_transform_locs.append(mc.FILE_PATH_COMPILED(cat_loc.stem))
+        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(name)):    
+            open_catalog(cat, return_cat=False, save_catalog=True, boundaries=True, save_boundaries=True)
+        cat_transform_locs.append(mc.FILE_PATH_COMPILED(name))
 
     # have to read these from disk in order to make them type
     # intake.catalog.local.YAMLFileCatalog
@@ -200,11 +284,40 @@ def setup(override=False):
         cats,
         full_cat_name="MAIN-CATALOG",
         full_cat_description="Main catalog for models; a catalog of nested catalogs.",
-        full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
+        full_cat_metadata={},
+        # full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
         cat_driver=intake.catalog.local.YAMLFileCatalog,
         cat_path=None,
         save_catalog=False,
     )
+
+    # cat_transform_locs = []
+    # # Loop over all hard-wired original catalog files, one per model
+    # for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
+
+    #     # re-compile together catalog file if user wants to override possibly
+    #     # existing file or if is not fresh
+    #     if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.stem)):
+            
+    #         open_catalog(cat_loc, return_cat=False, save_catalog=True, override=override, boundaries=True)
+
+    #     cat_transform_locs.append(mc.FILE_PATH_COMPILED(cat_loc.stem))
+
+    # # have to read these from disk in order to make them type
+    # # intake.catalog.local.YAMLFileCatalog
+    # # instead of intake.catalog.base.Catalog
+    # cats = [intake.open_catalog(loc) for loc in cat_transform_locs]
+
+    # # make master nested catalog
+    # main_cat = mc.make_catalog(
+    #     cats,
+    #     full_cat_name="MAIN-CATALOG",
+    #     full_cat_description="Main catalog for models; a catalog of nested catalogs.",
+    #     full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
+    #     cat_driver=intake.catalog.local.YAMLFileCatalog,
+    #     cat_path=None,
+    #     save_catalog=False,
+    # )
 
     return main_cat
 
@@ -236,8 +349,6 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
         Contains 'start_datetime' and 'end_datetime' where each are strings or can be None if they didn't need to be found.
     """
 
-    filetype = source.cat.metadata["filetype"]
-
     # For any model/model_source pairs with static links or known file address,
     # which is all non-OFS models and OFS models that are already aggregated
     if "catloc" not in source.metadata:
@@ -253,9 +364,14 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
 
     # for when we need to aggregate which is for model_source: ncei-archive-noagg and coops-forecast-noagg
     else:
+        
+        if filetype not in source.cat.metadata:
+            raise KeyError("If your model requires aggregation, it also requires `filetype` in the catalog-level metadata.")
+        else:
+            filetype = source.cat.metadata["filetype"]            
 
         if not override and mc.is_fresh(
-            mc.FILE_PATH_CATREFS(source.cat.name, source.name)
+            mc.FILE_PATH_CATREFS(source.cat.name, source.name), source
         ):
             with open(
                 mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r"
@@ -354,7 +470,7 @@ def find_availability_source(source, override=False):
         # file times are given in UTC
         # If files are not stale, read in info from there
         if not override and mc.is_fresh(
-            mc.FILE_PATH_START(source.cat.name, source.name)
+            mc.FILE_PATH_START(source.cat.name, source.name), source
         ):
             with open(mc.FILE_PATH_START(source.cat.name, source.name), "r") as stream:
                 start_datetime = yaml.safe_load(stream)["start_datetime"]
@@ -362,7 +478,7 @@ def find_availability_source(source, override=False):
         else:
             find_start_datetime = True  # need to still find the start_datetime
 
-        if not override and mc.is_fresh(mc.FILE_PATH_END(source.cat.name, source.name)):
+        if not override and mc.is_fresh(mc.FILE_PATH_END(source.cat.name, source.name), source):
             with open(mc.FILE_PATH_END(source.cat.name, source.name), "r") as stream:
                 end_datetime = yaml.safe_load(stream)["end_datetime"]
             find_end_datetime = False
@@ -771,7 +887,7 @@ def select_date_range(
             # return None
 
         if not override and mc.is_fresh(
-            mc.FILE_PATH_CATREFS(source.cat.name, source.name)
+            mc.FILE_PATH_CATREFS(source.cat.name, source.name), source
         ):
             with open(
                 mc.FILE_PATH_CATREFS(source.cat.name, source.name), "r"
@@ -803,7 +919,7 @@ def select_date_range(
                 source.cat.name, model_source, date, is_forecast
             )
 
-            if not override and mc.is_fresh(fname):
+            if not override and mc.is_fresh(fname, source):
                 with open(fname, "r") as stream:
                     agg_filelocs = yaml.safe_load(stream)["agg_filelocs"]
 
