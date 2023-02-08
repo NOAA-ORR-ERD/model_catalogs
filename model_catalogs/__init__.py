@@ -45,9 +45,11 @@ except PackageNotFoundError:
 # model boundaries can be found, which are hard-wired in the repo
 # version change for this behavior
 try:  # >= Python 3.9
-    CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
+    CAT_PATH = importlib.resources.files("model_catalogs")
+    # CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
 except AttributeError:  # < Python3.9
-    with importlib.resources.path("model_catalogs", "catalogs") as pth:
+    with importlib.resources.path("model_catalogs") as pth:
+    # with importlib.resources.path("model_catalogs", "catalogs") as pth:
         CAT_PATH = pth
 # CAT_PATH_ORIG = CAT_PATH / "orig"
 # CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
