@@ -320,26 +320,26 @@ def add_attributes(ds, metadata: Optional[dict] = None):
     if metadata is not None and "coords" in metadata:
         ds = ds.assign_coords({k: ds[k] for k in metadata["coords"]})
 
-    # set axis attributes (time, lon, lat, z potentially)
+    # set axis attributes (T, X, Y, Z potentially)
     if metadata is not None and "axis" in metadata:
         for ax_name, var_names in metadata["axis"].items():
-            if not isinstance(var_names, list):
-                var_names = [var_names]
+            var_names = mc.astype(var_names, list)
             for var_name in var_names:
-                # var_name needs to exist
-                # if ax_name == 'X':
-                #     import pdb; pdb.set_trace()
 
-                if var_name in ds.dims:
+                # Check dims, coords, and data_vars: 
+                if var_name in ds.dims or var_name in ds.data_vars.keys() or var_name in ds.coords:
                     # var_name needs to be a coord to have attributes
                     if var_name not in ds.coords:
-                        ds[var_name] = (
-                            var_name,
-                            np.arange(ds.sizes[var_name]),
-                            {"axis": ax_name},
-                        )
+                        ds = ds.assign_coords({var_name: (var_name,np.arange(ds[var_name].size), {"axis": ax_name},)})
                     else:
                         ds[var_name].attrs["axis"] = ax_name
+                        
+                else:
+                    warnings.warn(
+                        f"The variable {var_name} input in a catalog file is not present in the Dataset.",
+                        UserWarning,
+                    )
+                    
 
     # this won't run for e.g. GFS which has multiple time variables
     # but also doesn't need to have the calendar updated
