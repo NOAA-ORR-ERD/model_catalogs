@@ -121,13 +121,14 @@ def file2dt(filename):
 def get_fresh_parameter(filename, source):
     """Get freshness parameter, based on the filename.
 
-    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the
-    logic in this function, based on the filename.
+    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the logic in this function, based on the filename. The source is checked for most types of actions for an overriding freshness parmeter value, otherwise the default is used.
 
     Parameters
     ----------
     filename : Path
-        Filename to determine freshness
+        Filename to determine freshness.
+    source : Intake Source
+        Source from which to check for an overriding freshness parameter. Is not used for "compiled" catalog files.
 
     Returns
     -------
@@ -184,7 +185,7 @@ def is_fresh(filename, source=None):
     filename : Path
         Filename to determine freshness
     source : Intake Source
-        Source from which to check for an overriding freshness parameter. Is not possible for "compiled" catalog files.
+        Source from which to check for an overriding freshness parameter. Is not used for "compiled" catalog files.
 
     Returns
     -------
@@ -512,37 +513,32 @@ def find_filelocs(catref, catloc, filetype="fields"):
 def calculate_boundaries(cats, save_files=True, return_boundaries=False):
     """Calculate boundary information for all models.
 
-    This loops over all catalog files available in ``mc.CAT_PATH_ORIG``, will try with multiple model_source if necessary (in case servers aren't working) to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+    This loops over all input catalogs and will try with multiple model_source if necessary (in case servers aren't working) to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
 
-    The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
+    The files are saved the first time you run this function, so this function should only be rerun if you suspect that a model domain has changed or you have a new model catalog.
 
     Parameters
     ----------
-    cats : Path, list of Paths, optional
-        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at ``mc.CAT_PATH_ORIG.glob("*.yaml")``.
+    cats : Catalog, list of Catalogs
+        The Catalog or Catalogs for which to find boundaries.
     save_files : boolean, optional
-        Whether to save files or not. Defaults to True. Saves to ``mc.CAT_PATH_BOUNDARY / cat_loc.name``.
+        Whether to save files or not. Defaults to True. Saves to ``mc.FILE_PATH_BOUNDARIES(cat_loc.name)``.
     return_boundaries : boolean, optional
         Whether to return boundaries information from this call. Defaults to False.
 
     Examples
     --------
 
-    Calculate boundary information for all available models:
-
-    >>> mc.calculate_boundaries()
-
     Calculate boundary information for CBOFS:
 
-    >>> mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"])
+    >>> import model_catalogs as mc
+    >>> main_cat = mc.setup()
+    >>> mc.calculate_boundaries(main_cat["CBOFS"])
     """
     
     # loop over all orig catalogs
     boundaries = {}
     for cat in mc.astype(cats, list):
-
-        # # open model catalog
-        # cat_orig = intake.open_catalog(cat)
 
         # loop over available sources and use the first that works
         for model_source in list(cat):
