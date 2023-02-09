@@ -39,17 +39,21 @@ try:
 except PackageNotFoundError:
     # package is not installed
     __version__ = "unknown"
+    
+# this forces single threading which avoids an issue described here:
+# https://github.com/pydata/xarray/issues/7079
+# https://github.com/Unidata/netcdf4-python/issues/1192
+import dask
+dask.config.set(scheduler="single-threaded")
 
 # set up known locations for catalogs.
 # this is where the original model catalog files and previously-calculated
 # model boundaries can be found, which are hard-wired in the repo
 # version change for this behavior
 try:  # >= Python 3.9
-    CAT_PATH = importlib.resources.files("model_catalogs")
-    # CAT_PATH = importlib.resources.files("model_catalogs") / "catalogs"
+    CAT_PATH = importlib.resources.files("model_catalogs") / "support_files"
 except AttributeError:  # < Python3.9
-    with importlib.resources.path("model_catalogs") as pth:
-    # with importlib.resources.path("model_catalogs", "catalogs") as pth:
+    with importlib.resources.path("model_catalogs", "support_files") as pth:
         CAT_PATH = pth
 # CAT_PATH_ORIG = CAT_PATH / "orig"
 # CAT_PATH_BOUNDARIES = CAT_PATH / "boundaries"
