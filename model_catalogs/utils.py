@@ -137,6 +137,10 @@ def get_fresh_parameter(filename, source):
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
+        
+        if source is None:
+            raise ValueError("source cannot be None for this freshness calculation.")
+        
         # which type are we after
         if "start" in filename.name:
             parameter = "start"
@@ -150,29 +154,19 @@ def get_fresh_parameter(filename, source):
             mu = source.metadata["freshness"][parameter]
         else:
             mu = mc.FRESH[parameter]
-        
-        # # model_source = filename.name.split("_")[1]
-        # # if model_source not in mc.FRESH.keys():
-        # #     model_source = "default"
-        # if "start" in filename.name:
-        #     mu = mc.FRESH[model_source]["start"]
-        # elif "end" in filename.name:
-        #     mu = mc.FRESH[model_source]["end"]
-        # elif "catrefs" in filename.name:
-        #     mu = mc.FRESH[model_source]["catrefs"]
-    # a file of file locs for aggregation
+            # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
+        
+        if source is None:
+            raise ValueError("source cannot be None for this freshness calculation.")
+
         parameter = "file_locs"
         # check for overriding freshness parameter in source metadata
         if "freshness" in source.metadata and parameter in source.metadata["freshness"]:
             mu = source.metadata["freshness"][parameter]
         else:
             mu = mc.FRESH[parameter]
-        
-        # model_source = filename.name.split("_")[1]
-        # if model_source not in mc.FRESH.keys():
-        #     model_source = "default"
-        # mu = mc.FRESH[model_source]["file_locs"]
+
     # a compiled catalog file
     elif filename.parent == mc.CACHE_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
