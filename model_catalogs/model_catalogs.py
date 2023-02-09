@@ -365,7 +365,7 @@ def find_datetimes(source, find_start_datetime, find_end_datetime, override=Fals
     # for when we need to aggregate which is for model_source: ncei-archive-noagg and coops-forecast-noagg
     else:
         
-        if filetype not in source.cat.metadata:
+        if "filetype" not in source.cat.metadata:
             raise KeyError("If your model requires aggregation, it also requires `filetype` in the catalog-level metadata.")
         else:
             filetype = source.cat.metadata["filetype"]            
