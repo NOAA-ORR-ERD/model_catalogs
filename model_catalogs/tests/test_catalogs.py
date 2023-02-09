@@ -6,6 +6,7 @@ import warnings
 
 from unittest import mock
 
+import intake
 import numpy as np
 import pandas as pd
 import pytest
@@ -28,11 +29,9 @@ def test_setup():
     main_cat = mc.setup(override=True)
 
     # check that all compiled catalog files exist
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        fname = mc.FILE_PATH_COMPILED(cat_loc.name)
-        assert fname.exists()
-        assert mc.is_fresh(fname)
-
+    should_exist = [cat.lstrip("mc_") for cat in list(intake.cat) if cat.startswith("mc_")]
+    assert sorted(list(main_cat)) == sorted(should_exist)
+    
     # Check that model_sources are correct for one test case
     assert sorted(list(main_cat["CBOFS"])) == [
         "coops-forecast-agg",
@@ -67,7 +66,7 @@ def test_find_availability():
                 RuntimeWarning,
             )
         fname = mc.FILE_PATH_START(model, model_source)
-        if not mc.is_fresh(fname):
+        if not mc.is_fresh(fname, cat[model_source]):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
 
         # make sure catalog output since catalog was input
@@ -99,21 +98,18 @@ def test_find_availability():
 
 # @pytest.mark.slow
 def test_boundaries():
-    """Test one faster model and compare with existing file."""
+    """Test one faster model and make sure variables come through."""
 
-    model = "gofs"
+    model = "mc_GOFS"
+    cat = intake.cat[model]
 
     # Calculate
     boundaries = mc.calculate_boundaries(
-        file_locs=mc.FILE_PATH_ORIG(model), save_files=False, return_boundaries=True
+        cats=cat, save_files=False, return_boundaries=True
     )
 
-    # Read in saved
-    with open(mc.FILE_PATH_BOUNDARIES(model), "r") as stream:
-        boundaries_read = yaml.safe_load(stream)
-
-    assert boundaries[model]["bbox"] == boundaries_read["bbox"]
-    assert boundaries[model]["wkt"] == boundaries_read["wkt"]
+    assert "bbox" in boundaries[model]
+    assert "wkt" in boundaries[model]
 
 
 # @pytest.mark.slow
@@ -317,7 +313,7 @@ def test_process():
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
     assert "lon" in list(
-        main_cat["LOOFS-FVCOM"]["coops-forecast-noagg"].to_dask().coords
+        main_cat["LOOFS_FVCOM"]["coops-forecast-noagg"].to_dask().coords
     )
 
 
@@ -364,19 +360,14 @@ def check_source(source):
     assert all(checks)
 
     # check cf-xarray
-    # AXIS X and Y won't be defined for unstructured model unless interpolated
-    if "SELFE" in source.target.description or "FVCOM" in source.target.description:
-        if "RGRID" in source.cat.name:
-            assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
-        elif "2DS" in source.cat.name:
-            assert sorted(list(ds.cf.axes.keys())) == ["T"]
-        else:
-            assert sorted(list(ds.cf.axes.keys())) == ["T", "Z"]
+    # AXIS Z won't be defined for unstructured 2D model output
+    if ("SELFE" in source.target.description or "FVCOM" in source.target.description) and "2DS" in source.cat.name:
+        assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y"]
     else:
         assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
 
     # the 2D cases are weird
-    if "NGOFS2-2DS" in source.cat.name:
+    if "NGOFS2_2DS" in source.cat.name:
         assert sorted(list(ds.cf.coordinates.keys())) == [
             "latitude",
             "longitude",
@@ -401,9 +392,8 @@ def test_sources():
     """
 
     main_cat = mc.setup()
-
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        model = cat_loc.stem.upper()
+    
+    for model in list(main_cat):
         for model_source in list(main_cat[model]):
             source = main_cat[model][model_source]
             try:
