@@ -3,7 +3,12 @@
 
 v0.6.0 (unreleased)
 ===================
+* The "freshness" parameter, which determines how much time can pass before different actions must be rerun, now has a default for each of the four actions that have freshness parameters associated with them. These parameters are set in the `__init__` file but can be overridden for any model source with the "freshness" parameter in the source metadata. More details are available WHERE.
+* The "known" GOODS model catalog yaml files are no longer distributed with ``model_catalogs`` itself in order to enforce more separation between the catalog files themselves and this code. However, the package of catalogs is currently a requirement of ``model_catalogs`` and can be found at `mc-goods <https://github.com/axiom-data-science/mc-goods>`_.
+  * Catalog names that had names like `CBOFS-RGRID` are now called `CBOFS_RGRID` with underscores instead of hyphens. This was a necessary change for setting up the models in their own packages with entry points.
+* Enforcing single threading in ``model_catalogs`` to avoid issue when using ``xr.open_mfdataset`` (which is used with `noagg` sources) in which the first time you read something in you hit an error but the second time it works. For more information check this `xarray issue <https://github.com/pydata/xarray/issues/7079>`_ or this `netcdf issue <https://github.com/Unidata/netcdf4-python/issues/1192>`_.
 * User can work with a local catalog file now! See WHAT DOCS for details.
+  * boundaries are optionally calculated
 * Removed requirement for `filetype` to be in catalog if sources in catalog do not need to be aggregated.
 * LSOFS and LOOFS have new FVCOM versions. So, there are new versions of the model files:
   * `lsofs.yaml` and `loofs.yaml` are still the legacy POM version of the models but no longer have source `coops-forecast-noagg`, and their metadata have been updated to reflect the end dates of the model sources.
