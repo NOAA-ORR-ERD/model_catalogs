@@ -127,20 +127,24 @@ def make_catalog(
 
 def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, boundaries=False, 
                  save_boundaries=False):
-    """_summary_
+    """Open an intake catalog file and set up code to apply processing/transform.
+    
+    Optionally calculate the boundaries of the model represented in cat_log.
 
     Parameters
     ----------
     cat_loc : str, Catalog
-        Can be the name of a subcatalog in `intake.cat` that has been installed or can be the path to a catalog.
-    save_catalog : bool, optional
-        Defaults to True, and saves to cat_path.
+        The catalog to open. cat_loc can be the representation of a path to a catalog file (string or Path) or it can be a Catalog object.
     return_cat : bool, optional
-        Return catalog.
+        Return catalog from function. Defaults to True.
+    save_catalog : bool, optional
+        Defaults to False, and saves to mc.CACHE_PATH_COMPILED(model).
     override : boolean, optional
-        Use `override=True` to compile the catalog files together regardless of freshness.
+        Use `override=True` to calculate boundaries of the model regardless of whether the file already exists.
     boundaries : boolean, optional
-        If True, find or calculate domain boundary of model.
+        If True, find previously-saved or calculate domain boundary of model.
+    save_boundaries : bool, optional
+        Defaults to False, and saves to mc.FILE_PATH_BOUNDARIES(model).
     """
     
     if isinstance(cat_loc, Catalog):
@@ -179,7 +183,7 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
         full_cat_metadata=cat_orig.metadata,
         cat_driver=mc.process.DatasetTransform,
         cat_path=mc.CACHE_PATH_COMPILED,
-        save_catalog=True,
+        save_catalog=save_catalog,
         return_cat=True,
     )
     
@@ -189,35 +193,46 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
 
 def setup(locs="mc_", override=False):
     """Setup reference catalogs for models.
-
-    Loops over hard-wired "orig" catalogs available in ``mc.CAT_PATH_ORIG``, reads in previously-saved model boundary information, saves temporary catalog files for each model, and links those together into the returned master catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
+    
+    Loops over catalogs that have been previously installed as data packages to intake that start with the string(s) in locs. The default is to read in the required GOODS model catalogs which are prefixed with "mc_". Alternatively, one or more local catalog files can be input as strings or Paths.
+    
+    This function calls ``open_catalog`` which reads in previously-saved model boundary information (or calculates it if not available) and saves temporary catalog files for each model (called "compiled"), then this function links those together into the returned main catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
 
     Parameters
     ----------
-    locs : str, list
-        The name of a catalog in the default intake catalog `intake.cat`.
+    locs : str, Path, list
+        This can be:
+        
+        * a string or Path describing where a Catalog file is located
+        * a string of the prefix for selecting catalogs from the default intake catalog, ``intake.cat``. It is expected to be of the form "PREFIX_CATALOGNAME" with an underscore at the end followed by the catalog name, and there could be many catalogs with that "PREFIX_" set up.
+        * a list of a combination of the previous options.
+        
     override : boolean, optional
         Use `override=True` to compile the catalog files together regardless of freshness.
 
     Returns
     -------
     Intake catalog
-        Nested Intake catalog with a catalog for each model in ``mc.CAT_PATH_ORIG``. Each model in turn has one or more model_source available (e.g., "coops-forecast-agg", "coops-forecast-noagg").
+        Nested Intake catalog with a catalog for each input option. Each model in turn has one or more model_source available (e.g., "coops-forecast-agg", "coops-forecast-noagg").
 
     Examples
     --------
 
-    Set up master catalog:
+    Set up main catalog:
 
-    >>> cat = mc.setup()
+    >>> main_cat = mc.setup()
 
     Examine list of models available in catalog:
 
-    >>> list(cat)
+    >>> list(main_cat)
 
     Examine the model_sources for a specific model in the catalog:
 
-    >>> list(cat['CBOFS'])
+    >>> list(main_cat['CBOFS'])
+    
+    Separate from ``model_catalogs`` you can check the default Intake catalog with:
+    
+    >>> list(intake.cat)
     """
     
     locs = mc.astype(locs, list)
@@ -240,24 +255,6 @@ def setup(locs="mc_", override=False):
         
         # now cats is a list of Catalogs or a list of one Path
         initial_cats.extend(cats)
-    
-    # # LOC IS A STRING CURRENTLY
-    
-    # # start with one, then UPDATE TO MULTIPLE
-    # # initial_cats is a list of Catalogs in this case
-    # initial_cats = [intake.cat[cat_name] for cat_name in list(intake.cat) if loc in cat_name]
-    
-    # # remove the prefix from the catalog name
-    # for cat in initial_cats:
-    #     cat.name = cat.name.lstrip(loc)
-    
-    # # check for if loc is instead a path to a catalog
-    # if len(initial_cats) == 0:
-    #     # initial_cats is a list of one Path in this case
-    #     initial_cats = [PurePath(loc)]
-    # else:
-    #     # UPDATE ERROR
-    #     raise KeyError(f"The requested catalog {loc} needs to have been previously installed with intake.")
 
     cat_transform_locs = []
     for cat in list(initial_cats):
@@ -266,12 +263,12 @@ def setup(locs="mc_", override=False):
             name = cat.stem
         elif isinstance(cat, Catalog):
             name = cat.name
-        # import pdb; pdb.set_trace()
 
         # re-compile together catalog file if user wants to override possibly
         # existing file or if is not fresh
-        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(name)):    
-            open_catalog(cat, return_cat=False, save_catalog=True, boundaries=True, save_boundaries=True)
+        if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(name)):
+            # override for open_catalog is about calculating boundaries
+            open_catalog(cat, return_cat=False, save_catalog=True, boundaries=True, save_boundaries=True, override=False)
         cat_transform_locs.append(mc.FILE_PATH_COMPILED(name))
 
     # have to read these from disk in order to make them type
@@ -290,34 +287,6 @@ def setup(locs="mc_", override=False):
         cat_path=None,
         save_catalog=False,
     )
-
-    # cat_transform_locs = []
-    # # Loop over all hard-wired original catalog files, one per model
-    # for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-
-    #     # re-compile together catalog file if user wants to override possibly
-    #     # existing file or if is not fresh
-    #     if override or not mc.is_fresh(mc.FILE_PATH_COMPILED(cat_loc.stem)):
-            
-    #         open_catalog(cat_loc, return_cat=False, save_catalog=True, override=override, boundaries=True)
-
-    #     cat_transform_locs.append(mc.FILE_PATH_COMPILED(cat_loc.stem))
-
-    # # have to read these from disk in order to make them type
-    # # intake.catalog.local.YAMLFileCatalog
-    # # instead of intake.catalog.base.Catalog
-    # cats = [intake.open_catalog(loc) for loc in cat_transform_locs]
-
-    # # make master nested catalog
-    # main_cat = mc.make_catalog(
-    #     cats,
-    #     full_cat_name="MAIN-CATALOG",
-    #     full_cat_description="Main catalog for models; a catalog of nested catalogs.",
-    #     full_cat_metadata={"source_catalog_dir": str(mc.CAT_PATH_ORIG)},
-    #     cat_driver=intake.catalog.local.YAMLFileCatalog,
-    #     cat_path=None,
-    #     save_catalog=False,
-    # )
 
     return main_cat
 
