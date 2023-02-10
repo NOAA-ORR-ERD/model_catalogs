@@ -1,22 +1,24 @@
 """Test different ways to input catalogs."""
 
 from pathlib import PurePath
-import model_catalogs as mc
+
 import intake
-import xarray as xr
 import numpy as np
+import xarray as xr
+
+import model_catalogs as mc
 
 
 def test_default_catalogs_intake():
     """Make sure some default 'mc_' catalogs are present since are required."""
-    
+
     assert "mc_CBOFS" in list(intake.cat)
     assert "mc_CIOFS" in list(intake.cat)
 
 
 def test_setup_default():
     """Check that default `mc_` catalogs come through setup."""
-    
+
     main_cat = mc.setup()
     assert "CBOFS" in list(main_cat)
     assert "CIOFS" in list(main_cat)
@@ -24,8 +26,8 @@ def test_setup_default():
 
 def test_open_catalog(tmpdir):
     dsfname = PurePath(tmpdir) / "example_dataset.nc"
-    fname = PurePath(tmpdir) / 'example_catalog.yaml'
-    
+    fname = PurePath(tmpdir) / "example_catalog.yaml"
+
     ds = xr.Dataset()
     ds["time"] = (
         "Time",
@@ -69,8 +71,8 @@ def test_open_catalog(tmpdir):
                     - Time
     """
 
-    with open(fname, 'w') as fp:
-        fp.write(catalog_text)    
+    with open(fname, "w") as fp:
+        fp.write(catalog_text)
     cat = mc.open_catalog(fname)
     ds = cat["example_source"].to_dask()
     assert ds.cf.axes["X"] == ["x"]

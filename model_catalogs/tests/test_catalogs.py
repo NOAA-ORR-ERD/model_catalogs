@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-import yaml
 
 from intake.catalog import Catalog
 from intake_xarray.opendap import OpenDapSource
@@ -29,9 +28,11 @@ def test_setup():
     main_cat = mc.setup(override=True)
 
     # check that all compiled catalog files exist
-    should_exist = [cat.lstrip("mc_") for cat in list(intake.cat) if cat.startswith("mc_")]
+    should_exist = [
+        cat.lstrip("mc_") for cat in list(intake.cat) if cat.startswith("mc_")
+    ]
     assert sorted(list(main_cat)) == sorted(should_exist)
-    
+
     # Check that model_sources are correct for one test case
     assert sorted(list(main_cat["CBOFS"])) == [
         "coops-forecast-agg",
@@ -361,7 +362,9 @@ def check_source(source):
 
     # check cf-xarray
     # AXIS Z won't be defined for unstructured 2D model output
-    if ("SELFE" in source.target.description or "FVCOM" in source.target.description) and "2DS" in source.cat.name:
+    if (
+        "SELFE" in source.target.description or "FVCOM" in source.target.description
+    ) and "2DS" in source.cat.name:
         assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y"]
     else:
         assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
@@ -392,7 +395,7 @@ def test_sources():
     """
 
     main_cat = mc.setup()
-    
+
     for model in list(main_cat):
         for model_source in list(main_cat[model]):
             source = main_cat[model][model_source]

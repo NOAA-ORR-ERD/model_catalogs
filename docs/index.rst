@@ -29,7 +29,7 @@ To install from conda-forge:
    aggregations
    whats_new
    api
- 
+
 .. toctree::
    :maxdepth: 2
    :hidden:

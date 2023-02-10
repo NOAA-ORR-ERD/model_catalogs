@@ -2,7 +2,7 @@
 
 Boundaries files will be searched for automatically when `mc.setup()` is run. If the command has previously been run with the requested catalog files, then the boundaries files should already exist. If new catalog files are being used, then boundaries files will be calculated as each catalog file is handled.
 
-Boundaries files are saved to `mc.FILE_PATH_BOUNDARIES(catalog_name)` where the `catalog_name` is determined at the top of the catalog file itself under "name". 
+Boundaries files are saved to `mc.FILE_PATH_BOUNDARIES(catalog_name)` where the `catalog_name` is determined at the top of the catalog file itself under "name".
 
 If you want to calculate the boundaries separately from the call to `mc.setup()`, you can do so with
 

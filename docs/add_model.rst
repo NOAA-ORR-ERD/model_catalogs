@@ -14,7 +14,7 @@ Scenario: you want to use a new model with ``model_catalogs``. How should you go
 Make a new catalog for it
 -------------------------
 
-One Intake catalog file should represent a single model domain whose sources all provide access to model output from running on the same grid. Take a look at the top of an existing catalog file to see what catalog-level metadata is set to know what should be consistent between sources in a catalog file. If the horizontal grid is different (e.g., a subset of a model domain), that should be a different catalog file. If the vertical grid is different (e.g., the output is only at the surface of a 3D model), that should be a different catalog file. 
+One Intake catalog file should represent a single model domain whose sources all provide access to model output from running on the same grid. Take a look at the top of an existing catalog file to see what catalog-level metadata is set to know what should be consistent between sources in a catalog file. If the horizontal grid is different (e.g., a subset of a model domain), that should be a different catalog file. If the vertical grid is different (e.g., the output is only at the surface of a 3D model), that should be a different catalog file.
 
 What should your catalog file include?
 **************************************
@@ -61,8 +61,8 @@ Freshness
 
 The "freshness" parameters, which determine how much time can pass before different actions must be rerun, now have defaults (set in the `__init__` file) for each of the five actions that have freshness parameters associated with them. Possible parameters are:
 
-* start 
-* end 
+* start
+* end
 * catrefs
 * file_locs
 * compiled

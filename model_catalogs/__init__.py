@@ -39,11 +39,13 @@ try:
 except PackageNotFoundError:
     # package is not installed
     __version__ = "unknown"
-    
+
 # this forces single threading which avoids an issue described here:
 # https://github.com/pydata/xarray/issues/7079
 # https://github.com/Unidata/netcdf4-python/issues/1192
 import dask
+
+
 dask.config.set(scheduler="single-threaded")
 
 # set up known locations for catalogs.

@@ -7,11 +7,11 @@ import pathlib
 import re
 
 import cf_xarray  # noqa
-import intake
 import numpy as np
 import pandas as pd
 import requests
 import yaml
+
 from intake.catalog import Catalog
 from siphon.catalog import TDSCatalog
 
@@ -24,7 +24,9 @@ def astype(value, type_):
     Particularly made to work correctly for returning string, `PosixPath`, or `Timestamp` as list.
     """
     if not isinstance(value, type_):
-        if type_ == list and isinstance(value, (str, pathlib.PurePath, pd.Timestamp, Catalog)):
+        if type_ == list and isinstance(
+            value, (str, pathlib.PurePath, pd.Timestamp, Catalog)
+        ):
             return [value]
         return type_(value)
     return value
@@ -121,7 +123,7 @@ def file2dt(filename):
 def get_fresh_parameter(filename, source):
     """Get freshness parameter, based on the filename.
 
-    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the logic in this function, based on the filename. The source is checked for most types of actions for an overriding freshness parmeter value, otherwise the default is used.
+    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the logic in this function, based on the filename. The source is checked for most types of actions for an overriding freshness parameter value, otherwise the default is used.
 
     Parameters
     ----------
@@ -138,10 +140,10 @@ def get_fresh_parameter(filename, source):
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
-        
+
         if source is None:
             raise ValueError("source cannot be None for this freshness calculation.")
-        
+
         # which type are we after
         if "start" in filename.name:
             parameter = "start"
@@ -157,7 +159,7 @@ def get_fresh_parameter(filename, source):
             mu = mc.FRESH[parameter]
             # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
-        
+
         if source is None:
             raise ValueError("source cannot be None for this freshness calculation.")
 
@@ -282,7 +284,7 @@ def find_bbox(ds, dd=None, alpha=None):
 
         # need to calculate concave hull or alphashape of grid
         import alphashape
-        
+
         # downsample a bit to save time, still should clearly see shape of domain
         lon, lat = lon[::dd], lat[::dd]
         pts = list(zip(lon, lat))
@@ -535,7 +537,7 @@ def calculate_boundaries(cats, save_files=True, return_boundaries=False):
     >>> main_cat = mc.setup()
     >>> mc.calculate_boundaries(main_cat["CBOFS"])
     """
-    
+
     # loop over all orig catalogs
     boundaries = {}
     for cat in mc.astype(cats, list):

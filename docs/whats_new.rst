@@ -8,16 +8,16 @@ v0.6.0 (unreleased)
 * The "known" GOODS model catalog yaml files are no longer distributed with ``model_catalogs`` itself in order to enforce more separation between the catalog files themselves and this code. However, the package of catalogs is currently a requirement of ``model_catalogs`` and can be found at `mc-goods <https://github.com/axiom-data-science/mc-goods>`_. Note that catalog names that had names like `CBOFS-RGRID` are now called `CBOFS_RGRID` with underscores instead of hyphens. This was a necessary change for setting up the models in their own packages with entry points.
 * Enforcing single threading in ``model_catalogs`` to avoid issue when using ``xr.open_mfdataset`` (which is used with `noagg` sources) in which the first time you read something in you hit an error but the second time it works. For more information check this `xarray issue <https://github.com/pydata/xarray/issues/7079>`_ or this `netcdf issue <https://github.com/Unidata/netcdf4-python/issues/1192>`_.
 * User can work with a local catalog file now! See :doc:`here <catalog_modes>` for details.
-  
+
   * boundaries are optionally calculated when using `mc.open_catalog()`.
   * boundaries are calculated the first time a catalog file is worked with through `mc.setup()`
-  
+
 * Removed requirement for `filetype` to be in catalog if sources in catalog do not need to be aggregated.
 * LSOFS and LOOFS have new FVCOM versions. So, there are new versions of the model files:
-  
+
   * `lsofs.yaml` and `loofs.yaml` are still the legacy POM version of the models but no longer have source `coops-forecast-noagg`, and their metadata have been updated to reflect the end dates of the model sources.
   * new catalog files `lsofs-fvcom.yaml` and `loofs-fvcom.yaml` have source `coops-forecast-noagg` that points to the new FVCOM version of the models.
-  
+
 * If user requests time range that is not available for a source, it will now error instead of warn.
 * Bug fixed in `find_availability` so that when a source that does not have a catloc entry is checked, the Dataset is read in without extra processing and checks (including limiting the time range which otherwise would impact checking the time availability).
 

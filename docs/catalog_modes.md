@@ -34,7 +34,7 @@ See all available installed catalogs with:
 list(intake.cat)
 ```
 
-Installed catalogs to be used with `model_catalogs` should have a specified prefix ending with an underscore so they can be easily selected from the default catalog. `model_catalogs` required the installation of [`mc-goods`](https://github.com/axiom-data-science/mc-goods), a package of model catalogs, which have the prefix "mc_". 
+Installed catalogs to be used with `model_catalogs` should have a specified prefix ending with an underscore so they can be easily selected from the default catalog. `model_catalogs` required the installation of [`mc-goods`](https://github.com/axiom-data-science/mc-goods), a package of model catalogs, which have the prefix "mc_".
 
 +++
 
@@ -113,7 +113,7 @@ with TemporaryDirectory() as tmpdirname:
                     - Time
     """
     fp = open(fname, 'w')
-    fp.write(catalog_text) 
+    fp.write(catalog_text)
     fp.close()
 
     main_cat = mc.setup(str(fname), override=True)
