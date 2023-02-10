@@ -1,20 +1,21 @@
 # How to Update Boundaries
 
-The boundary information for all known model domains (that is, one per catalog file in `orig`) has been previously calculated and saved into the `model_catalogs` repository since it should not change frequently. However, sometimes a new model will be added or an existing model will change, and this demonstrates how to calculate and save the new information.
+Boundaries files will be searched for automatically when `mc.setup()` is run. If the command has previously been run with the requested catalog files, then the boundaries files should already exist. If new catalog files are being used, then boundaries files will be calculated as each catalog file is handled.
 
-## Run for all models
+Boundaries files are saved to `mc.FILE_PATH_BOUNDARIES(catalog_name)` where the `catalog_name` is determined at the top of the catalog file itself under "name". 
 
-Run this way to run through all the model catalog files, calculate the boundary information, and save them each to files at `mc.CAT_PATH_BOUNDARY / cat_loc.name`, for example `mc.CAT_PATH_BOUNDARY / 'DBOFS.yaml'` for the DBOFS model. If you want to then update the repository with the newly-calculated boundary information, you can commit these files to the repository (if you are set up to develop the package).
+If you want to calculate the boundaries separately from the call to `mc.setup()`, you can do so with
 
 ```
 import model_catalogs as mc
-mc.calculate_boundaries(save_files=True)
+boundaries = mc.calculate_boundaries(save_files=False, return_boundaries=True)
 ```
 
-## Run for one model
-
-Run this way to run a single model. For example, perhaps you want to make sure that the CBOFS boundary information hasn't changed, so you run the boundary calculation and return the information without saving it to disk and then compare it with the existing boundary information.
+You can also calculate them by opening a single catalog and requesting that the boundaries be calculated with:
 
 ```
-boundaries = mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"], save_files=False, return_boundaries=True)
+import model_catalogs as mc
+cat = mc.open_catalog(CATALOG_PATH, boundaries=True, save_boundaries=False)
 ```
+
+You can save the boundaries to the cache with the relevant keyword argument for either approach.
