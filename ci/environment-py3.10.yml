@@ -13,7 +13,7 @@ dependencies:
   - flake8
   - intake
   - intake-xarray
-  - mc-goods
+  # - mc-goods
   - netcdf4
   - numpy
   # - openssl<3.0  # NOMADS server for RTOFS doesn't work with openssl 3.0
@@ -26,6 +26,7 @@ dependencies:
   ##############
   - pytest
   - pip:
+    - mc-goods  # only the CI envs can't find this package on conda-forge
     - codecov
     - pytest-cov
     - coverage[toml]
