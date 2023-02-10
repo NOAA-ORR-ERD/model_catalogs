@@ -83,11 +83,11 @@ def make_catalog(
 
     if cat_path is None and save_catalog:
         cat_path = Path(full_cat_name)
-    if save_catalog:
-        cat_path = cat_path / full_cat_name.lower()
-        # cat_path = f"{cat_path}/{full_cat_name.lower()}"
-    if save_catalog and ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
-        cat_path = cat_path.with_suffix(".yaml")
+    # if save_catalog:
+    #     cat_path = cat_path / full_cat_name.lower()
+    #     # cat_path = f"{cat_path}/{full_cat_name.lower()}"
+    # if save_catalog and ("yaml" not in str(cat_path)) and ("yml" not in str(cat_path)):
+    #     cat_path = cat_path.with_suffix(".yaml")
 
     if not isinstance(cats, list):
         cats = [cats]
@@ -119,7 +119,7 @@ def make_catalog(
 
     # save catalog
     if save_catalog:
-        cat.save(cat_path)
+        cat.save(cat_path.with_suffix(".yaml"))
 
     if return_cat:
         return cat
@@ -130,6 +130,8 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
     """Open an intake catalog file and set up code to apply processing/transform.
     
     Optionally calculate the boundaries of the model represented in cat_log.
+    
+    Note that saved boundaries files will be saved under the name inside the catalog, not the name of the file if you input a catalog path.
 
     Parameters
     ----------
@@ -173,6 +175,9 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
         mc.transform_source(cat_orig[model_source])
         for model_source in list(cat_orig)
     ]
+    
+    metadata = cat_orig.metadata
+    metadata.update({"cat_path": cat_orig.path})
 
     # need to make catalog to transfer information properly from
     # source_orig to source_transform
@@ -180,9 +185,9 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
         source_transforms,
         full_cat_name=cat_orig.name,  # model name
         full_cat_description=cat_orig.description,
-        full_cat_metadata=cat_orig.metadata,
+        full_cat_metadata=metadata,
         cat_driver=mc.process.DatasetTransform,
-        cat_path=mc.CACHE_PATH_COMPILED,
+        cat_path=mc.FILE_PATH_COMPILED(cat_orig.name),
         save_catalog=save_catalog,
         return_cat=True,
     )
@@ -194,9 +199,11 @@ def open_catalog(cat_loc, return_cat=True, save_catalog=False, override=False, b
 def setup(locs="mc_", override=False):
     """Setup reference catalogs for models.
     
-    Loops over catalogs that have been previously installed as data packages to intake that start with the string(s) in locs. The default is to read in the required GOODS model catalogs which are prefixed with "mc_". Alternatively, one or more local catalog files can be input as strings or Paths.
+    Loops over catalogs that have been previously installed as data packages to intake that start with the string(s) in locs. The default is to read in the required GOODS model catalogs which are prefixed with `"mc_"`. Alternatively, one or more local catalog files can be input as strings or Paths.
     
     This function calls ``open_catalog`` which reads in previously-saved model boundary information (or calculates it if not available) and saves temporary catalog files for each model (called "compiled"), then this function links those together into the returned main catalog. For some models, reading in the original catalogs applies a "today" and/or "yesterday" date Intake user parameter that supplies two example model files that can be used for examining the model output for the example times. Those are rerun each time this function is rerun, filling the parameters using the proper dates.
+    
+    Note that saved compiled catalog files will be saved under the name inside the catalog, not the name of the file if you input a catalog path.
 
     Parameters
     ----------
@@ -204,7 +211,7 @@ def setup(locs="mc_", override=False):
         This can be:
         
         * a string or Path describing where a Catalog file is located
-        * a string of the prefix for selecting catalogs from the default intake catalog, ``intake.cat``. It is expected to be of the form "PREFIX_CATALOGNAME" with an underscore at the end followed by the catalog name, and there could be many catalogs with that "PREFIX_" set up.
+        * a string of the prefix for selecting catalogs from the default intake catalog, ``intake.cat``. It is expected to be of the form "PREFIX_CATALOGNAME" with an underscore at the end followed by the catalog name, and there could be many catalogs with that `"PREFIX_"` set up.
         * a list of a combination of the previous options.
         
     override : boolean, optional
@@ -251,18 +258,20 @@ def setup(locs="mc_", override=False):
         # check for if loc is instead a path to a catalog
         if len(cats) == 0:
             # initial_cats is a list of one Path in this case
-            cats = [PurePath(loc)]
+            # cats = [PurePath(loc)]
+            # initial_cats is a list of one Catalog in this case
+            cats = [intake.open_catalog(loc)]
         
-        # now cats is a list of Catalogs or a list of one Path
+        # now cats is a list of Catalog(s)
         initial_cats.extend(cats)
 
     cat_transform_locs = []
     for cat in list(initial_cats):
         
-        if isinstance(cat, PurePath):
-            name = cat.stem
-        elif isinstance(cat, Catalog):
-            name = cat.name
+        # if isinstance(cat, PurePath):
+        #     name = cat.stem
+        # elif isinstance(cat, Catalog):
+        name = cat.name
 
         # re-compile together catalog file if user wants to override possibly
         # existing file or if is not fresh

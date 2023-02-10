@@ -95,11 +95,6 @@ def TEST_PATH_FILE(model, model_source):
     return (TEST_PATH_FILES / f"{model}_{model_source}").with_suffix(".nc")
 
 
-# def FILE_PATH_ORIG(model):
-#     """Return file path to original model catalog file."""
-#     return (CAT_PATH_ORIG / model).with_suffix(".yaml")
-
-
 def FILE_PATH_COMPILED(model):
     """Return filename for model boundaries information."""
     return (CACHE_PATH_COMPILED / model).with_suffix(".yaml")
