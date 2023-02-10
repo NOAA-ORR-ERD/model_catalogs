@@ -21,9 +21,10 @@ To install from conda-forge:
    :caption: Documentation
 
    demo
+   catalog_modes
+   add_model
    paths
    standard_names
-   add_model
    update_boundaries
    aggregations
    package_management
