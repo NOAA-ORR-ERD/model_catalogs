@@ -8,7 +8,7 @@ If you want to calculate the boundaries separately from the call to `mc.setup()`
 
 ```
 import model_catalogs as mc
-boundaries = mc.calculate_boundaries(save_files=False, return_boundaries=True)
+boundaries = mc.calculate_boundaries([CATALOGS], save_files=False, return_boundaries=True)
 ```
 
 You can also calculate them by opening a single catalog and requesting that the boundaries be calculated with:

@@ -11,6 +11,9 @@ dependencies:
    - datetimerange
    - intake
    - intake-xarray
+   - jupytext
+   - mc-goods
+   - myst-nb
    - netcdf4
    - numpy
    - pandas
