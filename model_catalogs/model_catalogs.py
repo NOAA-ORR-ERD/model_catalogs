@@ -649,9 +649,7 @@ def transform_source(source_orig):
     source_transform._captured_init_kwargs["targets"] = [
         f"{source_orig.cat.path}:{source_orig.name}"
     ]
-    source_transform.targets = [
-        f"{source_orig.cat.path}:{source_orig.name}"
-    ]
+    source_transform.targets = [f"{source_orig.cat.path}:{source_orig.name}"]
 
     # add metadata from source_orig
     source_transform.metadata.update(source_orig.metadata)
