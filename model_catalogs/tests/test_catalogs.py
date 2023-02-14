@@ -615,7 +615,7 @@ def test_wrong_time_range(mock_open_dataset, mock_open_mfdataset):
     mock_open_mfdataset.return_value = ds
 
     # have to use a real cat/source pair to get this to work, but it isn't actually called in to_dask
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
     cat0 = main_cat[list(main_cat)[0]]
     source0 = cat0[list(cat0)[0]]
     source0.metadata = {}

@@ -202,7 +202,7 @@ def open_catalog(
         return cat
 
 
-def setup(locs="mc_", override=False):
+def setup(locs="mc_", override=False, boundaries=True):
     """Setup reference catalogs for models.
 
     Loops over catalogs that have been previously installed as data packages to intake that start with the string(s) in locs. The default is to read in the required GOODS model catalogs which are prefixed with `"mc_"`. Alternatively, one or more local catalog files can be input as strings or Paths.
@@ -222,6 +222,8 @@ def setup(locs="mc_", override=False):
 
     override : boolean, optional
         Use `override=True` to compile the catalog files together regardless of freshness.
+    boundaries : boolean, optional
+        If True, find previously-saved or calculate domain boundary of model. Intended for testing.
 
     Returns
     -------
@@ -645,6 +647,9 @@ def transform_source(source_orig):
 
     # make path to source_orig the target
     source_transform._captured_init_kwargs["targets"] = [
+        f"{source_orig.cat.path}:{source_orig.name}"
+    ]
+    source_transform.targets = [
         f"{source_orig.cat.path}:{source_orig.name}"
     ]
 
