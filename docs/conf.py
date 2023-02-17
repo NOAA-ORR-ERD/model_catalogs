@@ -54,12 +54,19 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "numpydoc",
-    "nbsphinx",
+    # "nbsphinx",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxcontrib.srclinks",
     "sphinx_markdown_tables",
+    "myst_nb",
 ]
+
+# for compiling notebooks with mystnb
+# https://docs.readthedocs.io/en/stable/guides/jupyter.html#using-notebooks-in-other-formats
+nb_custom_formats = {
+    ".md": ["jupytext.reads", {"fmt": "mystnb"}],
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -86,6 +93,8 @@ html_title = "model_catalogs documentation"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# https://myst-nb.readthedocs.io/en/v0.9.0/use/execute.html
+jupyter_execute_notebooks = "off"
 
 # -- nbsphinx specific options ----------------------------------------------
 # this allows notebooks to be run even if they produce errors.

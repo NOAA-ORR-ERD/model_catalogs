@@ -4,7 +4,7 @@ repos:
   rev: 1.5.0
   hooks:
     - id: interrogate
-      exclude: ^(setup.py|tests)
+      exclude: ^(setup.py|model_catalogs/tests)
       args: [--config=pyproject.toml]
 
 - repo: https://github.com/pre-commit/pre-commit-hooks

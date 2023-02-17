@@ -9,8 +9,9 @@ dependencies:
   - dask
   - datetimerange
   - extract_model
-  - intake
+  - intake>=0.6.7
   - intake-xarray
+  - mc-goods
   - netcdf4
   - numpy
   - pandas

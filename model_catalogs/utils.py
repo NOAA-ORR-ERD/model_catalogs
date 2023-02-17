@@ -7,12 +7,12 @@ import pathlib
 import re
 
 import cf_xarray  # noqa
-import intake
 import numpy as np
 import pandas as pd
 import requests
 import yaml
 
+from intake.catalog import Catalog
 from siphon.catalog import TDSCatalog
 
 import model_catalogs as mc
@@ -24,7 +24,9 @@ def astype(value, type_):
     Particularly made to work correctly for returning string, `PosixPath`, or `Timestamp` as list.
     """
     if not isinstance(value, type_):
-        if type_ == list and isinstance(value, (str, pathlib.PurePath, pd.Timestamp)):
+        if type_ == list and isinstance(
+            value, (str, pathlib.PurePath, pd.Timestamp, Catalog)
+        ):
             return [value]
         return type_(value)
     return value
@@ -118,16 +120,17 @@ def file2dt(filename):
     return date
 
 
-def get_fresh_parameter(filename):
+def get_fresh_parameter(filename, source):
     """Get freshness parameter, based on the filename.
 
-    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the
-    logic in this function, based on the filename.
+    A freshness parameter is stored in ``__init__`` for required scenarios which is looked up using the logic in this function, based on the filename. The source is checked for most types of actions for an overriding freshness parameter value, otherwise the default is used.
 
     Parameters
     ----------
     filename : Path
-        Filename to determine freshness
+        Filename to determine freshness.
+    source : Intake Source
+        Source from which to check for an overriding freshness parameter. Is not used for "compiled" catalog files.
 
     Returns
     -------
@@ -137,21 +140,36 @@ def get_fresh_parameter(filename):
 
     # a start or end datetime file
     if filename.parent == mc.CACHE_PATH_AVAILABILITY:
-        model_source = filename.name.split("_")[1]
-        if model_source not in mc.FRESH.keys():
-            model_source = "default"
+
+        if source is None:
+            raise ValueError("source cannot be None for this freshness calculation.")
+
+        # which type are we after
         if "start" in filename.name:
-            mu = mc.FRESH[model_source]["start"]
+            parameter = "start"
         elif "end" in filename.name:
-            mu = mc.FRESH[model_source]["end"]
+            parameter = "end"
         elif "catrefs" in filename.name:
-            mu = mc.FRESH[model_source]["catrefs"]
-    # a file of file locs for aggregation
+            parameter = "catrefs"
+
+        # check for overriding freshness parameter in source metadata
+        if "freshness" in source.metadata and parameter in source.metadata["freshness"]:
+            mu = source.metadata["freshness"][parameter]
+        else:
+            mu = mc.FRESH[parameter]
+            # a file of file locs for aggregation
     elif filename.parent == mc.CACHE_PATH_FILE_LOCS:
-        model_source = filename.name.split("_")[1]
-        if model_source not in mc.FRESH.keys():
-            model_source = "default"
-        mu = mc.FRESH[model_source]["file_locs"]
+
+        if source is None:
+            raise ValueError("source cannot be None for this freshness calculation.")
+
+        parameter = "file_locs"
+        # check for overriding freshness parameter in source metadata
+        if "freshness" in source.metadata and parameter in source.metadata["freshness"]:
+            mu = source.metadata["freshness"][parameter]
+        else:
+            mu = mc.FRESH[parameter]
+
     # a compiled catalog file
     elif filename.parent == mc.CACHE_PATH_COMPILED:
         mu = mc.FRESH["compiled"]
@@ -159,7 +177,7 @@ def get_fresh_parameter(filename):
     return mu
 
 
-def is_fresh(filename):
+def is_fresh(filename, source=None):
     """Check if file called filename is fresh.
 
     If filename doesn't exist, return False.
@@ -168,6 +186,8 @@ def is_fresh(filename):
     ----------
     filename : Path
         Filename to determine freshness
+    source : Intake Source
+        Source from which to check for an overriding freshness parameter. Is not used for "compiled" catalog files.
 
     Returns
     -------
@@ -179,7 +199,7 @@ def is_fresh(filename):
     try:
         filetime = pd.Timestamp(filename.stat().st_mtime_ns).tz_localize("UTC")
 
-        mu = get_fresh_parameter(filename)
+        mu = get_fresh_parameter(filename, source=source)
 
         return now - filetime < pd.Timedelta(mu)
 
@@ -265,10 +285,12 @@ def find_bbox(ds, dd=None, alpha=None):
         # need to calculate concave hull or alphashape of grid
         import alphashape
 
-        # low res, same as convex hull
-        p0 = alphashape.alphashape(list(zip(lon, lat)), 0.0)
         # downsample a bit to save time, still should clearly see shape of domain
-        pts = shapely.geometry.MultiPoint(list(zip(lon[::dd], lat[::dd])))
+        lon, lat = lon[::dd], lat[::dd]
+        pts = list(zip(lon, lat))
+
+        # low res, same as convex hull
+        p0 = alphashape.alphashape(pts, 0.0)
         p1 = alphashape.alphashape(pts, alpha)
 
     # useful things to look at: p.wkt  #shapely.geometry.mapping(p)
@@ -490,58 +512,48 @@ def find_filelocs(catref, catloc, filetype="fields"):
     return filelocs
 
 
-def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=False):
+def calculate_boundaries(cats, save_files=True, return_boundaries=False):
     """Calculate boundary information for all models.
 
-    This loops over all catalog files available in ``mc.CAT_PATH_ORIG``, will try with multiple model_source if necessary (in case servers aren't working) to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
+    This loops over all input catalogs and will try with multiple model_source if necessary (in case servers aren't working) to access the example model output files and calculate the bounding box and numerical domain boundary. The numerical domain boundary is calculated using `alpha_shape` with previously-chosen parameters stored in the original model catalog files. The bounding box and boundary string representation (as WKT) are then saved to files.
 
-    The files that are saved by running this function have been previously saved into the repository, so this function should only be run if you suspect that a model domain has changed.
+    The files are saved the first time you run this function, so this function should only be rerun if you suspect that a model domain has changed or you have a new model catalog.
 
     Parameters
     ----------
-    file_locs : Path, list of Paths, optional
-        List of Path objects for model catalog files to read from. If not input, will use all catalog files available at ``mc.CAT_PATH_ORIG.glob("*.yaml")``.
+    cats : Catalog, list of Catalogs
+        The Catalog or Catalogs for which to find boundaries.
     save_files : boolean, optional
-        Whether to save files or not. Defaults to True. Saves to ``mc.CAT_PATH_BOUNDARY / cat_loc.name``.
+        Whether to save files or not. Defaults to True. Saves to ``mc.FILE_PATH_BOUNDARIES(cat_loc.name)``.
     return_boundaries : boolean, optional
         Whether to return boundaries information from this call. Defaults to False.
 
     Examples
     --------
 
-    Calculate boundary information for all available models:
-
-    >>> mc.calculate_boundaries()
-
     Calculate boundary information for CBOFS:
 
-    >>> mc.calculate_boundaries([mc.CAT_PATH_ORIG / "cbofs.yaml"])
+    >>> import model_catalogs as mc
+    >>> main_cat = mc.setup()
+    >>> mc.calculate_boundaries(main_cat["CBOFS"])
     """
-
-    if file_locs is None:
-        file_locs = mc.CAT_PATH_ORIG.glob("*.yaml")
-    else:
-        file_locs = mc.astype(file_locs, list)
 
     # loop over all orig catalogs
     boundaries = {}
-    for cat_loc in file_locs:
-
-        # open model catalog
-        cat_orig = intake.open_catalog(cat_loc)
+    for cat in mc.astype(cats, list):
 
         # loop over available sources and use the first that works
-        for model_source in list(cat_orig):
-            source_orig = cat_orig[model_source]
+        for model_source in list(cat):
+            source_orig = cat[model_source]
             source_transform = mc.transform_source(source_orig)
 
             # need to make catalog to transfer information properly from
             # source_orig to source_transform
             cat_transform = mc.make_catalog(
                 source_transform,
-                full_cat_name=cat_orig.name,  # model name
-                full_cat_description=cat_orig.description,
-                full_cat_metadata=cat_orig.metadata,
+                full_cat_name=cat.name,  # model name
+                full_cat_description=cat.description,
+                full_cat_metadata=cat.metadata,
                 cat_driver=mc.process.DatasetTransform,
                 cat_path=None,
                 save_catalog=False,
@@ -554,8 +566,8 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
                 break
 
         # find boundary information for model
-        if "alpha_shape" in cat_orig.metadata:
-            dd, alpha = cat_orig.metadata["alpha_shape"]
+        if "alpha_shape" in cat.metadata:
+            dd, alpha = cat.metadata["alpha_shape"]
         else:
             dd, alpha = None, None
         lonkey, latkey, bbox, wkt = mc.find_bbox(ds, dd=dd, alpha=alpha)
@@ -564,11 +576,11 @@ def calculate_boundaries(file_locs=None, save_files=True, return_boundaries=Fals
 
         # save boundary info to file
         if save_files:
-            with open(mc.FILE_PATH_BOUNDARIES(cat_loc.name), "w") as outfile:
+            with open(mc.FILE_PATH_BOUNDARIES(cat.name.lower()), "w") as outfile:
                 yaml.dump({"bbox": bbox, "wkt": wkt}, outfile, default_flow_style=False)
 
         if return_boundaries:
-            boundaries[cat_loc.stem] = {"bbox": bbox, "wkt": wkt}
+            boundaries[cat.name] = {"bbox": bbox, "wkt": wkt}
 
     if return_boundaries:
         return boundaries

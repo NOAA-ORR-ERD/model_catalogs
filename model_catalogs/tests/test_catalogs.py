@@ -6,11 +6,11 @@ import warnings
 
 from unittest import mock
 
+import intake
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-import yaml
 
 from intake.catalog import Catalog
 from intake_xarray.opendap import OpenDapSource
@@ -25,13 +25,13 @@ from model_catalogs.process import DatasetTransform
 def test_setup():
     """Make sure main catalog is created correctly."""
 
-    main_cat = mc.setup(override=True)
+    main_cat = mc.setup(override=True, boundaries=False)
 
     # check that all compiled catalog files exist
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        fname = mc.FILE_PATH_COMPILED(cat_loc.name)
-        assert fname.exists()
-        assert mc.is_fresh(fname)
+    should_exist = [
+        cat.lstrip("mc_") for cat in list(intake.cat) if cat.startswith("mc_")
+    ]
+    assert sorted(list(main_cat)) == sorted(should_exist)
 
     # Check that model_sources are correct for one test case
     assert sorted(list(main_cat["CBOFS"])) == [
@@ -39,7 +39,7 @@ def test_setup():
         "coops-forecast-noagg",
         "ncei-archive-noagg",
     ]
-    assert main_cat["CBOFS"].metadata["geospatial_bounds"]
+    # assert main_cat["CBOFS"].metadata["geospatial_bounds"]
 
 
 # @pytest.mark.slow
@@ -56,7 +56,7 @@ def test_find_availability():
         "SFBOFS": "ncei-archive-noagg",
     }
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
     for model, model_source in test_models.items():
         cat = mc.find_availability(
             main_cat[model], model_source=model_source, override=True
@@ -67,7 +67,7 @@ def test_find_availability():
                 RuntimeWarning,
             )
         fname = mc.FILE_PATH_START(model, model_source)
-        if not mc.is_fresh(fname):
+        if not mc.is_fresh(fname, cat[model_source]):
             warnings.warn(f"Filename {fname} is not found as fresh.", RuntimeWarning)
 
         # make sure catalog output since catalog was input
@@ -99,21 +99,18 @@ def test_find_availability():
 
 # @pytest.mark.slow
 def test_boundaries():
-    """Test one faster model and compare with existing file."""
+    """Test one faster model and make sure variables come through."""
 
-    model = "gofs"
+    model = "mc_GOFS"
+    cat = intake.cat[model]
 
     # Calculate
     boundaries = mc.calculate_boundaries(
-        file_locs=mc.FILE_PATH_ORIG(model), save_files=False, return_boundaries=True
+        cats=cat, save_files=False, return_boundaries=True
     )
 
-    # Read in saved
-    with open(mc.FILE_PATH_BOUNDARIES(model), "r") as stream:
-        boundaries_read = yaml.safe_load(stream)
-
-    assert boundaries[model]["bbox"] == boundaries_read["bbox"]
-    assert boundaries[model]["wkt"] == boundaries_read["wkt"]
+    assert "bbox" in boundaries[model]
+    assert "wkt" in boundaries[model]
 
 
 # @pytest.mark.slow
@@ -313,11 +310,11 @@ def test_boundaries():
 def test_process():
     """Test that dataset is processed."""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
     assert "lon" in list(
-        main_cat["LOOFS-FVCOM"]["coops-forecast-noagg"].to_dask().coords
+        main_cat["LOOFS_FVCOM"]["coops-forecast-noagg"].to_dask().coords
     )
 
 
@@ -364,19 +361,16 @@ def check_source(source):
     assert all(checks)
 
     # check cf-xarray
-    # AXIS X and Y won't be defined for unstructured model unless interpolated
-    if "SELFE" in source.target.description or "FVCOM" in source.target.description:
-        if "RGRID" in source.cat.name:
-            assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
-        elif "2DS" in source.cat.name:
-            assert sorted(list(ds.cf.axes.keys())) == ["T"]
-        else:
-            assert sorted(list(ds.cf.axes.keys())) == ["T", "Z"]
+    # AXIS Z won't be defined for unstructured 2D model output
+    if (
+        "SELFE" in source.target.description or "FVCOM" in source.target.description
+    ) and "2DS" in source.cat.name:
+        assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y"]
     else:
         assert sorted(list(ds.cf.axes.keys())) == ["T", "X", "Y", "Z"]
 
     # the 2D cases are weird
-    if "NGOFS2-2DS" in source.cat.name:
+    if "NGOFS2_2DS" in source.cat.name:
         assert sorted(list(ds.cf.coordinates.keys())) == [
             "latitude",
             "longitude",
@@ -400,10 +394,9 @@ def test_sources():
     known files included or a static link.
     """
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
-    for cat_loc in mc.CAT_PATH_ORIG.glob("*.yaml"):
-        model = cat_loc.stem.upper()
+    for model in list(main_cat):
         for model_source in list(main_cat[model]):
             source = main_cat[model][model_source]
             try:
@@ -546,7 +539,7 @@ def test_filedates2df():
 def test_urlpath_after_select():
     """urlpath is replaced after select_date_range"""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
     day = "2022-1-1"
     source = mc.select_date_range(
@@ -622,7 +615,7 @@ def test_wrong_time_range(mock_open_dataset, mock_open_mfdataset):
     mock_open_mfdataset.return_value = ds
 
     # have to use a real cat/source pair to get this to work, but it isn't actually called in to_dask
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
     cat0 = main_cat[list(main_cat)[0]]
     source0 = cat0[list(cat0)[0]]
     source0.metadata = {}

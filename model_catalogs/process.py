@@ -66,7 +66,12 @@ class DatasetTransform(GenericTransform):
         """
 
         if not hasattr(self, "_status"):
-            self._status = mc.status(mc.astype(self.urlpath, list)[0])
+
+            if self.target.describe()["driver"][0] == "opendap":
+                suffix = ".das"
+            else:
+                suffix = ""
+            self._status = mc.status(mc.astype(self.urlpath, list)[0], suffix=suffix)
         return self._status
 
     @property
@@ -189,13 +194,17 @@ class DatasetTransform(GenericTransform):
             # Make sure that source has urlpath
             # check for if the urlpath is null and if so `select_date_range()`
             # needs to be run to fill it in
-            elif self._source.urlpath is None:
+            elif self.target.urlpath is None:
                 raise KeyError(
                     "The input source `urlpath` does not have a value. You probably want to run `mc.select_date_range()` before running `to_dask()`."  # noqa: E501
                 )
 
             # Alert if triangularmesh engine is required (from FVCOM) but not present
-            if self._source.engine == "triangularmesh_netcdf" and not EM_AVAILABLE:
+            if (
+                self.target.describe()["driver"][0] == "opendap"
+                and self.target.engine == "triangularmesh_netcdf"
+                and not EM_AVAILABLE
+            ):
                 raise ModuleNotFoundError(  # pragma: no cover
                     "`extract_model` is not available but contains the 'triangularmesh_netcdf' engine that is required for a model."
                 )
@@ -315,26 +324,37 @@ def add_attributes(ds, metadata: Optional[dict] = None):
     if metadata is not None and "coords" in metadata:
         ds = ds.assign_coords({k: ds[k] for k in metadata["coords"]})
 
-    # set axis attributes (time, lon, lat, z potentially)
+    # set axis attributes (T, X, Y, Z potentially)
     if metadata is not None and "axis" in metadata:
         for ax_name, var_names in metadata["axis"].items():
-            if not isinstance(var_names, list):
-                var_names = [var_names]
+            var_names = mc.astype(var_names, list)
             for var_name in var_names:
-                # var_name needs to exist
-                # if ax_name == 'X':
-                #     import pdb; pdb.set_trace()
 
-                if var_name in ds.dims:
+                # Check dims, coords, and data_vars:
+                if (
+                    var_name in ds.dims
+                    or var_name in ds.data_vars.keys()
+                    or var_name in ds.coords
+                ):
                     # var_name needs to be a coord to have attributes
                     if var_name not in ds.coords:
-                        ds[var_name] = (
-                            var_name,
-                            np.arange(ds.sizes[var_name]),
-                            {"axis": ax_name},
+                        ds = ds.assign_coords(
+                            {
+                                var_name: (
+                                    var_name,
+                                    np.arange(ds[var_name].size),
+                                    {"axis": ax_name},
+                                )
+                            }
                         )
                     else:
                         ds[var_name].attrs["axis"] = ax_name
+
+                else:
+                    warnings.warn(
+                        f"The variable {var_name} input in a catalog file is not present in the Dataset.",
+                        UserWarning,
+                    )
 
     # this won't run for e.g. GFS which has multiple time variables
     # but also doesn't need to have the calendar updated

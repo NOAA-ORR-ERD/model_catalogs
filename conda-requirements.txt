@@ -4,6 +4,7 @@ dask
 datetimerange
 intake
 intake-xarray
+mc-goods
 netcdf4
 numpy
 pandas

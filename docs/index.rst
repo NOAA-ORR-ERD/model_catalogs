@@ -20,13 +20,20 @@ To install from conda-forge:
    :hidden:
    :caption: Documentation
 
-   demo
+   demo.ipynb
+   catalog_modes.md
+   add_model
    paths
    standard_names
-   add_model
    update_boundaries
    aggregations
-   package_management
    whats_new
    api
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Developer
+
+   package_management
    GitHub repository <https://github.com/NOAA-ORR-ERD/model_catalogs>
