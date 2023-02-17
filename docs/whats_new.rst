@@ -1,8 +1,8 @@
 :mod:`What's New`
 ----------------------------
 
-v0.6.0 (unreleased)
-===================
+v0.6.0 (February 17, 2023)
+==========================
 * Updated docs.
 * The "freshness" parameter, which determines how much time can pass before different actions must be rerun, now has a default for each of the five actions that have freshness parameters associated with them. These parameters are set in the `__init__` file but can be overridden for any model source with the "freshness" parameter in the source metadata. More details are available :doc:`here <add_model>`.
 * The "known" GOODS model catalog yaml files are no longer distributed with ``model_catalogs`` itself in order to enforce more separation between the catalog files themselves and this code. However, the package of catalogs is currently a requirement of ``model_catalogs`` and can be found at `mc-goods <https://github.com/axiom-data-science/mc-goods>`_. Note that catalog names that had names like `CBOFS-RGRID` are now called `CBOFS_RGRID` with underscores instead of hyphens. This was a necessary change for setting up the models in their own packages with entry points.
