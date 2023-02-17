@@ -19,7 +19,7 @@ def test_default_catalogs_intake():
 def test_setup_default():
     """Check that default `mc_` catalogs come through setup."""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
     assert "CBOFS" in list(main_cat)
     assert "CIOFS" in list(main_cat)
 

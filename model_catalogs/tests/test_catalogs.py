@@ -25,7 +25,7 @@ from model_catalogs.process import DatasetTransform
 def test_setup():
     """Make sure main catalog is created correctly."""
 
-    main_cat = mc.setup(override=True)
+    main_cat = mc.setup(override=True, boundaries=False)
 
     # check that all compiled catalog files exist
     should_exist = [
@@ -56,7 +56,7 @@ def test_find_availability():
         "SFBOFS": "ncei-archive-noagg",
     }
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
     for model, model_source in test_models.items():
         cat = mc.find_availability(
             main_cat[model], model_source=model_source, override=True
@@ -310,7 +310,7 @@ def test_boundaries():
 def test_process():
     """Test that dataset is processed."""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
     # if this dataset hasn't been processed, lon and lat won't be in coords
     assert "lon" in list(
@@ -394,7 +394,7 @@ def test_sources():
     known files included or a static link.
     """
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
     for model in list(main_cat):
         for model_source in list(main_cat[model]):
@@ -539,7 +539,7 @@ def test_filedates2df():
 def test_urlpath_after_select():
     """urlpath is replaced after select_date_range"""
 
-    main_cat = mc.setup()
+    main_cat = mc.setup(boundaries=False)
 
     day = "2022-1-1"
     source = mc.select_date_range(

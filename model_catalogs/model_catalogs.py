@@ -291,7 +291,7 @@ def setup(locs="mc_", override=False, boundaries=True):
                 cat,
                 return_cat=False,
                 save_catalog=True,
-                boundaries=True,
+                boundaries=boundaries,
                 save_boundaries=True,
                 override=False,
             )
