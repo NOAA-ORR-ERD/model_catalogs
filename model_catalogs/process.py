@@ -251,7 +251,10 @@ class DatasetTransform(GenericTransform):
             )
 
             # drop any time duplicates that may be present (RTOFS can have)
-            self._ds = self._ds.drop_duplicates(dim=self._ds.cf.axes["T"])
+            if "T" in self._ds.cf.axes:
+                self._ds = self._ds.drop_duplicates(dim=self._ds.cf.axes["T"])
+            elif "time" in self._ds.cf.coordinates:
+                self._ds = self._ds.drop_duplicates(dim=self._ds.cf.coordinates["time"])
 
             # check for 'urlpath' update being sent in, if so use it to
             # subselect ds in time
