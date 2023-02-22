@@ -107,7 +107,7 @@ def test_boundaries():
 
     # Calculate
     boundaries = mc.calculate_boundaries(
-        cats=cat, save_files=False, return_boundaries=True
+        cats=cat, save_files=True, return_boundaries=True
     )
 
     assert "bbox" in boundaries[model]
@@ -118,7 +118,7 @@ def test_boundaries():
 
     # input catalog file directly
     catloc = pathlib.Path(mc_goods.__path__[0]) / "gofs.yaml"
-    main_cat = mc.setup(catloc)
+    main_cat = mc.setup(catloc, override=True)
     assert "geospatial_bounds" in main_cat["GOFS"].metadata
 
 
