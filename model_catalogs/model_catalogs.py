@@ -258,7 +258,9 @@ def setup(locs="mc_", override=False, boundaries=True):
 
         # initial_cats is a list of Catalogs in this case
         cats = [
-            intake.cat[cat_name] for cat_name in list(intake.cat) if loc in cat_name
+            intake.cat[cat_name]
+            for cat_name in list(intake.cat)
+            if str(loc) in cat_name
         ]
 
         # remove the prefix from the catalog name

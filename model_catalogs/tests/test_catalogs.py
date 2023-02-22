@@ -2,6 +2,7 @@
 Make sure catalogs work correctly. If this doesn't run once, try again since the servers can be finnicky.
 """
 
+import pathlib
 import warnings
 
 from unittest import mock
@@ -106,11 +107,19 @@ def test_boundaries():
 
     # Calculate
     boundaries = mc.calculate_boundaries(
-        cats=cat, save_files=False, return_boundaries=True
+        cats=cat, save_files=True, return_boundaries=True
     )
 
     assert "bbox" in boundaries[model]
     assert "wkt" in boundaries[model]
+
+    # also test through setup with just this one
+    import mc_goods
+
+    # input catalog file directly
+    catloc = pathlib.Path(mc_goods.__path__[0]) / "gofs.yaml"
+    main_cat = mc.setup(catloc, override=True)
+    assert "geospatial_bounds" in main_cat["GOFS"].metadata
 
 
 # @pytest.mark.slow
