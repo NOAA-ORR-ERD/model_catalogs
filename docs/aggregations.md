@@ -34,7 +34,7 @@ As of October 2022, developmental versions of LSOFS and LOOFS have started to re
 
 ##### General
 
-Usually, nowcast and forecast files are created four times a day, and output is hourly in individual files. So, each update generates 6 nowcast files and 48 forecast files (for a 48 hour forecast; the forecast length varies by model). The update cycle time will be the last model output timestep in the nowcast files and the first timestep in the forecast files.
+Usually, nowcast and forecast files are created four times a day, and output is hourly in individual files. (WCOFS is updated once a day which changes these details for that model.) So, each update generates 6 nowcast files and 48 forecast files (for a 48 hour forecast; the forecast length varies by model). The update cycle time will be the last model output timestep in the nowcast files and the first timestep in the forecast files.
 
 Example filenames from one update cycle (`20141027.t15z`):
 
@@ -103,11 +103,11 @@ The datetimes associated with a given NOAA OFS file is not obvious from the file
 
 #### General
 
-The ``n006`` file for timing cycle ``t00z`` is at midnight of the day listed in the filename. Files ``n000`` to ``n005`` for timing cycle ``t00z`` count backward in time from there. Forecast files do not have the 6 hour shift backward. The hour in the timing cycle should be added to this convention. Datetime translations are given in the following table for sample files.
+For most models, the ``n006`` file for timing cycle ``t00z`` is at midnight of the day listed in the filename. Files ``n000`` to ``n005`` for timing cycle ``t00z`` count backward in time from there. Forecast files do not have the 6 hour shift backward. The hour in the timing cycle should be added to this convention. Datetime translations are given in the following table for sample files. These are for a filename with the pattern `nos.MODELNAME.fields.[n|f]HHH.YYYYMMDD.tCCz.nc`. Note that the WCOFS model is distinct in that it updates only once a day and so has nowcast files up to ``n024`` and you need to subtract 24 hours from the formula instead of 6.
 
 The formula are:
 
-- Nowcast files: time shift from midnight on date listed = CC + HHH - 6
+- Nowcast files: time shift from midnight on date listed = CC + HHH - update period in hours (6 for most, 24 for WCOFS)
 - Forecast files: time shift from midnight on date listed = CC + HHH
 
 <details>

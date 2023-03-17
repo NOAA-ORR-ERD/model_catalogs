@@ -1,6 +1,11 @@
 :mod:`What's New`
 ----------------------------
 
+v0.7.0 (March 17, 2023)
+=======================
+* The sorting in filedates2df was slightly wrong and would not consistently return the desired nowcast file over the forecast file. Seems to be correct now.
+* WCOFS has a different update frequency which leads to a different conversion from filename to datetime. This is now included in file2dt.
+
 v0.6.0 (February 17, 2023)
 ==========================
 * Updated docs.
