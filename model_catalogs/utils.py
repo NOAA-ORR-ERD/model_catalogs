@@ -105,9 +105,9 @@ def file2dt(filename):
 
         # number of hours in repeat cycle for forecast
         if "wcofs" in filename:
-            dt = 24
+            tshift = 24
         else:
-            dt = 6
+            tshift = 6
 
         # pull hours from filename
         regex = re.compile(".[n,f][0-9]{3}.")
@@ -118,7 +118,7 @@ def file2dt(filename):
 
         # if nowcast file, subtract dt hours
         if fnmatch.fnmatch(filename, "*.n???.*"):
-            dt -= dt
+            dt -= tshift
 
         # construct datetime. dt might be negative.
         date += pd.Timedelta(f"{dt} hours")

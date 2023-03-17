@@ -535,7 +535,7 @@ def test_filedates2df():
         "nos.creofs.fields.n003.20220920.t15z.nc",
         "nos.creofs.fields.n004.20220920.t15z.nc",
         "nos.creofs.fields.n005.20220920.t15z.nc",
-        "nos.creofs.fields.f000.20220920.t15z.nc",
+        "nos.creofs.fields.n006.20220920.t15z.nc",
         "nos.creofs.fields.f001.20220920.t15z.nc",
         "nos.creofs.fields.f002.20220920.t15z.nc",
         "nos.creofs.fields.f003.20220920.t15z.nc",
