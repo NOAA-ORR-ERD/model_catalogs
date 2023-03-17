@@ -102,7 +102,7 @@ def file2dt(filename):
 
     # Main style of NOAA OFS files, 1 file per time step
     elif fnmatch.fnmatch(filename, "*.n???.*") or fnmatch.fnmatch(filename, "*.f???.*"):
-        
+
         # number of hours in repeat cycle for forecast
         if "wcofs" in filename:
             dt = 24
@@ -327,10 +327,10 @@ def filedates2df(filelocs):
 
     # Make dataframe
     df = pd.DataFrame(index=filedates, data={"filenames": filenames})
- 
+
     # Sort resulting df by filenames and then by index which is the datetime of each file
     df = df.reset_index().sort_values(by=["index", "filenames"]).set_index("index")
-    
+
     # df = df.sort_values(axis="index", by="filenames").sort_index()
 
     # remove rows if index is duplicated, sorting makes it so nowcast files are kept
