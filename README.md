@@ -1,3 +1,11 @@
+NOTE
+====
+
+- This repository has been archived and is no longer maintained.
+- The code is provided for historical reference and may contain unpatched or unknown vulnerabilities.
+- It should not be used in production systems.
+
+
 model_catalogs
 ==============================
 [![Build Status](https://img.shields.io/github/actions/workflow/status/NOAA-ORR-ERD/model_catalogs/test.yaml?branch=main&logo=github&style=for-the-badge)](https://github.com/axiom-data-science/model_catalogs/actions/workflows/test.yaml)
